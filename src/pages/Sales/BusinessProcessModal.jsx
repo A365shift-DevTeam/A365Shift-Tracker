@@ -12,7 +12,9 @@ const BusinessProcessModal = ({
     stages = [],
     activeStage,
     targetStage,
-    delay = 0
+
+    delay = 0,
+    history = []
 }) => {
     const initialStage = targetStage !== undefined ? targetStage : activeStage
     const [viewedStage, setViewedStage] = useState(initialStage)
@@ -149,10 +151,47 @@ const BusinessProcessModal = ({
 
                     {/* RIGHT STATUS */}
                     <Col md={5} className="bp-status-section">
-                        <h6>Status History</h6>
-                        <p className="text-muted">
-                            History and logs for {currentStageLabel} will appear here.
-                        </p>
+                        <h6 className="mb-3">Status History</h6>
+                        <div className="history-list" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                            {(!history || history.length === 0) ? (
+                                <p className="text-muted small">
+                                    History and logs for {currentStageLabel} will appear here.
+                                </p>
+                            ) : (
+                                history.map((item, idx) => (
+                                    <div key={idx} className="history-item mb-3 p-2 border-bottom">
+                                        <div className="d-flex justify-content-between">
+                                            <strong style={{ fontSize: '0.9rem', color: '#1f2937' }}>{item.transition}</strong>
+                                            <small className="text-secondary" style={{ fontSize: '0.75rem' }}>
+                                                {new Date(item.timestamp).toLocaleString()}
+                                            </small>
+                                        </div>
+                                        {item.amount && (
+                                            <div className="text-success small fw-bold">
+                                                Amount: ${item.amount}
+                                            </div>
+                                        )}
+                                        {item.description && (
+                                            <div className="small mt-1" style={{ color: '#374151' }}>
+                                                {item.description}
+                                            </div>
+                                        )}
+                                        <div className="d-flex gap-2 mt-1">
+                                            {item.targetDate && (
+                                                <small className="text-secondary" style={{ fontSize: '0.75rem' }}>
+                                                    Target: {item.targetDate}
+                                                </small>
+                                            )}
+                                            {item.revisedDate && (
+                                                <small className="text-danger" style={{ fontSize: '0.75rem' }}>
+                                                    Revised: {item.revisedDate}
+                                                </small>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </Col>
                 </Row>
             </div>

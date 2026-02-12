@@ -875,22 +875,36 @@
   /* Ensure it behaves as a block for truncation */
 }
 
-/* Hover Effect */
-.contacts-kanban-card:hover {
+/* Hover Effect — disabled when card is being dragged */
+.contacts-kanban-card:not(.kanban-card-dragging):not(.kanban-card-overlay):hover {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
   transform: translateY(-2px);
   border-color: #cbd5e1 !important;
   z-index: 5;
 }
 
-/* Dragging State */
-.contacts-kanban-card.dragging {
+/* Dragging placeholder (the card left behind in the column) */
+.contacts-kanban-card.kanban-card-dragging {
+  opacity: 0.3 !important;
+  box-shadow: none !important;
+  border: 2px dashed #cbd5e1 !important;
+  background: #f8fafc !important;
+  /* No transform — dnd-kit controls position via inline style */
+}
+
+/* Drag overlay card (follows cursor) */
+.contacts-kanban-card.kanban-card-overlay {
   cursor: grabbing;
-  opacity: 0.8;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2) !important;
-  transform: scale(1.02) rotate(1deg);
-  z-index: 1000;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
   border-color: #3b82f6 !important;
+  z-index: 9999;
+}
+
+/* Column highlight while a card hovers over it */
+.kanban-column-highlight {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 /* Action Buttons Reveal on Hover */
