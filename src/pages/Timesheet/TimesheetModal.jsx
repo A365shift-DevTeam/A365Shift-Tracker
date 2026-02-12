@@ -62,7 +62,17 @@ const FileUploadField = ({ column, value, onChange, errors }) => {
       })
     } catch (err) {
       console.error('Upload failed:', err)
-      setUploadError(err.message || 'Upload failed. Please try again.')
+      // Show user-friendly error message
+      let errorMessage = err.message || 'Upload failed. Please try again.'
+      
+      // Provide helpful hints for common errors
+      if (errorMessage.includes('Cannot connect')) {
+        errorMessage += ' Make sure the backend server is running on port 3001.'
+      } else if (errorMessage.includes('Authentication')) {
+        errorMessage += ' Please log out and log back in.'
+      }
+      
+      setUploadError(errorMessage)
     } finally {
       setUploading(false)
       // Reset file input so the same file can be re-selected
@@ -210,7 +220,18 @@ const FileUploadField = ({ column, value, onChange, errors }) => {
 
       {/* Error messages */}
       {uploadError && (
-        <div className="text-danger mt-1" style={{ fontSize: '0.8rem' }}>{uploadError}</div>
+        <div 
+          className="mt-2 p-2 rounded" 
+          style={{ 
+            fontSize: '0.8rem',
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#dc2626',
+            fontWeight: 500
+          }}
+        >
+          ⚠️ {uploadError}
+        </div>
       )}
       {hasError && (
         <div className="invalid-feedback d-block">{errors[column.id]}</div>

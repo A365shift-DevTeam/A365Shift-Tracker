@@ -1,4 +1,0 @@
-﻿
-> a365shift-tracker@0.0.0 lint
-> eslint .
-
