@@ -64,14 +64,12 @@ const FileUploadField = ({ column, value, onChange, errors }) => {
       console.error('Upload failed:', err)
       // Show user-friendly error message
       let errorMessage = err.message || 'Upload failed. Please try again.'
-      
+
       // Provide helpful hints for common errors
-      if (errorMessage.includes('Cannot connect')) {
-        errorMessage += ' Make sure the backend server is running on port 3001.'
-      } else if (errorMessage.includes('Authentication')) {
+      if (errorMessage.includes('Authentication')) {
         errorMessage += ' Please log out and log back in.'
       }
-      
+
       setUploadError(errorMessage)
     } finally {
       setUploading(false)
@@ -220,9 +218,9 @@ const FileUploadField = ({ column, value, onChange, errors }) => {
 
       {/* Error messages */}
       {uploadError && (
-        <div 
-          className="mt-2 p-2 rounded" 
-          style={{ 
+        <div
+          className="mt-2 p-2 rounded"
+          style={{
             fontSize: '0.8rem',
             background: '#fef2f2',
             border: '1px solid #fecaca',
