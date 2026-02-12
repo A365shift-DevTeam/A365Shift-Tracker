@@ -318,14 +318,21 @@ const Timesheet = () => {
             <div className="stat-content">
               <div className="stat-title">Total Hours</div>
               <div className="stat-value">
-                {Math.round(processedEntries.reduce((total, entry) => {
-                  const start = entry.values?.['col-start-datetime'] ? new Date(entry.values['col-start-datetime']) : null
-                  const end = entry.values?.['col-end-datetime'] ? new Date(entry.values['col-end-datetime']) : null
-                  if (start && end && !isNaN(start) && !isNaN(end)) {
-                    return total + (end - start) / (1000 * 60 * 60)
-                  }
-                  return total
-                }, 0) * 10) / 10}
+                {(() => {
+                  const totalHours = processedEntries.reduce((total, entry) => {
+                    const startStr = entry.values?.['col-start-datetime']
+                    const endStr = entry.values?.['col-end-datetime']
+                    if (!startStr || !endStr) return total
+                    const start = new Date(startStr)
+                    const end = new Date(endStr)
+                    if (isNaN(start.getTime()) || isNaN(end.getTime())) return total
+                    const diff = (end.getTime() - start.getTime()) / (1000 * 60 * 60)
+                    if (diff <= 0 || isNaN(diff)) return total
+                    return total + diff
+                  }, 0)
+                  const rounded = Math.round(totalHours * 10) / 10
+                  return isNaN(rounded) ? '0h' : `${rounded}h`
+                })()}
               </div>
             </div>
           </div>

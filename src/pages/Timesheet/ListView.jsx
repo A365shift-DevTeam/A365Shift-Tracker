@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Button, Form, Dropdown } from 'react-bootstrap'
-import { Edit, Trash2, Eye, ArrowUp, ArrowDown, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Plus, Paperclip, FileText, Image, File } from 'lucide-react'
+import { Edit, Trash2, Eye, ArrowUp, ArrowDown, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Plus, Paperclip, FileText, Image, File, Clock } from 'lucide-react'
 import { formatFileSize, getFileTypeLabel } from '../../services/storageService'
 
 const getAttachmentIcon = (fileType) => {
@@ -89,6 +89,19 @@ const formatValue = (value, column) => {
   }
 
   return String(value)
+}
+
+const computeDuration = (entry) => {
+  const startStr = entry.values?.['col-start-datetime']
+  const endStr = entry.values?.['col-end-datetime']
+  if (!startStr || !endStr) return '-'
+  const start = new Date(startStr)
+  const end = new Date(endStr)
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) return '-'
+  const diffMs = end.getTime() - start.getTime()
+  if (diffMs <= 0) return '-'
+  const hours = diffMs / (1000 * 60 * 60)
+  return `${Math.round(hours * 10) / 10}h`
 }
 
 export const ListView = ({ entries, columns, sortBy, sortOrder, onSort, onEdit, onDelete, onPreview }) => {
@@ -289,13 +302,18 @@ export const ListView = ({ entries, columns, sortBy, sortOrder, onSort, onEdit, 
                   </th>
                 )
               })}
+              <th style={{ width: '90px', minWidth: '90px', position: 'relative' }}>
+                <div className="d-flex align-items-center gap-1">
+                  <Clock size={12} /> Duration
+                </div>
+              </th>
               <th style={{ width: '120px', position: 'relative' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {paginatedEntries.length === 0 ? (
               <tr>
-                <td colSpan={visibleColumns.length + 1} className="text-center text-muted py-5">
+                <td colSpan={visibleColumns.length + 2} className="text-center text-muted py-5">
                   No entries found. Create a new entry to get started.
                 </td>
               </tr>
@@ -317,6 +335,9 @@ export const ListView = ({ entries, columns, sortBy, sortOrder, onSort, onEdit, 
                       </td>
                     )
                   })}
+                  <td style={{ fontWeight: 600, color: '#10b981', fontSize: '0.875rem' }}>
+                    {computeDuration(entry)}
+                  </td>
                   <td>
                     <div className="d-flex gap-2 align-items-center">
                       <Button
