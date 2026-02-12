@@ -169,9 +169,46 @@ export const ListView = ({ entries, columns, sortBy, sortOrder, onSort, onEdit, 
     )
   }
 
+  // --- Drag-to-scroll horizontally (hidden scrollbar) ---
+  const scrollContainerRef = useRef(null)
+  const [isDraggingScroll, setIsDraggingScroll] = useState(false)
+  const dragStartXRef = useRef(0)
+  const dragScrollLeftRef = useRef(0)
+
+  const handleDragScrollStart = (e) => {
+    if (e.button !== 0) return
+    const tag = e.target.tagName
+    if (['BUTTON', 'A', 'INPUT', 'SELECT', 'SVG', 'path', 'line', 'polyline'].includes(tag)) return
+    setIsDraggingScroll(true)
+    dragStartXRef.current = e.pageX
+    dragScrollLeftRef.current = scrollContainerRef.current.scrollLeft
+  }
+
+  useEffect(() => {
+    if (!isDraggingScroll) return
+
+    const onMove = (e) => {
+      e.preventDefault()
+      const walk = (e.pageX - dragStartXRef.current) * 1.5
+      scrollContainerRef.current.scrollLeft = dragScrollLeftRef.current - walk
+    }
+    const onUp = () => setIsDraggingScroll(false)
+
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+    return () => {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+  }, [isDraggingScroll])
+
   return (
     <div className="timesheet-list-view-container">
-      <div className="table-responsive">
+      <div
+        className={`timesheet-scroll-container ${isDraggingScroll ? 'dragging' : ''}`}
+        ref={scrollContainerRef}
+        onMouseDown={handleDragScrollStart}
+      >
         <table ref={tableRef} className="table table-hover resizable-table timesheet-table">
           <thead>
             <tr>

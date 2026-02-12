@@ -732,6 +732,28 @@ body.resizing * {
   background: rgba(239, 68, 68, 0.1);
 }
 
+/* --- Horizontal Scroll (hidden scrollbar + drag-to-scroll) --- */
+.timesheet-scroll-container {
+  overflow-x: auto;
+  overflow-y: visible;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  cursor: grab;
+}
+
+.timesheet-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+.timesheet-scroll-container.dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.timesheet-scroll-container.dragging * {
+  cursor: grabbing;
+}
+
 /* --- Responsive --- */
 @media (max-width: 768px) {
   .timesheet-container {
