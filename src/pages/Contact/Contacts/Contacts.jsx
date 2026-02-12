@@ -1,0 +1,658 @@
+import { useState, useEffect, useMemo } from 'react'
+import { Button, Dropdown, Form, Badge, Modal, Card, Row, Col } from 'react-bootstrap'
+import {
+  Plus, Filter, MoreVertical,
+  ArrowUpDown, Check, X, Layers, User, Flag, Briefcase, Building, Phone, Edit, Settings
+} from 'lucide-react'
+import { contactService } from '../../../services/contactService'
+import { ListView } from './ListView'
+import { KanbanView } from './KanbanView'
+import { ChartView } from './ChartView'
+import { ContactModal } from './ContactModal'
+import { AIAssistModal } from './AIAssistModal'
+import './Contacts.css'
+
+const DEFAULT_STATUS_COLUMNS = ['Active', 'Inactive', 'Lead', 'Customer']
+
+const Contacts = () => {
+  const [contacts, setContacts] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  // View State
+  const [viewMode, setViewMode] = useState('kanban') // 'list', 'kanban', 'chart'
+  const [showContactModal, setShowContactModal] = useState(false)
+  const [showAIAssist, setShowAIAssist] = useState(false)
+  const [editingContact, setEditingContact] = useState(null)
+
+  // Filter & Sort State (Project Page Style)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterBy, setFilterBy] = useState('all')
+  const [filterValue, setFilterValue] = useState('')
+  const [sortBy, setSortBy] = useState('name')
+  const [sortOrder, setSortOrder] = useState('asc')
+  const [groupBy, setGroupBy] = useState('status') // 'status', 'type', 'company'
+
+  // Dynamic Columns State (for Kanban)
+  const [statusColumns, setStatusColumns] = useState(DEFAULT_STATUS_COLUMNS)
+
+  // Preview Modal
+  const [showPreviewModal, setShowPreviewModal] = useState(false)
+  const [previewingContact, setPreviewingContact] = useState(null)
+
+  // Add Column Modal
+  const [showAddColumnModal, setShowAddColumnModal] = useState(false)
+  const [newColumnName, setNewColumnName] = useState('')
+
+  useEffect(() => {
+    loadContacts()
+  }, [])
+
+  const loadContacts = async () => {
+    try {
+      setIsLoading(true)
+      const data = await contactService.getContacts()
+      setContacts(data || [])
+    } catch (error) {
+      console.error('Error loading contacts:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // --- Stats Calculation ---
+  const stats = useMemo(() => {
+    const total = contacts.length
+    const leads = contacts.filter(c => c.status === 'Lead').length
+    const customers = contacts.filter(c => c.status === 'Customer').length
+    const uniqueCompanies = new Set(contacts.map(c => c.company).filter(Boolean)).size
+    return { total, leads, customers, companies: uniqueCompanies }
+  }, [contacts])
+
+  // --- Dynamic Options for Filters ---
+  const filterableColumns = [
+    { id: 'status', name: 'Status' },
+    { id: 'type', name: 'Type' },
+    { id: 'company', name: 'Company' },
+    { id: 'location', name: 'Location' }
+  ]
+
+  const getFilterOptions = (columnId) => {
+    const values = new Set()
+    contacts.forEach(c => {
+      const val = c[columnId]
+      if (val) values.add(val)
+    })
+    return Array.from(values).sort()
+  }
+
+  // --- Filtering & Sorting Logic ---
+  const processedContacts = useMemo(() => {
+    let filtered = [...contacts]
+
+    // 1. Search
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(contact =>
+        contact.name?.toLowerCase().includes(query) ||
+        contact.email?.toLowerCase().includes(query) ||
+        contact.company?.toLowerCase().includes(query)
+      )
+    }
+
+    // 2. Filter (Project Style)
+    if (filterBy !== 'all' && filterValue) {
+      filtered = filtered.filter(contact => {
+        const value = String(contact[filterBy] || '')
+        return value.toLowerCase() === filterValue.toLowerCase()
+      })
+    }
+
+    // 3. Sorting
+    filtered.sort((a, b) => {
+      let aValue = a[sortBy] || ''
+      let bValue = b[sortBy] || ''
+
+      if (typeof aValue === 'string') {
+        aValue = aValue.toLowerCase()
+        bValue = bValue.toLowerCase()
+      }
+
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0
+      } else {
+        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0
+      }
+    })
+
+    return filtered
+  }, [contacts, searchQuery, filterBy, filterValue, sortBy, sortOrder])
+
+  // --- Column Management (CRUD) ---
+  const getActiveColumns = () => {
+    if (groupBy === 'status') return statusColumns
+    // For other groupings, generate columns dynamically
+    const values = new Set()
+    contacts.forEach(c => {
+      if (c[groupBy]) values.add(c[groupBy])
+    })
+    if (values.size === 0) return ['Unassigned']
+    return Array.from(values).sort()
+  }
+
+  const handleAddColumn = (newCol) => {
+    if (groupBy === 'status') {
+      if (newCol && !statusColumns.includes(newCol)) {
+        setStatusColumns([...statusColumns, newCol])
+      }
+    } else {
+      alert('Can only add columns when grouping by Status')
+    }
+  }
+
+  const handleCreateColumnConfirm = () => {
+    if (newColumnName.trim()) {
+      handleAddColumn(newColumnName.trim())
+      setNewColumnName('')
+      setShowAddColumnModal(false)
+    }
+  }
+
+  const handleEditColumn = (oldCol, newCol) => {
+    if (groupBy === 'status') {
+      // Update columns list
+      setStatusColumns(prev => prev.map(c => c === oldCol ? newCol : c))
+      // Update all contacts that had this status
+      // Note: In a real app, you'd batch update via API. Here we assume generic update.
+      // We can't easily update all contacts without backend support for batch, 
+      // or we loop and update individually (inefficient but works for demo).
+      const contactsToUpdate = contacts.filter(c => c.status === oldCol)
+      contactsToUpdate.forEach(c => {
+        handleTaskUpdate(c.id, { status: newCol }) // Optimistic update
+      })
+    } else {
+      alert('Can only modify columns when grouping by Status')
+    }
+  }
+
+  const handleDeleteColumn = (colToDelete) => {
+    if (groupBy === 'status') {
+      if (confirm(`Delete column "${colToDelete}"? Contacts in this column will be moved to default.`)) {
+        setStatusColumns(prev => prev.filter(c => c !== colToDelete))
+        // Move contacts to first available column or ''
+        const fallback = statusColumns.find(c => c !== colToDelete) || 'Active'
+        const contactsToMove = contacts.filter(c => c.status === colToDelete)
+        contactsToMove.forEach(c => {
+          handleTaskUpdate(c.id, { status: fallback })
+        })
+      }
+    } else {
+      alert('Can only delete columns when grouping by Status')
+    }
+  }
+
+  // --- Handlers ---
+  const handleCreateContact = () => {
+    setEditingContact(null)
+    setShowContactModal(true)
+  }
+
+  const handleEditContact = (contact) => {
+    setEditingContact(contact)
+    setShowContactModal(true)
+  }
+
+  const handlePreviewContact = (contact) => {
+    setPreviewingContact(contact)
+    setShowPreviewModal(true)
+  }
+
+  const handleSaveContact = async (contactData) => {
+    try {
+      if (editingContact) {
+        await contactService.updateContact(editingContact.id, contactData)
+      } else {
+        await contactService.createContact(contactData)
+      }
+      await loadContacts()
+      setShowContactModal(false)
+      setEditingContact(null)
+    } catch (error) {
+      console.error('Error saving contact:', error)
+      alert('Failed to save contact')
+    }
+  }
+
+  const handleDeleteContact = async (contactId) => {
+    try {
+      await contactService.deleteContact(contactId)
+      await loadContacts()
+      setShowContactModal(false)
+      setEditingContact(null)
+    } catch (error) {
+      console.error('Error deleting contact:', error)
+      alert('Failed to delete contact')
+    }
+  }
+
+  const handleTaskUpdate = async (contactId, updates) => {
+    try {
+      // Optimistic update locally
+      setContacts(prev => prev.map(c => c.id === contactId ? { ...c, ...updates } : c))
+      await contactService.updateContact(contactId, updates)
+      // await loadContacts() // No need to reload if optimistic is correct
+    } catch (error) {
+      console.error('Error updating contact:', error)
+      loadContacts() // Revert on error
+    }
+  }
+
+  const handleAIFilterApply = (filters) => {
+    // Map AI filters to our single filter system or reset
+    // This might need adaptation if AI returns complex filters
+    // For now, if AI provides a status, we filter by status
+    if (filters.status && filters.status !== 'all') {
+      setFilterBy('status')
+      setFilterValue(filters.status)
+    }
+  }
+
+  if (isLoading && contacts.length === 0) {
+    return (
+      <div className="contacts-container d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+        <div className="spinner-border text-primary" role="status"></div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="contacts-container">
+
+      {/* Stats Grid */}
+      <div className="stats-grid">
+        {/* ... (Keep existing stats structure) ... */}
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon-wrapper blue"><User size={24} /></div>
+            <div className="stat-content">
+              <div className="stat-title">Total Contacts</div>
+              <div className="stat-value">{stats.total}</div>
+            </div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon-wrapper green"><Flag size={24} /></div>
+            <div className="stat-content">
+              <div className="stat-title">Total Leads</div>
+              <div className="stat-value">{stats.leads}</div>
+            </div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon-wrapper teal"><Briefcase size={24} /></div>
+            <div className="stat-content">
+              <div className="stat-title">Customers</div>
+              <div className="stat-value">{stats.customers}</div>
+            </div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-header">
+            <div className="stat-icon-wrapper purple"><Building size={24} /></div>
+            <div className="stat-content">
+              <div className="stat-title">Companies</div>
+              <div className="stat-value">{stats.companies}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Header & Toolbar (Project Page Style) */}
+      <div className="project-header mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+
+        {/* Left: Title & Search */}
+        <div className="d-flex align-items-center gap-4">
+          <h4 className="mb-0 fw-bold text-dark">Contacts</h4>
+          <div className="search-wrapper position-relative" style={{ width: '240px' }}>
+            <Form.Control
+              type="text"
+              placeholder="Search contacts..."
+              className="ps-5 bg-white border-secondary-subtle"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              style={{ borderRadius: '8px', fontSize: '13px' }}
+            />
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="position-absolute top-50 start-0 translate-middle-y ms-3" style={{ zIndex: 10, minWidth: 16, minHeight: 16, display: 'block' }}>
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Right: Toolbar Buttons */}
+        <div className="d-flex align-items-center gap-2">
+
+          {/* Filter Dropdown */}
+          <Dropdown align="end">
+            <Dropdown.Toggle as="button" className="icon-btn">
+              <div className={`icon-wrapper ${filterBy !== 'all' ? 'active' : ''}`}>
+                <Filter size={18} />
+              </div>
+            </Dropdown.Toggle>
+            <Dropdown.Menu className="timesheet-dropdown-menu p-3" style={{ minWidth: '240px' }}>
+              <Form.Label className="small text-muted fw-bold mb-2">FILTER BY</Form.Label>
+              <Form.Select
+                size="sm"
+                value={filterBy}
+                onChange={(e) => { setFilterBy(e.target.value); setFilterValue(''); }}
+                className="mb-2"
+              >
+                <option value="all">None</option>
+                {filterableColumns.map(col => <option key={col.id} value={col.id}>{col.name}</option>)}
+              </Form.Select>
+
+              {filterBy !== 'all' && (
+                <>
+                  <Form.Label className="small text-muted fw-bold mb-2 mt-2">VALUE</Form.Label>
+                  <Form.Select
+                    size="sm"
+                    value={filterValue}
+                    onChange={(e) => setFilterValue(e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    {getFilterOptions(filterBy).map(val => <option key={val} value={val}>{val}</option>)}
+                  </Form.Select>
+                </>
+              )}
+            </Dropdown.Menu>
+          </Dropdown>
+
+          {/* Group Dropdown */}
+          <Dropdown align="end">
+            <Dropdown.Toggle as="button" className="icon-btn">
+              <div className={`icon-wrapper ${groupBy !== 'status' ? 'active' : ''}`}>
+                <Layers size={18} />
+              </div>
+            </Dropdown.Toggle>
+            <Dropdown.Menu className="timesheet-dropdown-menu p-3" style={{ minWidth: '200px' }}>
+              <Form.Label className="small text-muted fw-bold mb-2">GROUP BY</Form.Label>
+              <Dropdown.Item active={groupBy === 'status'} onClick={() => setGroupBy('status')}>Status</Dropdown.Item>
+              <Dropdown.Item active={groupBy === 'type'} onClick={() => setGroupBy('type')}>Type</Dropdown.Item>
+              <Dropdown.Item active={groupBy === 'company'} onClick={() => setGroupBy('company')}>Company</Dropdown.Item>
+              <Dropdown.Item active={groupBy === 'location'} onClick={() => setGroupBy('location')}>Location</Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
+
+          {/* Sort Dropdown */}
+          <Dropdown align="end">
+            <Dropdown.Toggle as="button" className="icon-btn">
+              <div className="icon-wrapper">
+                <ArrowUpDown size={18} />
+              </div>
+            </Dropdown.Toggle>
+            <Dropdown.Menu className="timesheet-dropdown-menu p-3" style={{ minWidth: '200px' }}>
+              <Form.Label className="small text-muted fw-bold mb-2">SORT BY</Form.Label>
+              <Form.Select size="sm" value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="mb-2">
+                <option value="name">Name</option>
+                <option value="email">Email</option>
+                <option value="company">Company</option>
+                <option value="date">Date Added</option>
+              </Form.Select>
+              <div className="d-flex gap-2">
+                <Button size="sm" variant={sortOrder === 'asc' ? 'primary' : 'light'} className="w-50" onClick={() => setSortOrder('asc')}>Asc</Button>
+                <Button size="sm" variant={sortOrder === 'desc' ? 'primary' : 'light'} className="w-50" onClick={() => setSortOrder('desc')}>Desc</Button>
+              </div>
+            </Dropdown.Menu>
+          </Dropdown>
+
+          {/* Settings Dropdown (New) */}
+          <Dropdown align="end">
+            <Dropdown.Toggle as="button" className="icon-btn">
+              <div className="icon-wrapper">
+                <Settings size={18} />
+              </div>
+            </Dropdown.Toggle>
+            <Dropdown.Menu className="timesheet-dropdown-menu p-3" style={{ minWidth: '200px' }}>
+              <Form.Label className="small text-muted fw-bold mb-2">SETTINGS</Form.Label>
+              <Dropdown.Item onClick={() => setShowAddColumnModal(true)} disabled={groupBy !== 'status' || viewMode !== 'kanban'}>
+                <Plus size={14} className="me-2" /> Add Status Column
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
+
+          <div className="vr opacity-25 mx-2"></div>
+
+          {/* View Toggle - UPDATED ICONS (Inline SVG - TodoList Standard) */}
+          <div className="view-toggle-group">
+            <button
+              className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+              onClick={() => setViewMode('list')}
+              title="List View"
+            >
+              {/* List Icon SVG (lines+dots) */}
+              <svg style={{ minWidth: 18, minHeight: 18, display: 'block' }} xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="8" x2="21" y1="6" y2="6" />
+                <line x1="8" x2="21" y1="12" y2="12" />
+                <line x1="8" x2="21" y1="18" y2="18" />
+                <line x1="3" x2="3.01" y1="6" y2="6" />
+                <line x1="3" x2="3.01" y1="12" y2="12" />
+                <line x1="3" x2="3.01" y1="18" y2="18" />
+              </svg>
+            </button>
+            <button
+              className={`view-toggle-btn ${viewMode === 'kanban' ? 'active' : ''}`}
+              onClick={() => setViewMode('kanban')}
+              title="Kanban View"
+            >
+              {/* Kanban Icon SVG (Columns) */}
+              <svg style={{ minWidth: 18, minHeight: 18, display: 'block' }} xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 5v11" />
+                <path d="M12 5v6" />
+                <path d="M18 5v14" />
+              </svg>
+            </button>
+            <button
+              className={`view-toggle-btn ${viewMode === 'chart' ? 'active' : ''}`}
+              onClick={() => setViewMode('chart')}
+              title="Chart View"
+            >
+              {/* BarChart3 Icon SVG (L-axis + bars) */}
+              <svg style={{ minWidth: 18, minHeight: 18, display: 'block' }} xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 3v18h18" />
+                <path d="M18 17V9" />
+                <path d="M13 17V5" />
+                <path d="M8 17v-3" />
+              </svg>
+            </button>
+          </div>
+
+          <Button
+            variant="primary"
+            className="d-flex align-items-center gap-2 ms-2 btn-icon-text"
+            onClick={handleCreateContact}
+            size="sm"
+          >
+            <Plus size={16} />
+            Contact
+          </Button>
+
+          <Button
+            variant="outline-purple"
+            className="d-flex align-items-center gap-2 ms-1 btn-icon-text"
+            onClick={() => setShowAIAssist(true)}
+            size="sm"
+            style={{ borderColor: '#7e22ce', color: '#7e22ce' }}
+          >
+            ✨ AI
+          </Button>
+
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="contacts-content-wrapper">
+        {viewMode === 'list' && (
+          <ListView
+            contacts={processedContacts}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSort={(col) => {
+              if (sortBy === col) setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+              else { setSortBy(col); setSortOrder('asc'); }
+            }}
+            onEdit={handleEditContact}
+            onDelete={handleDeleteContact}
+            onPreview={handlePreviewContact}
+          />
+        )}
+
+        {viewMode === 'kanban' && (
+          <KanbanView
+            contacts={processedContacts}
+            columns={getActiveColumns()}
+            onContactUpdate={(id, updates) => {
+              // If grouped by something else, we might need to map the update key
+              const key = groupBy; // 'status' or 'type' etc
+              handleTaskUpdate(id, { [key]: updates.status }) // KanBanView passes 'status' property, but we map it to groupBy
+            }}
+            onEdit={handleEditContact}
+            onDelete={handleDeleteContact}
+            onPreview={handlePreviewContact}
+            onAddColumn={handleAddColumn}
+            onEditColumn={handleEditColumn}
+            onDeleteColumn={handleDeleteColumn}
+          />
+        )}
+
+        {viewMode === 'chart' && (
+          <ChartView contacts={processedContacts} />
+        )}
+      </div>
+
+      {/* Modals */}
+      <ContactModal
+        show={showContactModal}
+        onHide={() => { setShowContactModal(false); setEditingContact(null); }}
+        contact={editingContact}
+        onSave={handleSaveContact}
+        onDelete={handleDeleteContact}
+      />
+
+      {/* PREVIEW MODAL - UPDATED */}
+      <Modal show={showPreviewModal} onHide={() => setShowPreviewModal(false)} centered size="md" className="contact-preview-modal">
+        <Modal.Header closeButton className="border-0 pb-0 pt-4 px-4">
+          <div className="d-flex align-items-center gap-3">
+            <div className="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold" style={{ width: '48px', height: '48px', fontSize: '18px' }}>
+              {previewingContact?.name?.substring(0, 2).toUpperCase()}
+            </div>
+            <div>
+              <Modal.Title className="fw-bold h5 mb-0">{previewingContact?.name}</Modal.Title>
+              <span className="text-muted small">{previewingContact?.type || 'Contact'}</span>
+            </div>
+          </div>
+        </Modal.Header>
+        <Modal.Body className="px-4 py-4">
+          {previewingContact && (
+            <div className="d-flex flex-column gap-4">
+              {/* Compnay & Status */}
+              <Row className="g-3">
+                <Col xs={12}>
+                  <div className="p-3 bg-light rounded-3 border border-light-subtle">
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <span className="text-muted small fw-bold text-uppercase ls-1">Company</span>
+                      <Badge bg={previewingContact.status === 'Active' ? 'success' : 'secondary'} className="px-3 py-1 rounded-pill">
+                        {previewingContact.status}
+                      </Badge>
+                    </div>
+                    <div className="d-flex align-items-center gap-2 text-dark fw-medium">
+                      <Building size={16} className="text-muted" />
+                      {previewingContact.company || 'No Company'}
+                    </div>
+                  </div>
+                </Col>
+              </Row>
+
+              {/* Contact Info */}
+              <div>
+                <h6 className="text-muted small fw-bold text-uppercase mb-3 ls-1">Contact Information</h6>
+                <div className="d-flex flex-column gap-3">
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="icon-box bg-white border rounded-circle d-flex align-items-center justify-content-center" style={{ width: 36, height: 36 }}>
+                      <User size={16} className="text-secondary" />
+                    </div>
+                    <div>
+                      <label className="d-block text-muted x-small">Email Address</label>
+                      <span className="text-dark fw-medium">{previewingContact.email}</span>
+                    </div>
+                  </div>
+
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="icon-box bg-white border rounded-circle d-flex align-items-center justify-content-center" style={{ width: 36, height: 36 }}>
+                      <Phone size={16} className="text-secondary" />
+                    </div>
+                    <div>
+                      <label className="d-block text-muted x-small">Phone Number</label>
+                      <span className="text-dark fw-medium">{previewingContact.phone || 'Not Set'}</span>
+                    </div>
+                  </div>
+
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="icon-box bg-white border rounded-circle d-flex align-items-center justify-content-center" style={{ width: 36, height: 36 }}>
+                      <Briefcase size={16} className="text-secondary" />
+                    </div>
+                    <div>
+                      <label className="d-block text-muted x-small">Job Title</label>
+                      <span className="text-dark fw-medium">{previewingContact.role || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer className="border-0 px-4 pb-4 pt-0">
+          <Button variant="light" onClick={() => setShowPreviewModal(false)} className="flex-grow-1">Close</Button>
+          <Button variant="primary" onClick={() => { setShowPreviewModal(false); handleEditContact(previewingContact); }} className="flex-grow-1">
+            <Edit size={16} className="me-2" /> Edit Contact
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* ADD COLUMN MODAL */}
+      <Modal show={showAddColumnModal} onHide={() => setShowAddColumnModal(false)} centered size="sm">
+        <Modal.Header closeButton className="border-0 pb-0">
+          <Modal.Title className="h6 fw-bold">Add New Status</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="pt-3">
+          <Form.Group>
+            <Form.Label className="small text-muted">Status Name</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="e.g. Review"
+              value={newColumnName}
+              onChange={(e) => setNewColumnName(e.target.value)}
+              autoFocus
+              onKeyDown={(e) => e.key === 'Enter' && handleCreateColumnConfirm()}
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer className="border-0 pt-0">
+          <Button variant="light" size="sm" onClick={() => setShowAddColumnModal(false)}>Cancel</Button>
+          <Button variant="primary" size="sm" onClick={handleCreateColumnConfirm} disabled={!newColumnName.trim()}>Add Status</Button>
+        </Modal.Footer>
+      </Modal>
+
+      <AIAssistModal
+        show={showAIAssist}
+        onHide={() => setShowAIAssist(false)}
+        contacts={contacts}
+        onApplyFilters={handleAIFilterApply}
+        onCreateContact={() => { setShowAIAssist(false); handleCreateContact(); }}
+      />
+
+    </div>
+  )
+}
+
+export default Contacts

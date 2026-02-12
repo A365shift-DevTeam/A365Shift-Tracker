@@ -1,0 +1,85 @@
+/* Simple, Clean Modal Styles */
+
+/* Stage Pill Buttons */
+.stage-pill-btn {
+    background-color: #e5e7eb;
+    color: #6b7280;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.stage-pill-btn:hover {
+    background-color: #d1d5db;
+}
+
+.stage-pill-btn.active {
+    background-color: #10b981;
+    color: white;
+}
+
+.stage-pill-btn.current {
+    background-color: #059669;
+    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+}
+
+/* Status Header */
+.status-header-box {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    padding: 12px;
+    border-radius: 8px;
+}
+
+/* Status Content Area */
+.status-content-area {
+    min-height: 200px;
+}
+
+/* Form Label  Styling */
+.form-label.small {
+    color: #374151;
+    margin-bottom: 4px;
+}
+
+/* Modal adjustments */
+.modal-xl {
+    max-width: 1000px;
+}
+
+.modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    padding: 20px 24px;
+}
+
+.modal-footer {
+    padding: 16px 24px;
+}
+
+/* Scrollbar styling */
+.status-content-area::-webkit-scrollbar {
+    width: 6px;
+}
+
+.status-content-area::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.status-content-area::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.status-content-area::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}

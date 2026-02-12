@@ -1,0 +1,171 @@
+/* Business Process Modal Styles */
+
+/* Business Process Full Screen Overlay */
+
+.business-process-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: white;
+    z-index: 2000;
+    /* Above everything */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.bp-modal-header {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: white;
+    padding: 16px 24px;
+    font-weight: 600;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.bp-close-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.bp-close-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.bp-content-body {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+
+
+.bp-sidebar {
+    background-color: #f8f9fa;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border-right: 1px solid #dee2e6;
+    min-height: 100%;
+    /* Fill parent */
+}
+
+.bp-stage-btn {
+    background-color: #000;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 14px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    width: 100%;
+}
+
+.bp-stage-btn:hover {
+    background-color: #333;
+    transform: translateX(3px);
+}
+
+.bp-stage-btn.active {
+    background-color: #0891b2;
+    box-shadow: 0 4px 12px rgba(8, 145, 178, 0.4);
+    transform: translateX(3px);
+}
+
+.bp-form-section {
+    padding: 30px 40px;
+    background-color: white;
+    min-height: 100%;
+    /* Fill parent */
+}
+
+.bp-form-section .form-label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.bp-form-section .form-control {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 15px;
+}
+
+.bp-form-section .form-control:focus {
+    border-color: #0891b2;
+    box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1);
+}
+
+.bp-status-section {
+    padding: 30px;
+    background-color: #f9fafb;
+    border-left: 1px solid #e5e7eb;
+    min-height: 100%;
+    /* Fill parent */
+}
+
+.bp-status-content {
+    height: 100%;
+}
+
+.bp-status-content h6 {
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 20px;
+    font-size: 16px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.business-process-overlay {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+.bp-modal-header {
+    animation: slideUp 0.4s ease-out 0.1s both;
+}
+
+.bp-content-body {
+    animation: slideUp 0.5s ease-out 0.2s both;
+}

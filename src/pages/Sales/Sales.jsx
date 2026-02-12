@@ -1,0 +1,738 @@
+import { useState, useEffect } from 'react'
+import { User, Mail, Contact, Settings, Plus, CheckCircle, Trash2, Briefcase, DollarSign, Timer, Flag, AlertTriangle, ArrowUpRight, Search, Monitor, Phone, FileText, MessageSquare } from 'lucide-react'
+import { Button, Modal, Form } from 'react-bootstrap'
+import './Sales.css'
+import StageConfigModal from './StageConfigModal'
+import BusinessProcessModal from './BusinessProcessModal'
+import { projectService } from '../../services/api'
+
+const getDefaultStages = () => [
+    { id: 0, label: 'Demo', color: 'cyan', ageing: 7 },
+    { id: 1, label: 'Proposal', color: 'gray', ageing: 15 },
+    { id: 2, label: 'Negotiation', color: 'gray', ageing: 30 },
+    { id: 3, label: 'Approval', color: 'gray', ageing: 15 },
+    { id: 4, label: 'Won', color: 'green', ageing: 30 },
+    { id: 5, label: 'Closed', color: 'green', ageing: 90 },
+    { id: 6, label: 'Lost', color: 'orange', ageing: 60 },
+]
+
+const SalesCard = ({ projectId, stages, activeStage, onStageChange, onDelete, delay, clientName, brandingName }) => {
+    const [showNotification, setShowNotification] = useState(false)
+    const [stageTransition, setStageTransition] = useState({ from: '', to: '' })
+
+    const getClientData = (id) => {
+        const clients = [
+            { name: 'Lucs TVS', color: '#10b981' },
+            { name: 'Action Board', color: '#e879f9' },
+            { name: 'Ask Invest', color: '#f59e0b' },
+            { name: 'Tech Corp', color: '#3b82f6' },
+            { name: 'Global Systems', color: '#6366f1' }
+        ];
+        // Handle numeric or string ID
+        let hash = 0;
+        const strId = String(id);
+        for (let i = 0; i < strId.length; i++) {
+            hash = strId.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        return clients[Math.abs(hash) % clients.length];
+    }
+
+    // Use prop if available, else mock
+    // If clientName is passed as prop, we try to match a color or generate one?
+    // For now, if passed, we just use a default color or hash it.
+    const mockClient = getClientData(projectId);
+
+    // Determine display Client
+    const displayClient = clientName ? { name: clientName, color: mockClient.color } : mockClient;
+    const client = displayClient;
+
+    const handleDragStart = (e) => {
+        e.dataTransfer.setData('text/plain', activeStage)
+        e.dataTransfer.effectAllowed = 'move'
+    }
+
+    const handleDragOver = (e) => {
+        e.preventDefault()
+        e.dataTransfer.dropEffect = 'move'
+        e.currentTarget.classList.add('drag-over')
+    }
+
+    const handleDrop = (e, index) => {
+        e.preventDefault()
+        e.currentTarget.classList.remove('drag-over')
+
+        // Open modal for confirmation and data entry
+        if (index !== activeStage) {
+            setStageTransition({
+                from: stages[activeStage]?.label || 'Unknown',
+                to: stages[index]?.label || 'Unknown'
+            })
+            // Do NOT update stage yet - wait for modal save
+            setShowNotification(true)
+        }
+    }
+
+    const handleStageClick = (index) => {
+        // Open modal for confirmation and data entry
+        if (activeStage !== index) {
+            setStageTransition({
+                from: stages[activeStage]?.label || 'Unknown',
+                to: stages[index]?.label || 'Unknown'
+            })
+            // Do NOT update stage yet - wait for modal save
+            setShowNotification(true)
+        }
+    }
+
+    return (
+        <div className="sales-card d-block">
+            {/* Header Row: ID and Icons */}
+            <div className="d-flex justify-content-between align-items-start mb-1">
+                <div>
+                    <div className="project-id">Project ID: #{String(projectId).slice(-6).toUpperCase()}</div>
+                    <div className="d-flex flex-column mt-2">
+                        <span className="text-secondary" style={{ fontSize: '13px', fontWeight: '500' }}>
+                            {delay > 0 ? `Delay ${delay} Days` : 'On Track'}
+                        </span>
+                        <span className="fw-bold fs-6">60%</span>
+                    </div>
+                </div>
+
+                <div className="card-icons-row">
+                    <User size={18} className="icon-outline" strokeWidth={1.5} />
+                    <MessageSquare size={18} className="icon-outline" strokeWidth={1.5} />
+                    <Mail size={18} className="icon-outline" strokeWidth={1.5} />
+                    <Trash2
+                        size={16}
+                        className="icon-delete ms-2"
+                        strokeWidth={1.5}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (window.confirm('Are you sure you want to delete this project?')) {
+                                onDelete()
+                            }
+                        }}
+                    />
+                </div>
+            </div>
+
+            {/* Main Row: Branding - Pipeline - Client */}
+            <div className="d-flex align-items-center justify-content-center position-relative" style={{ minHeight: '50px' }}>
+
+                {/* Left: Branding */}
+                <div className="branding-section d-flex align-items-center" style={{ zIndex: 2 }}>
+                    <h4 className="fw-bold mb-0">
+                        {brandingName && brandingName !== 'A365Shift' ? (
+                            <span style={{ color: '#003366' }}>{brandingName}</span>
+                        ) : (
+                            <>
+                                <span style={{ color: '#003366' }}>A365</span>
+                                <span style={{ color: '#ef4444' }}>Shift</span>
+                            </>
+                        )}
+                    </h4>
+                    {/* Connecting Line to start of pipeline */}
+                    <div style={{ width: '20px', height: '2px', background: '#e5e7eb', marginLeft: '5px' }}></div>
+                </div>
+
+                {/* Center: Pipeline Container */}
+                <div className="px-3 d-flex flex-column align-items-center" style={{ minWidth: 0 }}>
+
+                    {/* Stages Row */}
+                    <div className="pipeline-wrapper w-100 d-flex align-items-center justify-content-center">
+                        {stages.map((stage, index) => {
+                            const isLast = index === stages.length - 1;
+                            const isActive = index === activeStage;
+                            const isPast = index < activeStage;
+
+                            // Colors based on status
+                            // Past = Greenish circle
+                            // Active = Gold/Yellowish border & circle
+                            // Future = Gray
+                            const activeColor = '#eab308'; // Gold/Yellow
+                            const pastColor = '#86efac'; // Light Green
+                            const futureColor = '#e5e7eb'; // Light Gray
+
+                            return (
+                                <div key={index} className="d-flex align-items-center">
+                                    {/* Stage Card */}
+                                    <div className="position-relative">
+                                        {/* Running Man Icon (Absolute above active) */}
+                                        {isActive && (
+                                            <div
+                                                className="position-absolute start-50 translate-middle-x"
+                                                style={{ top: '-28px', zIndex: 10, cursor: 'grab' }}
+                                                draggable="true"
+                                                onDragStart={handleDragStart}
+                                            >
+                                                <i className="fa-solid fa-person-running" style={{ color: '#003366', fontSize: '22px' }}></i>
+                                            </div>
+                                        )}
+
+                                        {/* The Card Itself */}
+                                        <div
+                                            className={`stage-card d-flex align-items-center justify-content-center px-3 py-2`}
+                                            onClick={() => handleStageClick(index)}
+                                            onDragOver={handleDragOver}
+                                            onDrop={(e) => handleDrop(e, index)}
+                                            style={{
+                                                background: isPast ? '#10b981' : 'white',
+                                                border: isActive ? `2px solid ${activeColor}` : (isPast ? '1px solid #10b981' : '1px solid #e5e7eb'),
+                                                borderRadius: '12px',
+                                                minWidth: '90px',
+                                                height: '30px',
+                                                boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                                                cursor: 'pointer',
+                                                color: isPast ? '#ffffff' : (index > activeStage ? '#9ca3af' : '#1f2937'),
+                                                fontWeight: isActive ? '600' : '400',
+                                                fontSize: '12px',
+                                                zIndex: 2,
+                                                position: 'relative'
+                                            }}
+                                        >
+                                            {stage.label}
+                                        </div>
+                                    </div>
+
+                                    {/* Connector (if not last) */}
+                                    {!isLast && (
+                                        <div className="d-flex align-items-center" style={{ width: '40px', position: 'relative' }}>
+                                            {/* Line Part 1 */}
+                                            <div style={{ flex: 1, height: '2px', background: '#e5e7eb' }}></div>
+
+                                            {/* Ageing Circle */}
+                                            <div
+                                                className="rounded-circle d-flex align-items-center justify-content-center"
+                                                style={{
+                                                    width: '24px',
+                                                    height: '24px',
+                                                    background: isPast ? pastColor : (isActive ? activeColor : futureColor),
+                                                    color: 'white',
+                                                    fontSize: '10px',
+                                                    fontWeight: 'bold',
+                                                    zIndex: 3,
+                                                    flexShrink: 0
+                                                }}
+                                            >
+                                                {stage.ageing || 0}
+                                            </div>
+
+                                            {/* Line Part 2 */}
+                                            <div style={{ flex: 1, height: '2px', background: '#e5e7eb' }}></div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Right: Client */}
+                <div className="client-section d-flex align-items-center text-end" style={{ zIndex: 2 }}>
+                    {/* Connecting Line from pipeline end */}
+                    <div style={{ width: '20px', height: '2px', background: '#e5e7eb', marginRight: '5px' }}></div>
+                    <h5 className="fw-bold mb-0" style={{ color: client.color }}>
+                        {client.name}
+                    </h5>
+                </div>
+            </div>
+
+            {/* Subtext Row - Moved outside to preserve vertical alignment of main row */}
+            <div className="text-secondary small fw-medium mt-1 text-center" style={{ fontSize: '11px' }}>
+                SAP Project ,Waiting for Vendor
+            </div>
+
+            {/* Business Process Modal */}
+            <BusinessProcessModal
+                show={showNotification}
+                handleClose={() => setShowNotification(false)}
+                handleSave={(data) => {
+                    console.log('Form data saved:', data)
+                    // Actually update the stage now
+                    // Find actual index from label if needed, or pass directly
+                    // In handleDrop/Click we use index, but here we need to reconstruct what to call
+                    // Ideally we should pass the target index to modal, but modal handles stage selection internally too
+                    // Let's rely on data.stageIndex from modal
+
+                    if (data.stageIndex !== undefined) {
+                        onStageChange(data.stageIndex, data)
+                    }
+                    setShowNotification(false)
+                }}
+                projectId={projectId}
+                stages={stages}
+                activeStage={activeStage}
+                targetStage={stages.findIndex(s => s.label === stageTransition.to)}
+                delay={delay}
+            />
+        </div >
+    )
+}
+
+function Sales() {
+    const [showSettings, setShowSettings] = useState(false)
+    const [activeTab, setActiveTab] = useState('Product') // 'Product' or 'Service'
+
+    // Filter & Sort State
+    const [searchQuery, setSearchQuery] = useState('')
+    const [filterBy, setFilterBy] = useState('all') // 'all', 'stage'
+    const [filterValue, setFilterValue] = useState('')
+    const [sortBy, setSortBy] = useState('id') // 'id', 'rating', 'delay'
+    const [sortOrder, setSortOrder] = useState('desc')
+
+    // Distinct stages for each menu type
+    const [productStages, setProductStages] = useState(getDefaultStages())
+    const [serviceStages, setServiceStages] = useState(getDefaultStages())
+
+    // Projects state
+    const [projects, setProjects] = useState([])
+    const [, setLoading] = useState(true)
+
+    // Helper to get correct stages based on type
+    const getStagesByType = (type) => type === 'Product' ? productStages : serviceStages
+
+    // Helper to get correct set function
+    const setStagesByType = (type, newStages) => {
+        if (type === 'Product') setProductStages(newStages)
+        else setServiceStages(newStages)
+    }
+
+    // Fetch data on mount
+    useEffect(() => {
+        loadProjects();
+    }, [])
+
+    const loadProjects = async () => {
+        try {
+            setLoading(true);
+            const data = await projectService.getAll();
+            setProjects(data);
+        } catch (error) {
+            console.error("Failed to load projects", error);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    const updateProjectStage = async (projectId, newStageIndex, logData) => {
+        // Find current project
+        const p = projects.find(proj => proj.id === projectId);
+        if (!p) return;
+
+        const currentStages = getStagesByType(p.type)
+        const oldStageLabel = currentStages[p.activeStage]?.label || 'Unknown'
+        const newStageLabel = currentStages[newStageIndex]?.label || 'Unknown'
+        const transitionStr = `${oldStageLabel} to ${newStageLabel}`
+
+        const newEntry = {
+            timestamp: new Date().toISOString(),
+            transition: transitionStr,
+            amount: logData?.amount || 0,
+            description: logData?.description || `Moved to ${newStageLabel}`,
+            targetDate: logData?.targetDate,
+            revisedDate: logData?.revisedDate
+        }
+
+        const updates = {
+            activeStage: newStageIndex,
+            history: [newEntry, ...p.history]
+        };
+
+        // Optimistic UI update
+        // We do this AFTER modal confirmation now
+        setProjects(prev => prev.map(proj =>
+            proj.id === projectId ? { ...proj, ...updates } : proj
+        ));
+
+        try {
+            // Call API
+            await projectService.update(projectId, updates);
+            console.log(`✅ Project ${projectId} updated: ${transitionStr}`);
+        } catch (error) {
+            console.error('Failed to update project stage:', error);
+            // Revert on error
+            loadProjects();
+        }
+    }
+
+    const [showAddModal, setShowAddModal] = useState(false)
+    const [newProjectData, setNewProjectData] = useState({ clientName: '', brandingName: 'A365Shift', type: 'Product' })
+
+    const handleAddProject = () => {
+        setNewProjectData({ clientName: '', brandingName: 'A365Shift', type: activeTab })
+        setShowAddModal(true)
+    }
+
+    const handleCreateProject = async () => {
+        const newProject = {
+            // ID generated by service
+            activeStage: 0,
+            history: [],
+            type: newProjectData.type,
+            rating: 4.0, // Default rating
+            delay: 0,
+            clientName: newProjectData.clientName || 'New Client',
+            brandingName: newProjectData.brandingName || 'A365Shift'
+        }
+
+        try {
+            const created = await projectService.create(newProject);
+            setProjects([...projects, created]);
+            setShowAddModal(false);
+        } catch (error) {
+            console.error("Failed to create project", error)
+        }
+    }
+
+    const handleDeleteProject = async (projectId) => {
+        await projectService.delete(projectId);
+        setProjects(projects.filter(p => p.id !== projectId));
+    }
+
+    // Configure Global Stages for the ACTIVE TAB
+    const handleConfigure = () => {
+        setShowSettings(true)
+    }
+
+    const handleSaveSettings = (newStages) => {
+        setStagesByType(activeTab, newStages)
+        setShowSettings(false)
+    }
+
+    // Filter projects
+    const activeStages = getStagesByType(activeTab)
+
+    const filteredProjects = projects.filter(p => {
+        // 1. Type Filter
+        if (p.type !== activeTab) return false;
+
+        // 2. Search Filter
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase();
+            const matchesId = p.id.toString().toLowerCase().includes(query);
+            // Only ID search for now as that's visible, can expand later
+            if (!matchesId) return false;
+        }
+
+        // 3. Custom Filter
+        if (filterBy === 'stage' && filterValue) {
+            const stageLabel = activeStages[p.activeStage]?.label;
+            if (stageLabel !== filterValue) return false;
+        }
+
+        return true;
+    }).sort((a, b) => {
+        let aVal = a[sortBy];
+        let bVal = b[sortBy];
+
+        if (sortOrder === 'asc') {
+            return aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
+        } else {
+            return aVal < bVal ? 1 : aVal > bVal ? -1 : 0;
+        }
+    });
+
+    return (
+        <div className="sales-page">
+
+            <div className="sales-stats-grid">
+                {/* Card 1: Stages */}
+                <div className="stat-card">
+                    <div className="stat-header">
+                        <div className="stat-icon-wrapper blue">
+                            <Flag size={24} />
+                        </div>
+                        <div className="stat-content">
+                            <div className="stat-title">Total Stages</div>
+                            <div className="stat-value">5</div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Card 2: Progress */}
+                <div className="stat-card">
+                    <div className="stat-header">
+                        <div className="stat-icon-wrapper green">
+                            <CheckCircle size={24} />
+                        </div>
+                        <div className="stat-content">
+                            <div className="stat-title">Completed</div>
+                            <div className="d-flex align-items-baseline gap-2">
+                                <div className="stat-value">44%</div>
+                                <div className="text-success small d-flex align-items-center">
+                                    <ArrowUpRight size={14} className="me-1" />3%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Card 3: Delays */}
+                <div className="stat-card">
+                    <div className="stat-header">
+                        <div className="stat-icon-wrapper orange">
+                            <AlertTriangle size={24} />
+                        </div>
+                        <div className="stat-content">
+                            <div className="stat-title">Delays</div>
+                            <div className="stat-value">4</div>
+                            <small className="text-muted" style={{ fontSize: '11px' }}>2 Not on Track</small>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Card 4: Insights */}
+                <div className="stat-card">
+                    <div className="stat-header">
+                        <div className="stat-icon-wrapper teal">
+                            <Search size={24} />
+                        </div>
+                        <div className="stat-content">
+                            <div className="stat-title">Insights</div>
+                            <div className="stat-value" style={{ fontSize: '14px', marginTop: '4px' }}>
+                                <a href="#" className="text-decoration-none" style={{ color: '#0f766e' }}>Product View</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* New Unified Toolbar */}
+            <div className="sales-toolbar mb-4">
+                <div className="d-flex align-items-center justify-content-between flex-wrap gap-3 p-3 bg-white rounded-3 shadow-sm border">
+                    {/* Search - Left */}
+                    <div className="search-wrapper" style={{ minWidth: '300px' }}>
+                        <div className="position-relative">
+                            <div className="position-absolute top-50 start-0 translate-middle-y ps-3 text-muted">
+                                <Search size={18} />
+                            </div>
+                            <input
+                                type="text"
+                                className="form-control ps-5 shadow-none border-secondary-subtle"
+                                placeholder="Search Project ID..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Controls - Right */}
+                    <div className="d-flex align-items-center gap-2">
+
+                        {/* Filter Button */}
+                        <div className="dropdown">
+                            <button className="icon-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <div className={`icon-wrapper ${filterBy !== 'all' ? 'active' : ''}`}>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                                    </svg>
+                                </div>
+                            </button>
+                            <div className="dropdown-menu timesheet-dropdown-menu p-3" style={{ minWidth: '260px' }}>
+                                <div className="mb-3">
+                                    <label className="small text-muted fw-bold mb-2">FILTER BY</label>
+                                    <select
+                                        className="form-select form-select-sm"
+                                        value={filterBy}
+                                        onChange={(e) => {
+                                            setFilterBy(e.target.value);
+                                            setFilterValue('');
+                                        }}
+                                    >
+                                        <option value="all">None</option>
+                                        <option value="stage">Stage</option>
+                                    </select>
+                                </div>
+                                {filterBy === 'stage' && (
+                                    <div>
+                                        <label className="small text-muted fw-bold mb-2">SELECT STAGE</label>
+                                        <select
+                                            className="form-select form-select-sm"
+                                            value={filterValue}
+                                            onChange={(e) => setFilterValue(e.target.value)}
+                                        >
+                                            <option value="">Select...</option>
+                                            {activeStages.map(s => (
+                                                <option key={s.id} value={s.label}>{s.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+                                {filterBy !== 'all' && (
+                                    <div className="mt-3 pt-2 border-top text-end">
+                                        <button
+                                            className="btn btn-link btn-sm text-danger text-decoration-none p-0"
+                                            onClick={() => {
+                                                setFilterBy('all');
+                                                setFilterValue('');
+                                            }}
+                                        >
+                                            Clear Filters
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Sort Button */}
+                        <div className="dropdown">
+                            <button className="icon-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <div className="icon-wrapper">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                        <polyline points="19 12 12 19 5 12"></polyline>
+                                    </svg>
+                                </div>
+                            </button>
+                            <div className="dropdown-menu timesheet-dropdown-menu p-3" style={{ minWidth: '240px' }}>
+                                <div className="mb-3">
+                                    <label className="small text-muted fw-bold mb-2">SORT BY</label>
+                                    <select
+                                        className="form-select form-select-sm"
+                                        value={sortBy}
+                                        onChange={(e) => setSortBy(e.target.value)}
+                                    >
+                                        <option value="id">Project ID</option>
+                                        <option value="rating">Rating</option>
+                                        <option value="delay">Delay</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="small text-muted fw-bold mb-2">ORDER</label>
+                                    <div className="d-flex gap-2">
+                                        <Button
+                                            variant={sortOrder === 'asc' ? 'primary' : 'light'}
+                                            size="sm"
+                                            className="flex-grow-1"
+                                            onClick={() => setSortOrder('asc')}
+                                        >
+                                            Asc
+                                        </Button>
+                                        <Button
+                                            variant={sortOrder === 'desc' ? 'primary' : 'light'}
+                                            size="sm"
+                                            className="flex-grow-1"
+                                            onClick={() => setSortOrder('desc')}
+                                        >
+                                            Desc
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="vr mx-2 opacity-25"></div>
+
+                        {/* Toggle Product/Service - Mapped to View Mode */}
+                        <div className="btn-group view-mode-toggle me-2">
+                            <Button
+                                variant={activeTab === 'Product' ? 'primary' : 'outline-secondary'}
+                                size="sm"
+                                onClick={() => setActiveTab('Product')}
+                            >
+                                Product
+                            </Button>
+                            <Button
+                                variant={activeTab === 'Service' ? 'primary' : 'outline-secondary'}
+                                size="sm"
+                                onClick={() => setActiveTab('Service')}
+                            >
+                                Service
+                            </Button>
+                        </div>
+
+                        {/* Actions */}
+                        <button className="icon-btn" onClick={handleConfigure} title="Settings">
+                            <div className="icon-wrapper">
+                                <Settings size={20} />
+                            </div>
+                        </button>
+
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={handleAddProject}
+                            className="d-flex align-items-center gap-2 btn-icon-text ms-2"
+                        >
+                            <Plus size={16} /> Add Project
+                        </Button>
+                    </div>
+                </div>
+            </div>
+
+            <div className="sales-list">
+                {filteredProjects.map((project) => (
+                    <SalesCard
+                        key={project.id}
+                        projectId={project.id}
+                        stages={activeStages}
+                        activeStage={project.activeStage}
+                        history={project.history}
+                        rating={project.rating}
+                        delay={project.delay}
+                        clientName={project.clientName}
+                        brandingName={project.brandingName}
+                        onStageChange={(newStage, data) => updateProjectStage(project.id, newStage, data)}
+                        onDelete={() => handleDeleteProject(project.id)}
+                    />
+                ))}
+            </div>
+
+            {/* Add Project Modal */}
+            <Modal show={showAddModal} onHide={() => setShowAddModal(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Add New Project</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Branding Name (Left)</Form.Label>
+                            <Form.Control
+                                type="text"
+                                placeholder="e.g. A365Shift"
+                                value={newProjectData.brandingName}
+                                onChange={(e) => setNewProjectData({ ...newProjectData, brandingName: e.target.value })}
+                            />
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Client Name (Right)</Form.Label>
+                            <Form.Control
+                                type="text"
+                                placeholder="Enter client name"
+                                value={newProjectData.clientName}
+                                onChange={(e) => setNewProjectData({ ...newProjectData, clientName: e.target.value })}
+                            />
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Project Type</Form.Label>
+                            <Form.Select
+                                value={newProjectData.type}
+                                onChange={(e) => setNewProjectData({ ...newProjectData, type: e.target.value })}
+                            >
+                                <option value="Product">Product</option>
+                                <option value="Service">Service</option>
+                            </Form.Select>
+                        </Form.Group>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowAddModal(false)}>
+                        Cancel
+                    </Button>
+                    <Button variant="primary" onClick={handleCreateProject}>
+                        Create Project
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            <StageConfigModal
+                show={showSettings}
+                onHide={() => setShowSettings(false)}
+                currentStages={activeStages}
+                onSave={handleSaveSettings}
+            />
+        </div>
+    )
+}
+
+export default Sales

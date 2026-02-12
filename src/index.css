@@ -1,0 +1,103 @@
+:root {
+  /* 2026 Modern Dark Theme Palette */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #1a1a1a;
+  --bg-glass: rgba(255, 255, 255, 0.05);
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0a0;
+  --accent-primary: #00d4ff;
+  /* Neon Blue */
+  --accent-secondary: #ff00ff;
+  /* Neon Pink */
+  --accent-success: #00ff9d;
+  /* Neon Green */
+  --border-color: rgba(255, 255, 255, 0.1);
+  --shadow-glow: 0 0 15px rgba(0, 212, 255, 0.3);
+
+  --font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-primary);
+  background-image:
+    radial-gradient(circle at 15% 50%, rgba(0, 212, 255, 0.08), transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(255, 0, 255, 0.08), transparent 25%);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Glassmorphism Utilities */
+.glass-panel {
+  background: var(--bg-glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  backdrop-filter: blur(4px);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+.glass-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.glass-input:focus {
+  outline: none;
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Button Styles */
+.btn-neon {
+  background: linear-gradient(45deg, var(--accent-primary), #00aaff);
+  border: none;
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+}
+
+.btn-neon:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

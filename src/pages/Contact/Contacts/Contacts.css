@@ -1,0 +1,942 @@
+/* Contacts.css - Enterprise SaaS Redesign */
+.contacts-container {
+  padding: 24px;
+  background-color: #f8fafc;
+  /* Slate 50 */
+  min-height: 100vh;
+}
+
+/* --- Stats Grid --- */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid #f1f5f9;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  /* For absolute positioning of trends */
+}
+
+.stat-trend-absolute {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 20px;
+  background-color: #f8fafc;
+}
+
+.stat-trend-absolute.positive {
+  background-color: #ecfdf5;
+  color: #10b981;
+}
+
+.stat-trend-absolute.neutral {
+  background-color: #f1f5f9;
+  color: #64748b;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+}
+
+.stat-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.stat-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.stat-icon-wrapper.blue {
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+.stat-icon-wrapper.green {
+  background: #ecfdf5;
+  color: #10b981;
+}
+
+.stat-icon-wrapper.teal {
+  background: #f0fdfa;
+  color: #14b8a6;
+}
+
+.stat-icon-wrapper.purple {
+  background: #f5f3ff;
+  color: #8b5cf6;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.stat-trend {
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #64748b;
+}
+
+.stat-trend.positive {
+  color: #10b981;
+}
+
+/* --- AI Assist Modal --- */
+.ai-assist-modal .modal-content {
+  border: none;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.ai-assist-modal .modal-header {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 16px 24px;
+  background-color: #ffffff;
+}
+
+.ai-chat-history {
+  padding: 24px;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 400px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.ai-message {
+  display: flex;
+  gap: 12px;
+  max-width: 85%;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.ai-message.user {
+  flex-direction: row-reverse;
+  align-self: flex-end;
+}
+
+.ai-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.ai-message.assistant .ai-avatar {
+  background-color: #f0f9ff;
+  color: #0369a1;
+}
+
+.ai-message.user .ai-avatar {
+  background-color: #f1f5f9;
+  color: #334155;
+}
+
+.ai-bubble {
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.ai-message.assistant .ai-bubble {
+  background-color: #f8fafc;
+  /* Slate 50 */
+  color: #1e293b;
+  border-radius: 16px;
+  border-top-left-radius: 4px;
+  border: 1px solid #e2e8f0;
+}
+
+.ai-message.user .ai-bubble {
+  background-color: #0f172a;
+  /* Slate 900 */
+  color: #ffffff;
+  border-radius: 16px;
+  border-top-right-radius: 4px;
+}
+
+.ai-input-area {
+  padding: 16px 24px 24px;
+  background-color: #ffffff;
+  border-top: 1px solid #f1f5f9;
+}
+
+.ai-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.ai-input {
+  width: 100%;
+  padding: 14px 50px 14px 20px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  background-color: #f8fafc;
+}
+
+.ai-input:focus {
+  outline: none;
+  background-color: #ffffff;
+  border-color: #0d9488;
+  /* Teal 600 */
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+}
+
+.ai-send-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background-color: #0d9488;
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ai-send-btn:hover {
+  background-color: #0f766e;
+}
+
+.ai-send-btn:disabled {
+  background-color: #0d9488;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- AI Suggestions --- */
+.ai-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding-left: 44px;
+  /* Align with text */
+  animation: fadeIn 0.5s ease-out 0.2s backwards;
+}
+
+.ai-chip {
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-chip:hover {
+  background-color: #e2e8f0;
+  /* Slate 200 */
+  color: #1e293b;
+  transform: translateY(-1px);
+}
+
+.ai-chip:active {
+  transform: translateY(0);
+}
+
+/* --- Action Toolbar --- */
+.contacts-toolbar-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+  border: 1px solid #f1f5f9;
+}
+
+.toolbar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.add-contact-btn {
+  background-color: #0d9488;
+  /* Teal 600 */
+  border-color: #0d9488;
+  border-radius: 8px;
+  font-weight: 500;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.add-contact-btn:hover {
+  background-color: #0f766e;
+  border-color: #0f766e;
+}
+
+.ai-assist-btn {
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-weight: 500;
+  background: white;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-assist-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+/* --- Filter Row --- */
+.filter-row {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1.5fr 1.5fr 1.5fr;
+  gap: 16px;
+}
+
+.filter-group label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.filter-input-wrapper {
+  position: relative;
+}
+
+.filter-input {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 90px 8px 36px;
+  /* Space for icon + actions */
+  font-size: 13px;
+  color: #334155;
+  width: 100%;
+  background: #fcfcfc;
+  transition: all 0.2s;
+  height: 40px;
+  /* Ensure sufficient height */
+}
+
+.search-actions {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 10;
+}
+
+.icon-btn-action {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.icon-btn-action.ai {
+  background: white;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+
+.icon-btn-action.ai:hover {
+  background: #f3e8ff;
+  border-color: #d8b4fe;
+}
+
+.icon-btn-action.add {
+  background: #0f766e;
+  color: white;
+  border: 1px solid #0f766e;
+}
+
+.icon-btn-action.add:hover {
+  background: #115e59;
+  border-color: #115e59;
+}
+
+.filter-input:focus {
+  border-color: #3b82f6;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  outline: none;
+}
+
+.filter-select {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #334155;
+  width: 100%;
+  background-color: #fcfcfc;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  transition: all 0.2s ease;
+}
+
+.filter-select:hover {
+  border-color: #cbd5e1;
+  background-color: #ffffff;
+}
+
+.filter-select:focus {
+  border-color: #0d9488;
+  /* Teal 600 */
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+  outline: none;
+  background-color: #ffffff;
+}
+
+/* --- Table Styling --- */
+.contacts-table-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f1f5f9;
+  overflow: hidden;
+}
+
+.contacts-table th {
+  background: #000000;
+  /* Black Header */
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+  /* White Text */
+  text-transform: uppercase;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+}
+
+/* Explicitly remove hover effect */
+.contacts-table th:hover {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  cursor: default;
+}
+
+.contacts-table th:first-child {
+  border-top-left-radius: 12px;
+}
+
+.contacts-table th:last-child {
+  border-top-right-radius: 12px;
+}
+
+.contacts-table td {
+  padding: 16px 24px;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 14px;
+  color: #334155;
+}
+
+.contacts-table tr:hover td {
+  background-color: #f8fafc;
+}
+
+/* --- Cells --- */
+.contact-cell-primary {
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-name {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.contact-subtext {
+  font-size: 12px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+/* --- Badges --- */
+.badge-enterprise {
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-blue {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
+.badge-green {
+  background-color: #ecfdf5;
+  color: #10b981;
+}
+
+.badge-teal {
+  background-color: #f0fdfa;
+  color: #0d9488;
+}
+
+.badge-gray {
+  background-color: #f1f5f9;
+  color: #64748b;
+}
+
+.badge-purple {
+  background-color: #f5f3ff;
+  color: #7c3aed;
+}
+
+.badge-amber {
+  background-color: #fffbeb;
+  color: #d97706;
+}
+
+/* --- Pagination --- */
+.contacts-pagination {
+  padding: 16px 24px;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* Modal Styling Overrides (Flat CSS) */
+.contacts-container .modal-content {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.contacts-container .modal-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.contacts-container .modal-title {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.contacts-container .modal-footer {
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .filter-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-row {
+    grid-template-columns: 1fr;
+  }
+
+  .contacts-container {
+    padding: 16px;
+  }
+}
+
+/* --- View Toggle Buttons (Matched to TodoList) --- */
+.view-toggle-group {
+  display: flex;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  padding: 4px;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.view-toggle-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 500;
+  position: relative;
+  overflow: hidden;
+  background: transparent;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.view-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.8);
+  color: #1f2937;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.view-toggle-btn.active {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow:
+    0 4px 12px rgba(16, 185, 129, 0.3),
+    0 2px 4px rgba(16, 185, 129, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.view-toggle-btn.active:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 20px rgba(16, 185, 129, 0.4),
+    0 4px 8px rgba(16, 185, 129, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Force SVG visibility and Styling */
+.view-toggle-btn svg {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  stroke: currentColor;
+  stroke-width: 2px;
+  display: block;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* --- Project Page Styles Integration (Dropdowns, Buttons) --- */
+.icon-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn::after {
+  display: none !important;
+}
+
+.icon-wrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.icon-wrapper:hover,
+.icon-btn[aria-expanded="true"] .icon-wrapper {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.icon-wrapper.active {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  position: relative;
+}
+
+.icon-wrapper.active::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  background: #10b981;
+  border-radius: 50%;
+  border: 1px solid #ffffff;
+}
+
+/* Dropdown Menu Styles */
+.timesheet-dropdown-menu {
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+}
+
+.timesheet-dropdown-menu .form-label {
+  color: #64748b;
+  font-size: 0.7rem;
+  letter-spacing: 0.5px;
+}
+
+.timesheet-dropdown-menu .dropdown-item {
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: #374151;
+}
+
+.timesheet-dropdown-menu .dropdown-item:active,
+.timesheet-dropdown-menu .dropdown-item.active {
+  background-color: #ecfdf5 !important;
+  /* Light Green (Overridden hard to prevent grey) */
+  color: #10b981 !important;
+  font-weight: 500;
+  border: none !important;
+}
+
+/* Buttons */
+.btn-icon-text {
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.view-mode-toggle .btn {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+/* --- Kanban Layout & Scrolling --- */
+.kanban-container {
+  height: calc(100vh - 180px);
+  /* Adjust based on header/stats height */
+  align-items: stretch;
+}
+
+.kanban-column {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100%;
+  background: #f1f5f9;
+  /* Slight background for column track */
+  border: 1px solid #e2e8f0;
+}
+
+.kanban-header {
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.kanban-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px;
+  min-height: 0;
+  /* Crucial for flex scrolling */
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.kanban-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.kanban-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.kanban-body::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 20px;
+}
+
+/* --- Kanban Card Styling (Refined) --- */
+.contacts-kanban-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: white;
+  border-radius: 12px !important;
+  border: 1px solid #e2e8f0 !important;
+  /* Clean border */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  margin-bottom: 12px;
+}
+
+.kanban-card-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.95rem;
+  margin-bottom: 2px;
+}
+
+.kanban-card-field {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.8rem;
+  display: block;
+  /* Ensure it behaves as a block for truncation */
+}
+
+/* Hover Effect */
+.contacts-kanban-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  transform: translateY(-2px);
+  border-color: #cbd5e1 !important;
+  z-index: 5;
+}
+
+/* Dragging State */
+.contacts-kanban-card.dragging {
+  cursor: grabbing;
+  opacity: 0.8;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2) !important;
+  transform: scale(1.02) rotate(1deg);
+  z-index: 1000;
+  border-color: #3b82f6 !important;
+}
+
+/* Action Buttons Reveal on Hover */
+.action-buttons-container {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.contacts-kanban-card:hover .action-buttons-container {
+  opacity: 1;
+}
+
+.hover-danger:hover {
+  background-color: #fee2e2 !important;
+  color: #ef4444 !important;
+}
+
+/* Add Status Button Polish */
+.btn-add-status {
+  border: 2px dashed #e2e8f0;
+  background: rgba(255, 255, 255, 0.5);
+  transition: all 0.2s;
+}
+
+.btn-add-status:hover {
+  border-color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.8);
+  color: #0f172a;
+}
+
+/* Kanban Horizontal Scrollbar */
+.kanban-scroll-container::-webkit-scrollbar {
+  height: 10px;
+}
+
+.kanban-scroll-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 5px;
+}
+
+.kanban-scroll-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 5px;
+  border: 2px solid #f1f5f9;
+}
+
+.kanban-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
