@@ -2,14 +2,13 @@
 
 .timesheet-container {
   padding: 24px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  min-height: calc(100vh - 80px);
-  max-height: calc(100vh - 80px);
+  background-color: transparent;
+  min-height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;
   scrollbar-width: thin;
-  scrollbar-color: #10b981 #f1f5f9;
+  scrollbar-color: #10b981 transparent;
 }
 
 .timesheet-container::-webkit-scrollbar {

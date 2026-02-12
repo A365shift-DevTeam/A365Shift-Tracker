@@ -1,4 +1,4 @@
-/* Sales.css — Light Theme */
+/* Sales.css — Glassmorphism Light Theme */
 
 .sales-page {
     padding: 24px;
@@ -18,26 +18,26 @@
 }
 
 .sales-card {
-    background: var(--bg-card);
+    background: white;
     border-radius: 20px;
-    border: 1px solid var(--border-color);
+    border: 1px solid #f1f5f9;
     padding: 8px 16px;
     display: block;
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .sales-card:hover {
     transform: translateY(-3px);
-    box-shadow: var(--shadow-md);
-    border-color: #cbd5e1;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    border-color: #e2e8f0;
 }
 
 /* Left Section */
 .card-left-section {
     width: 250px;
     flex-shrink: 0;
-    border-right: 1px solid var(--border-color);
+    border-right: 1px solid #e2e8f0;
     padding-right: 24px;
     margin-right: 24px;
 }
@@ -45,20 +45,20 @@
 .project-id {
     font-weight: 600;
     font-size: 16px;
-    color: var(--text-primary);
+    color: #0f172a;
     margin-bottom: 4px;
 }
 
 .project-rating {
     font-size: 14px;
-    color: var(--text-muted);
+    color: #64748b;
     margin-bottom: 12px;
 }
 
 .card-icons-row {
     display: flex;
     gap: 12px;
-    color: var(--text-muted);
+    color: #64748b;
 }
 
 .icon-outline {
@@ -68,12 +68,12 @@
 }
 
 .icon-outline:hover {
-    color: var(--accent-primary);
+    color: #3b82f6;
 }
 
 .icon-delete {
     cursor: pointer;
-    color: var(--accent-danger);
+    color: #ef4444;
     opacity: 0.6;
     transition: opacity 0.2s;
 }
@@ -95,7 +95,7 @@
     font-weight: 500;
     text-align: right;
     width: 100%;
-    color: var(--text-secondary);
+    color: #475569;
 }
 
 .pipeline-container {
@@ -130,27 +130,6 @@
     background-color: transparent;
 }
 
-@media (max-width: 1024px) {
-    .sales-card {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .card-left-section {
-        width: 100%;
-        border-right: none;
-        padding-right: 0;
-        margin-right: 0;
-        margin-bottom: 20px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .card-right-section {
-        width: 100%;
-    }
-}
-
 .stage-column {
     display: flex;
     flex-direction: column;
@@ -174,7 +153,7 @@
 
 .stage-ageing {
     font-size: 11px;
-    color: var(--text-muted);
+    color: #64748b;
     margin-top: 8px;
     font-weight: 500;
     text-align: center;
@@ -189,7 +168,7 @@
     top: 50%;
     width: 4px;
     height: 2px;
-    background-color: var(--border-color);
+    background-color: #e2e8f0;
     z-index: 0;
     display: none;
 }
@@ -233,25 +212,25 @@
 }
 
 .pill.white {
-    background: var(--bg-card-hover);
-    color: var(--text-secondary);
-    border: 1px solid var(--border-color);
+    background: #f8fafc;
+    color: #475569;
+    border: 1px solid #e2e8f0;
     text-shadow: none;
 }
 
 .pill.pending {
-    background-color: var(--bg-card-hover);
-    border: 1px solid var(--border-color);
-    color: var(--text-muted);
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #94a3b8;
     box-shadow: none;
     text-shadow: none;
 }
 
 /* Drag Over Style for Pill */
 .drag-over .pill {
-    border: 2px dashed var(--accent-primary);
+    border: 2px dashed #3b82f6;
     background: rgba(59, 130, 246, 0.08);
-    color: var(--accent-primary);
+    color: #3b82f6;
 }
 
 /* Active Marker */
@@ -260,7 +239,7 @@
     top: -20px;
     left: 50%;
     transform: translateX(-50%);
-    color: var(--text-primary);
+    color: #0f172a;
     cursor: grab;
     z-index: 10;
     transition: top 0.2s;
@@ -271,13 +250,13 @@
 }
 
 .avatar-icon-filled {
-    fill: var(--text-primary);
+    fill: #0f172a;
 }
 
 .completion-text {
     font-size: 14px;
     font-weight: 600;
-    color: var(--accent-primary);
+    color: #3b82f6;
     margin-left: 24px;
     min-width: 110px;
     text-align: right;
@@ -310,21 +289,22 @@
     margin-bottom: 20px;
 }
 
-.stat-card {
-    background: var(--bg-card);
-    border-radius: var(--radius-lg);
+.sales-page .stat-card {
+    background: white;
+    border-radius: 16px;
     padding: 16px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    border: 1px solid var(--border-color);
+    border: 1px solid #f1f5f9;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     min-height: 100px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 }
 
-.stat-card:hover {
+.sales-page .stat-card:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
 }
 
 .stat-header {
@@ -344,27 +324,27 @@
 }
 
 .stat-icon-wrapper.blue {
-    background: rgba(59, 130, 246, 0.1);
+    background: #eff6ff;
     color: #3b82f6;
 }
 
 .stat-icon-wrapper.green {
-    background: rgba(16, 185, 129, 0.1);
+    background: #ecfdf5;
     color: #10b981;
 }
 
 .stat-icon-wrapper.orange {
-    background: rgba(245, 158, 11, 0.1);
+    background: #fff7ed;
     color: #d97706;
 }
 
 .stat-icon-wrapper.purple {
-    background: rgba(139, 92, 246, 0.1);
+    background: #f5f3ff;
     color: #8b5cf6;
 }
 
 .stat-icon-wrapper.teal {
-    background: rgba(6, 182, 212, 0.1);
+    background: #ecfeff;
     color: #06b6d4;
 }
 
@@ -375,18 +355,29 @@
 .stat-title {
     font-size: 14px;
     font-weight: 500;
-    color: var(--text-muted);
+    color: #64748b;
     margin-bottom: 4px;
 }
 
 .stat-value {
     font-size: 24px;
     font-weight: 700;
-    color: var(--text-primary);
+    color: #0f172a;
     line-height: 1.2;
 }
 
 /* Icon Buttons & Toolbar */
+.sales-toolbar {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 16px;
+    padding: 16px 20px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    margin-bottom: 20px;
+}
+
 .sales-toolbar .icon-btn {
     background: transparent;
     border: none;
@@ -421,7 +412,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-muted);
+    color: #64748b;
     transition: all 0.2s ease;
     background: transparent;
     border: 1px solid transparent;
@@ -430,11 +421,11 @@
 .sales-toolbar .icon-wrapper:hover,
 .sales-toolbar .icon-btn[aria-expanded="true"] .icon-wrapper {
     background: rgba(59, 130, 246, 0.08);
-    color: var(--accent-primary);
+    color: #3b82f6;
 }
 
 .sales-toolbar .icon-wrapper.active {
-    color: var(--accent-primary);
+    color: #3b82f6;
     background: rgba(59, 130, 246, 0.08);
     position: relative;
 }
@@ -446,9 +437,9 @@
     right: 6px;
     width: 6px;
     height: 6px;
-    background: var(--accent-primary);
+    background: #3b82f6;
     border-radius: 50%;
-    border: 1px solid var(--bg-secondary);
+    border: 1px solid white;
 }
 
 .view-mode-toggle .btn {
@@ -474,7 +465,7 @@
 /* Dropdown Menu */
 .timesheet-dropdown-menu .form-label,
 .timesheet-dropdown-menu label {
-    color: var(--text-muted);
+    color: #64748b;
     font-size: 0.7rem;
     letter-spacing: 0.5px;
 }
@@ -488,5 +479,51 @@
 .timesheet-dropdown-menu .dropdown-item:active,
 .timesheet-dropdown-menu .dropdown-item.active {
     background: rgba(59, 130, 246, 0.08);
-    color: var(--accent-primary);
+    color: #3b82f6;
+}
+
+/* --- Responsive --- */
+@media (max-width: 1200px) {
+    .sales-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 1024px) {
+    .sales-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .card-left-section {
+        width: 100%;
+        border-right: none;
+        padding-right: 0;
+        margin-right: 0;
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .card-right-section {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .sales-page {
+        padding: 16px;
+    }
+
+    .sales-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sales-toolbar {
+        padding: 12px 16px;
+    }
+
+    .sales-card {
+        padding: 8px 12px;
+    }
 }

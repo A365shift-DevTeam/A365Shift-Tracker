@@ -749,15 +749,29 @@ const Timesheet = () => {
                                 {formatDateTimePreview(value)}
                               </span>
                             ) : isFile && value ? (
-                              <a
-                                href={value}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-primary text-decoration-none"
-                                style={{ fontSize: '0.875rem' }}
-                              >
-                                View Attachment
-                              </a>
+                              (() => {
+                                const attachment = typeof value === 'object' && value.url ? value : { url: value, fileName: 'Attachment' }
+                                return (
+                                  <a
+                                    href={attachment.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="d-inline-flex align-items-center gap-2 text-decoration-none"
+                                    style={{
+                                      background: '#eff6ff',
+                                      color: '#3b82f6',
+                                      padding: '6px 14px',
+                                      borderRadius: 10,
+                                      fontSize: '0.84rem',
+                                      fontWeight: 500,
+                                      border: '1px solid #bfdbfe'
+                                    }}
+                                  >
+                                    <Paperclip size={14} />
+                                    {attachment.fileName || 'View Attachment'}
+                                  </a>
+                                )
+                              })()
                             ) : value ? (
                               <span className="text-dark" style={{ fontSize: '0.875rem' }}>{value}</span>
                             ) : (

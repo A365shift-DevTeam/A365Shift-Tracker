@@ -3,7 +3,7 @@
 }
 
 .stage-modal-title {
-    color: var(--accent-success);
+    color: #10b981;
     font-weight: 600;
     font-style: italic;
     font-size: 1.5rem;
@@ -28,7 +28,7 @@
 }
 
 .stage-row:hover {
-    background-color: var(--bg-card-hover);
+    background-color: #f8fafc;
 }
 
 .stage-row input,
@@ -42,7 +42,7 @@
     align-items: center;
     cursor: pointer;
     font-size: 16px;
-    color: var(--text-muted);
+    color: #64748b;
     gap: 4px;
 }
 
@@ -53,19 +53,19 @@
 }
 
 .sort-icons div:hover:not(.disabled) {
-    color: var(--accent-success);
+    color: #10b981;
     background-color: rgba(16, 185, 129, 0.08);
 }
 
 .sort-icons div.disabled {
-    color: var(--text-muted);
+    color: #94a3b8;
     opacity: 0.3;
     cursor: not-allowed;
 }
 
 .stage-table-header {
-    border-bottom: 1px solid var(--border-color);
-    background-color: var(--bg-card-hover);
+    border-bottom: 1px solid #e2e8f0;
+    background-color: #f8fafc;
 }
 
 .color-picker-wrapper {
@@ -78,36 +78,37 @@
     width: 40px;
     height: 40px;
     padding: 2px;
-    border: 1px solid var(--border-color);
+    border: 1px solid #e2e8f0;
     border-radius: 8px;
     cursor: pointer;
-    background: var(--bg-input);
+    background: white;
 }
 
 .color-label {
     font-size: 12px;
-    color: var(--text-muted);
+    color: #64748b;
 }
 
 /* Modal */
 .stage-modal .modal-content {
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
 .stage-modal .modal-header {
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     padding: 20px 24px;
 }
 
 .stage-modal .modal-footer {
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
     padding: 16px 24px;
+    background: #f9fafb;
 }
 
 .stage-modal .btn-success {
-    background-color: var(--accent-success);
-    border-color: var(--accent-success);
+    background-color: #10b981;
+    border-color: #10b981;
     color: #fff;
 }
 
@@ -117,11 +118,11 @@
 }
 
 .stage-modal .btn-outline-success {
-    color: var(--accent-success);
-    border-color: var(--accent-success);
+    color: #10b981;
+    border-color: #10b981;
 }
 
 .stage-modal .btn-outline-success:hover {
-    background-color: var(--accent-success);
+    background-color: #10b981;
     color: #fff;
 }
