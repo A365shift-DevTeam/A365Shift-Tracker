@@ -25,37 +25,77 @@ export default function MainLayout() {
     return (
         <div className="d-flex" style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
             {/* Sidebar */}
-            <div className="d-flex flex-column p-3 glass-panel m-3" style={{ width: '250px' }}>
-                <a href="/" className="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-decoration-none text-white">
-                    <span className="fs-4 fw-bold" style={{ color: 'var(--accent-primary)' }}>A365 Tracker</span>
+            <div
+                className="d-flex flex-column p-3 m-3"
+                style={{
+                    width: '240px',
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '16px',
+                    flexShrink: 0,
+                    boxShadow: 'var(--shadow-sm)'
+                }}
+            >
+                <a href="/" className="d-flex align-items-center mb-3 text-decoration-none px-2">
+                    <span className="fs-5 fw-bold" style={{ color: 'var(--accent-primary)', letterSpacing: '-0.3px' }}>
+                        A365 Tracker
+                    </span>
                 </a>
-                <hr className="text-secondary" />
-                <ul className="nav nav-pills flex-column mb-auto">
-                    {navItems.map((item) => (
-                        <li className="nav-item mb-2" key={item.path}>
-                            <Link
-                                to={item.path}
-                                className={`nav-link text-white d-flex align-items-center gap-2 ${location.pathname === item.path ? 'active' : ''}`}
-                                style={{
-                                    background: location.pathname === item.path ? 'var(--bg-glass)' : 'transparent',
-                                    border: location.pathname === item.path ? '1px solid var(--accent-primary)' : 'none'
-                                }}
-                            >
-                                {item.icon}
-                                {item.label}
-                            </Link>
-                        </li>
-                    ))}
+                <hr style={{ borderColor: 'var(--border-color)', opacity: 0.5 }} />
+                <ul className="nav nav-pills flex-column mb-auto gap-1">
+                    {navItems.map((item) => {
+                        const isActive = location.pathname === item.path;
+                        return (
+                            <li className="nav-item" key={item.path}>
+                                <Link
+                                    to={item.path}
+                                    className="nav-link d-flex align-items-center gap-3 px-3 py-2"
+                                    style={{
+                                        color: isActive ? 'var(--accent-primary)' : 'var(--text-muted)',
+                                        background: isActive ? 'rgba(59,130,246,0.08)' : 'transparent',
+                                        border: isActive ? '1px solid rgba(59,130,246,0.15)' : '1px solid transparent',
+                                        borderRadius: '10px',
+                                        fontWeight: isActive ? 600 : 500,
+                                        fontSize: '0.9rem',
+                                        transition: 'all 0.2s ease'
+                                    }}
+                                >
+                                    {item.icon}
+                                    {item.label}
+                                </Link>
+                            </li>
+                        );
+                    })}
                 </ul>
-                <hr className="text-secondary" />
-                <button onClick={handleLogout} className="btn btn-outline-danger d-flex align-items-center gap-2 w-100 justify-content-center">
+                <hr style={{ borderColor: 'var(--border-color)', opacity: 0.5 }} />
+                <button
+                    onClick={handleLogout}
+                    className="btn d-flex align-items-center gap-2 w-100 justify-content-center py-2"
+                    style={{
+                        background: 'rgba(239,68,68,0.06)',
+                        border: '1px solid rgba(239,68,68,0.12)',
+                        color: '#ef4444',
+                        borderRadius: '10px',
+                        fontWeight: 500,
+                        fontSize: '0.85rem',
+                        transition: 'all 0.2s ease'
+                    }}
+                >
                     <FaRightFromBracket /> Sign out
                 </button>
             </div>
 
             {/* Main Content */}
-            <div className="flex-grow-1 p-3">
-                <div className="glass-panel h-100 w-100 overflow-auto">
+            <div className="flex-grow-1 p-3" style={{ minWidth: 0 }}>
+                <div
+                    className="h-100 w-100 overflow-auto"
+                    style={{
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '16px',
+                        boxShadow: 'var(--shadow-sm)'
+                    }}
+                >
                     <Outlet />
                 </div>
             </div>

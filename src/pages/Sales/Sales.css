@@ -1,9 +1,10 @@
-/* Sales.css - Restored */
+/* Sales.css — Light Theme */
 
 .sales-page {
     padding: 24px;
-    background-color: #f3f4f6;
+    background-color: transparent;
     min-height: 100vh;
+    color: var(--text-primary);
 }
 
 .sales-header {
@@ -17,34 +18,26 @@
 }
 
 .sales-card {
-    /* Glassmorphism / 3D Liquid Effect */
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.6));
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: var(--bg-card);
     border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    border-top: 1px solid rgba(255, 255, 255, 0.8);
-    border-left: 1px solid rgba(255, 255, 255, 0.8);
+    border: 1px solid var(--border-color);
     padding: 8px 16px;
     display: block;
-    box-shadow:
-        0 8px 32px 0 rgba(31, 38, 135, 0.15),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    box-shadow: var(--shadow-sm);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .sales-card:hover {
-    transform: translateY(-5px);
-    box-shadow:
-        0 15px 40px 0 rgba(31, 38, 135, 0.2),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: #cbd5e1;
 }
 
 /* Left Section */
 .card-left-section {
     width: 250px;
     flex-shrink: 0;
-    border-right: 1px solid #e5e7eb;
+    border-right: 1px solid var(--border-color);
     padding-right: 24px;
     margin-right: 24px;
 }
@@ -52,20 +45,20 @@
 .project-id {
     font-weight: 600;
     font-size: 16px;
-    color: #111827;
+    color: var(--text-primary);
     margin-bottom: 4px;
 }
 
 .project-rating {
     font-size: 14px;
-    color: #6b7280;
+    color: var(--text-muted);
     margin-bottom: 12px;
 }
 
 .card-icons-row {
     display: flex;
     gap: 12px;
-    color: #9ca3af;
+    color: var(--text-muted);
 }
 
 .icon-outline {
@@ -75,12 +68,12 @@
 }
 
 .icon-outline:hover {
-    color: #374151;
+    color: var(--accent-primary);
 }
 
 .icon-delete {
     cursor: pointer;
-    color: #ef4444;
+    color: var(--accent-danger);
     opacity: 0.6;
     transition: opacity 0.2s;
 }
@@ -102,6 +95,7 @@
     font-weight: 500;
     text-align: right;
     width: 100%;
+    color: var(--text-secondary);
 }
 
 .pipeline-container {
@@ -116,15 +110,11 @@
     gap: 4px;
     flex: 1;
     min-width: 0;
-    /* CRITICAL for flex item scrolling */
     position: relative;
     padding: 20px 4px;
-    /* Increased top padding to show floating avatar */
     overflow-x: auto;
-    /* Allow scrolling if pills overflow */
     max-width: 100%;
     scrollbar-width: thin;
-    /* Firefox */
 }
 
 .status-pills::-webkit-scrollbar {
@@ -132,7 +122,7 @@
 }
 
 .status-pills::-webkit-scrollbar-thumb {
-    background-color: #e5e7eb;
+    background-color: #cbd5e1;
     border-radius: 4px;
 }
 
@@ -153,7 +143,7 @@
         margin-right: 0;
         margin-bottom: 20px;
         padding-bottom: 20px;
-        border-bottom: 1px solid #e5e7eb;
+        border-bottom: 1px solid var(--border-color);
     }
 
     .card-right-section {
@@ -175,7 +165,6 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    /* flex: 1 removed from here, moved to parent */
     transition: transform 0.2s;
 }
 
@@ -185,9 +174,7 @@
 
 .stage-ageing {
     font-size: 11px;
-    /* Slightly smaller to fit nicely */
-    color: #6b7280;
-    /* Matches Rating 4.0 color */
+    color: var(--text-muted);
     margin-top: 8px;
     font-weight: 500;
     text-align: center;
@@ -201,12 +188,10 @@
     right: -2px;
     top: 50%;
     width: 4px;
-    /* gap filler */
     height: 2px;
-    background-color: #e5e7eb;
+    background-color: var(--border-color);
     z-index: 0;
     display: none;
-    /* Hidden for separate pill style */
 }
 
 /* Pills */
@@ -222,65 +207,60 @@
     z-index: 1;
     transition: all 0.2s;
     user-select: none;
-
-    /* 3D Glass Effect Base */
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), inset 0 2px 4px rgba(255, 255, 255, 0.3);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 .pill.cyan {
-    background: linear-gradient(135deg, rgba(6, 182, 212, 0.9), rgba(6, 182, 212, 0.6));
+    background: linear-gradient(135deg, #06b6d4, #22d3ee);
 }
 
 .pill.gray {
-    background: linear-gradient(135deg, rgba(107, 114, 128, 0.9), rgba(107, 114, 128, 0.6));
+    background: linear-gradient(135deg, #6b7280, #9ca3af);
 }
 
 .pill.green {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.9), rgba(16, 185, 129, 0.6));
+    background: linear-gradient(135deg, #10b981, #34d399);
 }
 
 .pill.orange {
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.9), rgba(245, 158, 11, 0.6));
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
 }
 
 .pill.red {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(239, 68, 68, 0.6));
+    background: linear-gradient(135deg, #ef4444, #f87171);
 }
 
 .pill.white {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.6));
-    color: #374151;
-    /* Dark text for white background */
-    border: 1px solid rgba(255, 255, 255, 0.8);
+    background: var(--bg-card-hover);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    text-shadow: none;
 }
 
 .pill.pending {
-    background-color: rgba(255, 255, 255, 0.3);
-    border: 1px solid #e5e7eb;
-    color: #9ca3af;
+    background-color: var(--bg-card-hover);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
     box-shadow: none;
     text-shadow: none;
 }
 
 /* Drag Over Style for Pill */
 .drag-over .pill {
-    border: 2px dashed #0891b2;
-    background-color: #ecfeff;
-    color: #0891b2;
+    border: 2px dashed var(--accent-primary);
+    background: rgba(59, 130, 246, 0.08);
+    color: var(--accent-primary);
 }
 
 /* Active Marker */
 .avatar-marker {
     position: absolute;
     top: -20px;
-    /* Float above */
     left: 50%;
     transform: translateX(-50%);
-    color: #111827;
+    color: var(--text-primary);
     cursor: grab;
     z-index: 10;
     transition: top 0.2s;
@@ -291,19 +271,19 @@
 }
 
 .avatar-icon-filled {
-    fill: #111827;
+    fill: var(--text-primary);
 }
 
 .completion-text {
     font-size: 14px;
     font-weight: 600;
-    color: #2563eb;
+    color: var(--accent-primary);
     margin-left: 24px;
     min-width: 110px;
     text-align: right;
 }
 
-/* Stage Settings Modal - Fullscreen Centered */
+/* Stage Settings Modal */
 .stage-settings-centered-modal {
     margin: 0 auto !important;
     max-width: 95vw !important;
@@ -322,7 +302,7 @@
     max-height: calc(90vh - 140px);
 }
 
-/* Summary Cards - Matching Project Style */
+/* Summary Cards */
 .sales-stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -331,21 +311,20 @@
 }
 
 .stat-card {
-    background: white;
-    border-radius: 16px;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
     padding: 16px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    border: 1px solid #f1f5f9;
+    border: 1px solid var(--border-color);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     min-height: 100px;
 }
 
 .stat-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-md);
 }
 
 .stat-header {
@@ -365,28 +344,28 @@
 }
 
 .stat-icon-wrapper.blue {
-    background: #eff6ff;
+    background: rgba(59, 130, 246, 0.1);
     color: #3b82f6;
 }
 
 .stat-icon-wrapper.green {
-    background: #ecfdf5;
+    background: rgba(16, 185, 129, 0.1);
     color: #10b981;
 }
 
 .stat-icon-wrapper.orange {
-    background: #fff7ed;
-    color: #f97316;
+    background: rgba(245, 158, 11, 0.1);
+    color: #d97706;
 }
 
 .stat-icon-wrapper.purple {
-    background: #f5f3ff;
+    background: rgba(139, 92, 246, 0.1);
     color: #8b5cf6;
 }
 
 .stat-icon-wrapper.teal {
-    background: #f0fdfa;
-    color: #14b8a6;
+    background: rgba(6, 182, 212, 0.1);
+    color: #06b6d4;
 }
 
 .stat-content {
@@ -396,18 +375,18 @@
 .stat-title {
     font-size: 14px;
     font-weight: 500;
-    color: #64748b;
+    color: var(--text-muted);
     margin-bottom: 4px;
 }
 
 .stat-value {
     font-size: 24px;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--text-primary);
     line-height: 1.2;
 }
 
-/* Icon Buttons & Toolbar Styles */
+/* Icon Buttons & Toolbar */
 .sales-toolbar .icon-btn {
     background: transparent;
     border: none;
@@ -442,7 +421,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #64748b;
+    color: var(--text-muted);
     transition: all 0.2s ease;
     background: transparent;
     border: 1px solid transparent;
@@ -450,13 +429,13 @@
 
 .sales-toolbar .icon-wrapper:hover,
 .sales-toolbar .icon-btn[aria-expanded="true"] .icon-wrapper {
-    background: rgba(16, 185, 129, 0.1);
-    color: #10b981;
+    background: rgba(59, 130, 246, 0.08);
+    color: var(--accent-primary);
 }
 
 .sales-toolbar .icon-wrapper.active {
-    color: #10b981;
-    background: rgba(16, 185, 129, 0.1);
+    color: var(--accent-primary);
+    background: rgba(59, 130, 246, 0.08);
     position: relative;
 }
 
@@ -467,9 +446,9 @@
     right: 6px;
     width: 6px;
     height: 6px;
-    background: #10b981;
+    background: var(--accent-primary);
     border-radius: 50%;
-    border: 1px solid #ffffff;
+    border: 1px solid var(--bg-secondary);
 }
 
 .view-mode-toggle .btn {
@@ -492,10 +471,10 @@
     padding: 0.5rem 1rem;
 }
 
-/* Dropdown Menu Styles */
+/* Dropdown Menu */
 .timesheet-dropdown-menu .form-label,
 .timesheet-dropdown-menu label {
-    color: #64748b;
+    color: var(--text-muted);
     font-size: 0.7rem;
     letter-spacing: 0.5px;
 }
@@ -504,11 +483,10 @@
     font-size: 13px;
     padding: 8px 12px;
     border-radius: 6px;
-    color: #374151;
 }
 
 .timesheet-dropdown-menu .dropdown-item:active,
 .timesheet-dropdown-menu .dropdown-item.active {
-    background-color: rgba(16, 185, 129, 0.1);
-    color: #10b981;
+    background: rgba(59, 130, 246, 0.08);
+    color: var(--accent-primary);
 }
