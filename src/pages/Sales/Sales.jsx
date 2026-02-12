@@ -16,7 +16,7 @@ const getDefaultStages = () => [
     { id: 6, label: 'Lost', color: 'orange', ageing: 60 },
 ]
 
-const SalesCard = ({ projectId, stages, activeStage, onStageChange, onDelete, delay, clientName, brandingName }) => {
+const SalesCard = ({ projectId, stages, activeStage, onStageChange, onDelete, delay, clientName, brandingName, history = [] }) => {
     const [showNotification, setShowNotification] = useState(false)
     const [stageTransition, setStageTransition] = useState({ from: '', to: '' })
 
@@ -165,7 +165,7 @@ const SalesCard = ({ projectId, stages, activeStage, onStageChange, onDelete, de
                                                 draggable="true"
                                                 onDragStart={handleDragStart}
                                             >
-                                                <i className="fa-solid fa-person-running" style={{ color: '#003366', fontSize: '22px' }}></i>
+                                                <i className="fa-solid fa-person-running" style={{ color: '#116454', fontSize: '22px' }}></i>
                                             </div>
                                         )}
 
@@ -264,6 +264,7 @@ const SalesCard = ({ projectId, stages, activeStage, onStageChange, onDelete, de
                 activeStage={activeStage}
                 targetStage={stages.findIndex(s => s.label === stageTransition.to)}
                 delay={delay}
+                history={history}
             />
         </div >
     )
@@ -335,7 +336,7 @@ function Sales() {
 
         const updates = {
             activeStage: newStageIndex,
-            history: [newEntry, ...p.history]
+            history: [newEntry, ...(p.history || [])]
         };
 
         // Optimistic UI update
@@ -432,6 +433,22 @@ function Sales() {
         }
     });
 
+    // Calculate Dashboard Metrics
+    const totalStages = activeStages.length;
+
+    // Calculate Total Progress (Completed %)
+    const totalProgress = filteredProjects.length > 0
+        ? Math.round(filteredProjects.reduce((acc, curr) => {
+            const maxStageIndex = activeStages.length - 1;
+            const progress = maxStageIndex > 0 ? (curr.activeStage / maxStageIndex) * 100 : 0;
+            return acc + progress;
+        }, 0) / filteredProjects.length)
+        : 0;
+
+    // Calculate Delays
+    const totalDelays = filteredProjects.filter(p => p.delay > 0).length;
+    const notOnTrack = filteredProjects.filter(p => p.delay > 0).length; // Simplify for now, assuming all delays are "not on track"
+
     return (
         <div className="sales-page">
 
@@ -444,7 +461,7 @@ function Sales() {
                         </div>
                         <div className="stat-content">
                             <div className="stat-title">Total Stages</div>
-                            <div className="stat-value">5</div>
+                            <div className="stat-value">{totalStages}</div>
                         </div>
                     </div>
                 </div>
@@ -458,7 +475,7 @@ function Sales() {
                         <div className="stat-content">
                             <div className="stat-title">Completed</div>
                             <div className="d-flex align-items-baseline gap-2">
-                                <div className="stat-value">44%</div>
+                                <div className="stat-value">{totalProgress}%</div>
                                 <div className="text-success small d-flex align-items-center">
                                     <ArrowUpRight size={14} className="me-1" />3%
                                 </div>
@@ -475,8 +492,8 @@ function Sales() {
                         </div>
                         <div className="stat-content">
                             <div className="stat-title">Delays</div>
-                            <div className="stat-value">4</div>
-                            <small className="text-muted" style={{ fontSize: '11px' }}>2 Not on Track</small>
+                            <div className="stat-value">{totalDelays}</div>
+                            <small className="text-muted" style={{ fontSize: '11px' }}>{notOnTrack} Not on Track</small>
                         </div>
                     </div>
                 </div>
@@ -490,7 +507,7 @@ function Sales() {
                         <div className="stat-content">
                             <div className="stat-title">Insights</div>
                             <div className="stat-value" style={{ fontSize: '14px', marginTop: '4px' }}>
-                                <a href="#" className="text-decoration-none" style={{ color: '#0f766e' }}>Product View</a>
+                                <a href="#" className="text-decoration-none" style={{ color: '#0f766e' }}>{activeTab} View</a>
                             </div>
                         </div>
                     </div>

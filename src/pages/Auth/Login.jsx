@@ -18,8 +18,9 @@ export default function Login() {
             setLoading(true);
             await login(email, password);
             navigate('/');
-        } catch {
-            setError('Failed to log in. Please checks your credentials.');
+        } catch (error) {
+            console.error("Login Error:", error);
+            setError(`Failed to log in: ${error.message}`);
         }
 
         setLoading(false);
