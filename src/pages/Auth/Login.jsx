@@ -28,8 +28,8 @@ export default function Login() {
 
     return (
         <div className="container d-flex justify-content-center align-items-center vh-100">
-            <div className="glass-panel p-5 text-center" style={{ maxWidth: '400px', width: '100%' }}>
-                <h2 className="mb-4" style={{ color: 'var(--accent-primary)' }}>Sign In</h2>
+            <div className="p-5 text-center" style={{ maxWidth: '420px', width: '100%', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '20px' }}>
+                <h2 className="mb-4" style={{ color: 'var(--text-primary)', fontWeight: 800, letterSpacing: '-0.3px' }}>Sign In<span style={{ color: 'var(--accent-primary)' }}>.</span></h2>
                 {error && <div className="alert alert-danger">{error}</div>}
                 <form onSubmit={handleSubmit}>
                     <div className="mb-3">
