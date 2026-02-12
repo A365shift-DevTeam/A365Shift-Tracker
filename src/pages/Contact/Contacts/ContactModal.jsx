@@ -1,14 +1,53 @@
 import { useState, useEffect } from 'react'
-import { Modal, Form, Button } from 'react-bootstrap'
+import { Modal, Form, Button, Row, Col } from 'react-bootstrap'
 
 const STATUS_OPTIONS = ['Active', 'Inactive', 'Lead', 'Customer']
+
+const JOB_TITLES = [
+  'CEO',
+  'CTO',
+  'manager',
+  'Software Engineer',
+  'Product Manager',
+  'Sales Representative',
+  'Designer',
+  'HR Manager',
+  'Accountant',
+  'Consultant',
+  'Director',
+  'Other'
+];
+
+const COMPANIES = [
+  'TechCorp Solutions',
+  'InnovateX',
+  'Global Dynamics',
+  'Alpha Systems',
+  'Omega Services'
+];
+
+const LOCATIONS = [
+  'New York, USA',
+  'London, UK',
+  'San Francisco, USA',
+  'Toronto, Canada',
+  'Berlin, Germany',
+  'Sydney, Australia',
+  'Tokyo, Japan',
+  'Singapore',
+  'Mumbai, India',
+  'Paris, France'
+];
 
 export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
   const [formData, setFormData] = useState({
     name: '',
+    jobTitle: '',
     email: '',
     phone: '',
     company: '',
+    location: '', // New field
+    linkedin: '', // New field
     status: 'Active',
     notes: ''
   })
@@ -20,18 +59,24 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setFormData({
           name: contact.name || '',
+          jobTitle: contact.jobTitle || '',
           email: contact.email || '',
           phone: contact.phone || '',
           company: contact.company || '',
+          location: contact.location || '',
+          linkedin: contact.linkedin || '',
           status: contact.status || 'Active',
           notes: contact.notes || ''
         })
       } else {
         setFormData({
           name: '',
+          jobTitle: '',
           email: '',
           phone: '',
           company: '',
+          location: '',
+          linkedin: '',
           status: 'Active',
           notes: ''
         })
@@ -45,7 +90,6 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
       ...prev,
       [field]: value
     }))
-    // Clear error for this field
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
@@ -89,114 +133,162 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
   }
 
   return (
-    <Modal show={show} onHide={onHide} size="lg" centered>
-      <Modal.Header className="border-bottom">
-        <Modal.Title>
-          {contact ? 'Edit Contact' : 'Create New Contact'}
+    <Modal show={show} onHide={onHide} size="lg" centered backdrop="static" keyboard={false}>
+      <Modal.Header closeButton className="py-2 bg-light border-bottom-0">
+        <Modal.Title className="fs-6 fw-bold">
+          {contact ? 'Edit Contact' : 'New Contact'}
         </Modal.Title>
       </Modal.Header>
       <Form onSubmit={handleSubmit}>
-        <Modal.Body>
-          <Form.Group className="mb-3">
-            <Form.Label>
-              Name <span className="text-danger">*</span>
-            </Form.Label>
-            <Form.Control
-              type="text"
-              value={formData.name}
-              onChange={(e) => handleChange('name', e.target.value)}
-              isInvalid={!!errors.name}
-              placeholder="Enter contact name"
-            />
-            <Form.Control.Feedback type="invalid">
-              {errors.name}
-            </Form.Control.Feedback>
-          </Form.Group>
+        <Modal.Body className="p-3">
+          <Row className="g-2">
+            {/* ROW 1: Identity & Role */}
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label className="small fw-bold mb-1">Name <span className="text-danger">*</span></Form.Label>
+                <Form.Control
+                  size="sm"
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => handleChange('name', e.target.value)}
+                  isInvalid={!!errors.name}
+                  placeholder="Full Name"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label className="small fw-bold mb-1">Job Title</Form.Label>
+                <Form.Select
+                  size="sm"
+                  value={formData.jobTitle}
+                  onChange={(e) => handleChange('jobTitle', e.target.value)}
+                >
+                  <option value="">Select Role</option>
+                  {JOB_TITLES.map(title => (
+                    <option key={title} value={title}>{title}</option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label className="small fw-bold mb-1">Status <span className="text-danger">*</span></Form.Label>
+                <Form.Select
+                  size="sm"
+                  value={formData.status}
+                  onChange={(e) => handleChange('status', e.target.value)}
+                  isInvalid={!!errors.status}
+                >
+                  {STATUS_OPTIONS.map(status => (
+                    <option key={status} value={status}>{status}</option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
 
-          <Form.Group className="mb-3">
-            <Form.Label>
-              Email <span className="text-danger">*</span>
-            </Form.Label>
-            <Form.Control
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleChange('email', e.target.value)}
-              isInvalid={!!errors.email}
-              placeholder="Enter email address"
-            />
-            <Form.Control.Feedback type="invalid">
-              {errors.email}
-            </Form.Control.Feedback>
-          </Form.Group>
+            {/* ROW 2: Communication */}
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label className="small fw-bold mb-1">Email <span className="text-danger">*</span></Form.Label>
+                <Form.Control
+                  size="sm"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleChange('email', e.target.value)}
+                  isInvalid={!!errors.email}
+                  placeholder="Email Address"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label className="small fw-bold mb-1">Phone</Form.Label>
+                <Form.Control
+                  size="sm"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => handleChange('phone', e.target.value)}
+                  placeholder="Phone Number"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label className="small fw-bold mb-1">LinkedIn</Form.Label>
+                <Form.Control
+                  size="sm"
+                  type="url"
+                  value={formData.linkedin}
+                  onChange={(e) => handleChange('linkedin', e.target.value)}
+                  placeholder="Profile URL"
+                />
+              </Form.Group>
+            </Col>
 
-          <div className="row">
-            <Form.Group className="mb-3 col-md-6">
-              <Form.Label>Phone</Form.Label>
-              <Form.Control
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => handleChange('phone', e.target.value)}
-                placeholder="Enter phone number"
-              />
-            </Form.Group>
+            {/* ROW 3: Organization */}
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label className="small fw-bold mb-1">Company</Form.Label>
+                <Form.Select
+                  size="sm"
+                  value={formData.company}
+                  onChange={(e) => handleChange('company', e.target.value)}
+                >
+                  <option value="">Select Company</option>
+                  {COMPANIES.map(company => (
+                    <option key={company} value={company}>{company}</option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label className="small fw-bold mb-1">Location</Form.Label>
+                <Form.Select
+                  size="sm"
+                  value={formData.location}
+                  onChange={(e) => handleChange('location', e.target.value)}
+                >
+                  <option value="">Select Location</option>
+                  {LOCATIONS.map(location => (
+                    <option key={location} value={location}>{location}</option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
 
-            <Form.Group className="mb-3 col-md-6">
-              <Form.Label>
-                Status <span className="text-danger">*</span>
-              </Form.Label>
-              <Form.Select
-                value={formData.status}
-                onChange={(e) => handleChange('status', e.target.value)}
-                isInvalid={!!errors.status}
-              >
-                {STATUS_OPTIONS.map(status => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </Form.Select>
-              <Form.Control.Feedback type="invalid">
-                {errors.status}
-              </Form.Control.Feedback>
-            </Form.Group>
-          </div>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Company</Form.Label>
-            <Form.Control
-              type="text"
-              value={formData.company}
-              onChange={(e) => handleChange('company', e.target.value)}
-              placeholder="Enter company name"
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Notes</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={3}
-              value={formData.notes}
-              onChange={(e) => handleChange('notes', e.target.value)}
-              placeholder="Add any additional notes..."
-            />
-          </Form.Group>
+            {/* ROW 4: Notes */}
+            <Col xs={12}>
+              <Form.Group>
+                <Form.Label className="small fw-bold mb-1">Notes</Form.Label>
+                <Form.Control
+                  size="sm"
+                  as="textarea"
+                  rows={2}
+                  value={formData.notes}
+                  onChange={(e) => handleChange('notes', e.target.value)}
+                  placeholder="Additional notes..."
+                />
+              </Form.Group>
+            </Col>
+          </Row>
         </Modal.Body>
-        <Modal.Footer className="border-top">
+        <Modal.Footer className="py-2 border-top-0 bg-light">
           {contact && (
             <Button
-              variant="outline-danger"
+              variant="link"
+              className="text-danger text-decoration-none p-0 me-auto small"
               onClick={handleDelete}
-              className="me-auto"
             >
-              Delete
+              Delete Contact
             </Button>
           )}
-          <Button variant="secondary" onClick={onHide}>
+          <Button variant="outline-secondary" size="sm" onClick={onHide}>
             Cancel
           </Button>
-          <Button variant="primary" type="submit">
-            {contact ? 'Update' : 'Create'} Contact
+          <Button variant="dark" type="submit" size="sm" className="px-4">
+            {contact ? 'Save Changes' : 'Create Contact'}
           </Button>
         </Modal.Footer>
       </Form>

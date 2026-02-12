@@ -1,54 +1,184 @@
-import { db } from './firebase';
-import { collection, addDoc, updateDoc, doc, getDocs, query, where, orderBy, limit, Timestamp } from 'firebase/firestore';
+import { db } from './firebase'
+import {
+  collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, writeBatch, setDoc, getDoc
+} from 'firebase/firestore'
 
-const TIMESHEETS_COLLECTION = 'timesheets';
+const ENTRIES_COLLECTION = 'timesheet_entries'
+const COLUMNS_COLLECTION = 'timesheet_columns'
+
+// Default columns seeded on first load if none exist
+const DEFAULT_COLUMNS = [
+  { id: 'col-id', name: 'ID', type: 'text', required: false, visible: false, order: 0, config: { readOnly: true } },
+  { id: 'col-task', name: 'Task', type: 'text', required: true, visible: true, order: 1 },
+  { id: 'col-start-datetime', name: 'Start Date & Time', type: 'datetime', required: true, visible: true, order: 2 },
+  { id: 'col-end-datetime', name: 'End Date & Time', type: 'datetime', required: false, visible: true, order: 3 },
+  { id: 'col-notes', name: 'Notes', type: 'text', required: false, visible: true, order: 4, config: { multiline: true } },
+  { id: 'col-name', name: 'Person', type: 'text', required: false, visible: true, order: 5 },
+  { id: 'col-customer', name: 'Customer', type: 'text', required: false, visible: true, order: 6 },
+  { id: 'col-site', name: 'Site', type: 'text', required: false, visible: true, order: 7 },
+  { id: 'col-attachments', name: 'Attachments', type: 'file', required: false, visible: true, order: 8 }
+]
+
+// Helper: deduplicate columns by `id` field, delete extras from Firestore, return unique list
+const deduplicateColumns = async (docs) => {
+  const seen = new Map()
+  const duplicateRefs = []
+
+  for (const d of docs) {
+    const data = d.data()
+    const colId = data.id
+    if (!colId) {
+      // Document without an id field — delete it
+      duplicateRefs.push(d.ref)
+      continue
+    }
+    if (seen.has(colId)) {
+      duplicateRefs.push(d.ref)
+    } else {
+      seen.set(colId, { ...data, _docId: d.id })
+    }
+  }
+
+  // Delete duplicates from Firestore — AWAIT so they're gone before we return
+  if (duplicateRefs.length > 0) {
+    try {
+      const batch = writeBatch(db)
+      duplicateRefs.forEach(ref => batch.delete(ref))
+      await batch.commit()
+      console.log(`Cleaned ${duplicateRefs.length} duplicate column(s) from Firestore`)
+    } catch (err) {
+      console.error('Error cleaning duplicate columns:', err)
+    }
+  }
+
+  return Array.from(seen.values())
+}
 
 export const timesheetService = {
-    // Clock In: Create a new document with startTime
-    clockIn: async (userId) => {
-        const newEntry = {
-            userId,
-            startTime: Timestamp.now(),
-            endTime: null,
-            notes: '',
-            date: new Date().toISOString().split('T')[0] // Store as YYYY-MM-DD for easy querying
-        };
-        const docRef = await addDoc(collection(db, TIMESHEETS_COLLECTION), newEntry);
-        return { id: docRef.id, ...newEntry };
-    },
+  // ─── Entries ───────────────────────────────────────────────
 
-    // Clock Out: Update the document with endTime
-    clockOut: async (id, notes = '') => {
-        const docRef = doc(db, TIMESHEETS_COLLECTION, id);
-        const endTime = Timestamp.now();
-        await updateDoc(docRef, { endTime, notes });
-        return endTime;
-    },
+  getEntries: async () => {
+    const snapshot = await getDocs(collection(db, ENTRIES_COLLECTION))
+    return snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+  },
 
-    // Get current active session (if any)
-    getCurrentSession: async (userId) => {
-        const q = query(
-            collection(db, TIMESHEETS_COLLECTION),
-            where('userId', '==', userId),
-            where('endTime', '==', null),
-            orderBy('startTime', 'desc'),
-            limit(1)
-        );
-        const snapshot = await getDocs(q);
-        if (snapshot.empty) return null;
-        const doc = snapshot.docs[0];
-        return { id: doc.id, ...doc.data() };
-    },
-
-    // Get entries for a specific user (e.g., last 7 days) - Simplified for now to get all
-    getUserEntries: async (userId) => {
-        const q = query(
-            collection(db, TIMESHEETS_COLLECTION),
-            where('userId', '==', userId),
-            orderBy('startTime', 'desc'),
-            limit(50)
-        );
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  createEntry: async (entryData) => {
+    const payload = {
+      ...entryData,
+      createdAt: new Date().toISOString()
     }
-};
+    const docRef = await addDoc(collection(db, ENTRIES_COLLECTION), payload)
+    return { id: docRef.id, ...payload }
+  },
+
+  updateEntry: async (id, updates) => {
+    const docRef = doc(db, ENTRIES_COLLECTION, id)
+    await updateDoc(docRef, updates)
+    return { id, ...updates }
+  },
+
+  deleteEntry: async (id) => {
+    const docRef = doc(db, ENTRIES_COLLECTION, id)
+    await deleteDoc(docRef)
+    return id
+  },
+
+  // ─── Columns ───────────────────────────────────────────────
+
+  getColumns: async () => {
+    // Fetch ALL documents (no orderBy — ensures nothing is skipped)
+    const snapshot = await getDocs(collection(db, COLUMNS_COLLECTION))
+
+    // Deduplicate — keeps first occurrence of each column id, deletes extras from Firestore
+    let cols = await deduplicateColumns(snapshot.docs)
+
+    // Seed defaults if the collection is empty (use column id as Firestore doc id to prevent duplicates)
+    if (cols.length === 0) {
+      const batch = writeBatch(db)
+      DEFAULT_COLUMNS.forEach(col => {
+        const ref = doc(db, COLUMNS_COLLECTION, col.id)
+        batch.set(ref, col)
+      })
+      await batch.commit()
+      const snap2 = await getDocs(collection(db, COLUMNS_COLLECTION))
+      cols = snap2.docs.map(d => ({ ...d.data(), _docId: d.id }))
+    }
+
+    // Sort by order field in JavaScript
+    cols.sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
+
+    return cols
+  },
+
+  addColumn: async (columnData) => {
+    const colId = 'col-' + Date.now()
+
+    // Count existing columns for order
+    const snapshot = await getDocs(collection(db, COLUMNS_COLLECTION))
+    const existingIds = new Set()
+    snapshot.docs.forEach(d => existingIds.add(d.data().id))
+    const order = existingIds.size
+
+    const payload = {
+      id: colId,
+      name: columnData.name,
+      type: columnData.type || 'text',
+      required: columnData.required || false,
+      visible: columnData.visible !== false,
+      order
+    }
+    // Use column id as Firestore doc id to prevent duplicates
+    const ref = doc(db, COLUMNS_COLLECTION, colId)
+    await setDoc(ref, payload)
+    return { ...payload, _docId: colId }
+  },
+
+  updateColumn: async (columnId, updates) => {
+    // Try direct lookup first (new docs use columnId as Firestore doc id)
+    const directRef = doc(db, COLUMNS_COLLECTION, columnId)
+    const directSnap = await getDoc(directRef)
+    if (directSnap.exists()) {
+      await updateDoc(directRef, updates)
+      return { id: columnId, ...updates }
+    }
+    // Fallback: search by `id` field (old docs with auto-generated Firestore ids)
+    const snapshot = await getDocs(collection(db, COLUMNS_COLLECTION))
+    const target = snapshot.docs.find(d => d.data().id === columnId)
+    if (!target) throw new Error('Column not found')
+    await updateDoc(target.ref, updates)
+    return { id: columnId, ...updates }
+  },
+
+  deleteColumn: async (columnId) => {
+    const defaultIds = DEFAULT_COLUMNS.map(c => c.id)
+    if (defaultIds.includes(columnId)) {
+      throw new Error('Cannot delete default columns')
+    }
+    // Try direct lookup first
+    const directRef = doc(db, COLUMNS_COLLECTION, columnId)
+    const directSnap = await getDoc(directRef)
+    if (directSnap.exists()) {
+      await deleteDoc(directRef)
+      return columnId
+    }
+    // Fallback: search by `id` field
+    const snapshot = await getDocs(collection(db, COLUMNS_COLLECTION))
+    const target = snapshot.docs.find(d => d.data().id === columnId)
+    if (!target) throw new Error('Column not found')
+    await deleteDoc(target.ref)
+    return columnId
+  },
+
+  reorderColumns: async (orderedIds) => {
+    const snapshot = await getDocs(collection(db, COLUMNS_COLLECTION))
+    const batch = writeBatch(db)
+    snapshot.docs.forEach(d => {
+      const colId = d.data().id
+      const newOrder = orderedIds.indexOf(colId)
+      if (newOrder !== -1) {
+        batch.update(d.ref, { order: newOrder })
+      }
+    })
+    await batch.commit()
+  }
+}
