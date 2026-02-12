@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Button, Form, Modal, Badge, Dropdown } from 'react-bootstrap'
-import { Plus, Eye, EyeOff, Trash2, Edit2, GripVertical, Settings, FileText, Info } from 'lucide-react'
+import { Plus, Eye, EyeOff, Trash2, Edit2, GripVertical, Settings, FileText, Info, X } from 'lucide-react'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -95,6 +95,8 @@ export const ColumnManager = ({ show, onHide, columns, onColumnsChange }) => {
     required: false,
     visible: true
   })
+  const [choiceOptions, setChoiceOptions] = useState([])
+  const [newChoiceValue, setNewChoiceValue] = useState('')
   const [errors, setErrors] = useState({})
 
   const sensors = useSensors(
@@ -138,6 +140,9 @@ export const ColumnManager = ({ show, onHide, columns, onColumnsChange }) => {
       required: column.required || false,
       visible: column.visible !== false
     })
+    // Load existing choice options if it's a choice column
+    setChoiceOptions(column.config?.options || [])
+    setNewChoiceValue('')
     setShowAddModal(true)
   }
 
@@ -156,6 +161,8 @@ export const ColumnManager = ({ show, onHide, columns, onColumnsChange }) => {
   const handleAddNew = () => {
     setEditingColumn(null)
     setFormData({ name: '', type: 'text', required: false, visible: true })
+    setChoiceOptions([])
+    setNewChoiceValue('')
     setShowAddModal(true)
   }
 
@@ -172,23 +179,43 @@ export const ColumnManager = ({ show, onHide, columns, onColumnsChange }) => {
     if (!validate()) return
 
     try {
+      // Build the save payload — include config.options for choice columns
+      const saveData = { ...formData }
+      if (formData.type === 'choice') {
+        saveData.config = { ...(saveData.config || {}), options: choiceOptions }
+      }
+
       if (editingColumn) {
-        await timesheetService.updateColumn(editingColumn.id, formData)
+        await timesheetService.updateColumn(editingColumn.id, saveData)
         const updatedColumns = columns.map(col =>
-          col.id === editingColumn.id ? { ...col, ...formData } : col
+          col.id === editingColumn.id ? { ...col, ...saveData } : col
         )
         onColumnsChange(updatedColumns)
       } else {
-        const newColumn = await timesheetService.addColumn(formData)
+        const newColumn = await timesheetService.addColumn(saveData)
         onColumnsChange([...columns, newColumn])
       }
       setShowAddModal(false)
       setEditingColumn(null)
       setFormData({ name: '', type: 'text', required: false, visible: true })
+      setChoiceOptions([])
+      setNewChoiceValue('')
     } catch (error) {
       console.error('Error saving column:', error)
       alert('Failed to save column: ' + (error.message || 'Unknown error'))
     }
+  }
+
+  const handleAddChoice = () => {
+    const trimmed = newChoiceValue.trim()
+    if (trimmed && !choiceOptions.includes(trimmed)) {
+      setChoiceOptions([...choiceOptions, trimmed])
+      setNewChoiceValue('')
+    }
+  }
+
+  const handleRemoveChoice = (index) => {
+    setChoiceOptions(choiceOptions.filter((_, i) => i !== index))
   }
 
   const handleDragEnd = async (event) => {
@@ -311,6 +338,75 @@ export const ColumnManager = ({ show, onHide, columns, onColumnsChange }) => {
               </Dropdown.Menu>
             </Dropdown>
           </Form.Group>
+
+          {/* Choice Options — only shown when type is 'choice' */}
+          {formData.type === 'choice' && (
+            <Form.Group className="mb-3">
+              <Form.Label className="timesheet-form-label d-flex align-items-center gap-2">
+                <Settings size={16} className="text-muted" />
+                <span className="fw-semibold">
+                  Choice Options
+                </span>
+              </Form.Label>
+
+              {/* Existing options */}
+              {choiceOptions.length > 0 && (
+                <div className="d-flex flex-wrap gap-2 mb-2">
+                  {choiceOptions.map((opt, idx) => (
+                    <Badge
+                      key={idx}
+                      bg="light"
+                      text="dark"
+                      className="d-flex align-items-center gap-1 border px-3 py-2"
+                      style={{ fontSize: '0.85rem', borderRadius: '8px' }}
+                    >
+                      {opt}
+                      <X
+                        size={14}
+                        className="ms-1 text-danger"
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => handleRemoveChoice(idx)}
+                      />
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Add new option */}
+              <div className="d-flex gap-2">
+                <Form.Control
+                  type="text"
+                  value={newChoiceValue}
+                  onChange={(e) => setNewChoiceValue(e.target.value)}
+                  placeholder="Type an option and press Add"
+                  className="timesheet-form-control"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      handleAddChoice()
+                    }
+                  }}
+                />
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  onClick={handleAddChoice}
+                  disabled={!newChoiceValue.trim()}
+                  className="d-flex align-items-center"
+                  style={{ whiteSpace: 'nowrap' }}
+                >
+                  <Plus size={16} className="me-1" />
+                  Add
+                </Button>
+              </div>
+
+              {choiceOptions.length === 0 && (
+                <Form.Text className="text-muted">
+                  Add at least one option for the dropdown.
+                </Form.Text>
+              )}
+            </Form.Group>
+          )}
 
           <div className="row">
             <Form.Group className="mb-3 col-md-6">

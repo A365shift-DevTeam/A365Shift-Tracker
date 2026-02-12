@@ -54,6 +54,25 @@ const deduplicateColumns = async (docs) => {
   return Array.from(seen.values())
 }
 
+// Sanitize entry values before saving to Firestore.
+// Firestore has a 1MB doc limit — base64 data URLs from file inputs are too large.
+// Strip them out and store only a placeholder/filename.
+const sanitizeValuesForFirestore = (values) => {
+  if (!values || typeof values !== 'object') return values
+  const clean = {}
+  for (const [key, val] of Object.entries(values)) {
+    if (typeof val === 'string' && val.startsWith('data:')) {
+      // It's a base64 data URL — too large for Firestore
+      // Extract a readable label from the data URL type
+      const mimeMatch = val.match(/^data:([^;]+)/)
+      clean[key] = mimeMatch ? `[file: ${mimeMatch[1]}]` : '[file attached]'
+    } else {
+      clean[key] = val
+    }
+  }
+  return clean
+}
+
 export const timesheetService = {
   // ─── Entries ───────────────────────────────────────────────
 
@@ -63,18 +82,24 @@ export const timesheetService = {
   },
 
   createEntry: async (entryData) => {
-    const payload = {
+    // Sanitize values to avoid Firestore size limits with base64 files
+    const sanitized = {
       ...entryData,
+      values: sanitizeValuesForFirestore(entryData.values),
       createdAt: new Date().toISOString()
     }
-    const docRef = await addDoc(collection(db, ENTRIES_COLLECTION), payload)
-    return { id: docRef.id, ...payload }
+    const docRef = await addDoc(collection(db, ENTRIES_COLLECTION), sanitized)
+    return { id: docRef.id, ...sanitized }
   },
 
   updateEntry: async (id, updates) => {
     const docRef = doc(db, ENTRIES_COLLECTION, id)
-    await updateDoc(docRef, updates)
-    return { id, ...updates }
+    // Sanitize values if present
+    const sanitized = updates.values
+      ? { ...updates, values: sanitizeValuesForFirestore(updates.values) }
+      : updates
+    await updateDoc(docRef, sanitized)
+    return { id, ...sanitized }
   },
 
   deleteEntry: async (id) => {
@@ -126,6 +151,10 @@ export const timesheetService = {
       required: columnData.required || false,
       visible: columnData.visible !== false,
       order
+    }
+    // Include config (e.g., choice options) if provided
+    if (columnData.config) {
+      payload.config = columnData.config
     }
     // Use column id as Firestore doc id to prevent duplicates
     const ref = doc(db, COLUMNS_COLLECTION, colId)
