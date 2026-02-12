@@ -1,10 +1,10 @@
-/* Target Modal — Light Theme */
+/* Target Modal — Glassmorphism Light Theme */
 
 /* Stage Pill Buttons */
 .stage-pill-btn {
-    background-color: var(--bg-card);
-    color: var(--text-muted);
-    border: 1px solid var(--border-color);
+    background-color: white;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
     padding: 6px 16px;
     border-radius: 6px;
     font-size: 13px;
@@ -16,19 +16,19 @@
 }
 
 .stage-pill-btn:hover {
-    background-color: var(--bg-card-hover);
-    color: var(--text-primary);
+    background-color: #f8fafc;
+    color: #0f172a;
 }
 
 .stage-pill-btn.active {
     background: rgba(59, 130, 246, 0.08);
-    color: var(--accent-primary);
+    color: #3b82f6;
     border-color: rgba(59, 130, 246, 0.25);
 }
 
 .stage-pill-btn.current {
     background: rgba(16, 185, 129, 0.08);
-    color: var(--accent-success);
+    color: #10b981;
     border-color: rgba(16, 185, 129, 0.25);
     box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
 }
@@ -48,7 +48,7 @@
 
 /* Form Label Styling */
 .form-label.small {
-    color: var(--text-secondary);
+    color: #475569;
     margin-bottom: 4px;
 }
 
@@ -58,8 +58,8 @@
 }
 
 .modal-content {
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
 .modal-header {

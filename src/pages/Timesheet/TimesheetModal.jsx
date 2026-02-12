@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Modal, Form, Button, Dropdown, InputGroup } from 'react-bootstrap'
-import { Calendar, Clock, FileText, User, Building2, CheckCircle, Paperclip, ListChecks, Info } from 'lucide-react'
+import { Modal, Form, Button, Dropdown, InputGroup, Spinner, ProgressBar } from 'react-bootstrap'
+import { Calendar, Clock, FileText, User, Building2, CheckCircle, Paperclip, ListChecks, Info, X, Upload, File, Image, FileSpreadsheet } from 'lucide-react'
+import { uploadFile, deleteFile, formatFileSize, getFileTypeLabel } from '../../services/storageService'
 
 const getColumnIcon = (columnId) => {
   const iconMap = {
@@ -14,6 +15,229 @@ const getColumnIcon = (columnId) => {
     'col-attachments': Paperclip
   }
   return iconMap[columnId] || FileText
+}
+
+/* ── File type icon helper ──────────────────────────── */
+const getFileIcon = (fileType) => {
+  if (!fileType) return File
+  if (fileType.startsWith('image/')) return Image
+  if (fileType === 'application/pdf') return FileText
+  if (fileType.includes('spreadsheet') || fileType.includes('excel') || fileType === 'text/csv') return FileSpreadsheet
+  return File
+}
+
+/* ── Attachment upload widget ───────────────────────── */
+const FileUploadField = ({ column, value, onChange, errors }) => {
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState(null)
+  const isRequired = column.required
+  const hasError = !!errors[column.id]
+  const IconComponent = getColumnIcon(column.id)
+
+  // value is expected to be an object: { url, fileName, fileType, fileSize, publicId } or a legacy string URL
+  const attachment = typeof value === 'object' && value !== null ? value : (value ? { url: value, fileName: 'Attachment', fileType: '', fileSize: 0, publicId: '' } : null)
+
+  const handleFileSelect = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    // Validate file size (max 10MB for free plan)
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError('File too large. Maximum size is 10 MB.')
+      return
+    }
+
+    try {
+      setUploading(true)
+      setUploadError(null)
+
+      const result = await uploadFile(file, 'timesheet-attachments')
+
+      onChange(column.id, {
+        url: result.url,
+        fileName: result.fileName,
+        fileType: result.fileType,
+        fileSize: result.fileSize,
+        publicId: result.publicId
+      })
+    } catch (err) {
+      console.error('Upload failed:', err)
+      // Show user-friendly error message
+      let errorMessage = err.message || 'Upload failed. Please try again.'
+      
+      // Provide helpful hints for common errors
+      if (errorMessage.includes('Cannot connect')) {
+        errorMessage += ' Make sure the backend server is running on port 3001.'
+      } else if (errorMessage.includes('Authentication')) {
+        errorMessage += ' Please log out and log back in.'
+      }
+      
+      setUploadError(errorMessage)
+    } finally {
+      setUploading(false)
+      // Reset file input so the same file can be re-selected
+      e.target.value = ''
+    }
+  }
+
+  const handleRemove = async () => {
+    if (attachment?.publicId) {
+      try {
+        await deleteFile(attachment.publicId)
+      } catch (err) {
+        console.error('Failed to delete from storage:', err)
+      }
+    }
+    onChange(column.id, null)
+  }
+
+  const FileIcon = attachment ? getFileIcon(attachment.fileType) : File
+
+  return (
+    <Form.Group className="mb-3">
+      <Form.Label className="timesheet-form-label d-flex align-items-center gap-2">
+        <IconComponent size={16} className="text-muted" />
+        <span className="fw-semibold">
+          {column.name} {isRequired && <span className="text-danger">*</span>}
+        </span>
+      </Form.Label>
+
+      {/* Show existing attachment */}
+      {attachment && !uploading && (
+        <div className="attachment-preview d-flex align-items-center gap-3 p-3 rounded-3 mb-2"
+          style={{
+            background: '#f8fafc',
+            border: '1px solid #e2e8f0'
+          }}
+        >
+          <div className="d-flex align-items-center justify-content-center rounded-2"
+            style={{
+              width: 42,
+              height: 42,
+              background: attachment.fileType?.startsWith('image/') ? '#eff6ff' : attachment.fileType === 'application/pdf' ? '#fef2f2' : '#f0fdf4',
+              color: attachment.fileType?.startsWith('image/') ? '#3b82f6' : attachment.fileType === 'application/pdf' ? '#ef4444' : '#10b981',
+              flexShrink: 0
+            }}
+          >
+            <FileIcon size={20} />
+          </div>
+          <div className="flex-grow-1" style={{ minWidth: 0 }}>
+            <div className="fw-semibold text-truncate" style={{ fontSize: '0.875rem', color: '#0f172a' }}>
+              {attachment.fileName || 'Attachment'}
+            </div>
+            <div className="d-flex align-items-center gap-2" style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+              {attachment.fileType && <span>{getFileTypeLabel(attachment.fileType)}</span>}
+              {attachment.fileSize > 0 && <span>• {formatFileSize(attachment.fileSize)}</span>}
+            </div>
+          </div>
+          <div className="d-flex align-items-center gap-2">
+            <a
+              href={attachment.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+              style={{ fontSize: '0.78rem', borderRadius: 8 }}
+            >
+              View
+            </a>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center"
+              style={{ width: 32, height: 32, borderRadius: 8, padding: 0 }}
+              onClick={handleRemove}
+              title="Remove attachment"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Upload area */}
+      {!attachment && !uploading && (
+        <label
+          className="d-flex flex-column align-items-center justify-content-center gap-2 p-4 rounded-3"
+          style={{
+            border: '2px dashed #cbd5e1',
+            background: '#fafbfc',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            minHeight: 110
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = '#3b82f6'
+            e.currentTarget.style.background = '#eff6ff'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = '#cbd5e1'
+            e.currentTarget.style.background = '#fafbfc'
+          }}
+        >
+          <Upload size={24} style={{ color: '#94a3b8' }} />
+          <div style={{ fontSize: '0.875rem', color: '#64748b', fontWeight: 500 }}>
+            Click to upload a file
+          </div>
+          <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+            Images, PDFs, Documents up to 10 MB
+          </div>
+          <input
+            type="file"
+            className="d-none"
+            onChange={handleFileSelect}
+            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.pptx,.zip,.rar"
+          />
+        </label>
+      )}
+
+      {/* Uploading state */}
+      {uploading && (
+        <div className="d-flex align-items-center gap-3 p-3 rounded-3"
+          style={{ background: '#eff6ff', border: '1px solid #bfdbfe' }}
+        >
+          <Spinner animation="border" size="sm" variant="primary" />
+          <div>
+            <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e40af' }}>Uploading...</div>
+            <div style={{ fontSize: '0.75rem', color: '#60a5fa' }}>Please wait</div>
+          </div>
+        </div>
+      )}
+
+      {/* Replace button when attachment exists */}
+      {attachment && !uploading && (
+        <label
+          className="d-inline-flex align-items-center gap-1 mt-1"
+          style={{ fontSize: '0.78rem', color: '#3b82f6', cursor: 'pointer', fontWeight: 500 }}
+        >
+          <Upload size={12} /> Replace file
+          <input
+            type="file"
+            className="d-none"
+            onChange={handleFileSelect}
+            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.pptx,.zip,.rar"
+          />
+        </label>
+      )}
+
+      {/* Error messages */}
+      {uploadError && (
+        <div 
+          className="mt-2 p-2 rounded" 
+          style={{ 
+            fontSize: '0.8rem',
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#dc2626',
+            fontWeight: 500
+          }}
+        >
+          ⚠️ {uploadError}
+        </div>
+      )}
+      {hasError && (
+        <div className="invalid-feedback d-block">{errors[column.id]}</div>
+      )}
+    </Form.Group>
+  )
 }
 
 const renderField = (column, value, onChange, errors) => {
@@ -221,43 +445,12 @@ const renderField = (column, value, onChange, errors) => {
 
     case 'file':
       return (
-        <Form.Group className="mb-3">
-          <Form.Label className="timesheet-form-label d-flex align-items-center gap-2">
-            <IconComponent size={16} className="text-muted" />
-            <span className="fw-semibold">
-              {column.name} {isRequired && <span className="text-danger">*</span>}
-            </span>
-          </Form.Label>
-          <Form.Control
-            type="file"
-            onChange={(e) => {
-              const file = e.target.files[0]
-              if (file) {
-                const reader = new FileReader()
-                reader.onloadend = () => {
-                  onChange(column.id, reader.result)
-                }
-                reader.readAsDataURL(file)
-              } else {
-                onChange(column.id, null)
-              }
-            }}
-            isInvalid={hasError}
-            className="timesheet-form-control"
-          />
-          {value && (
-            <div className="mt-2">
-              <a href={value} target="_blank" rel="noopener noreferrer" className="text-primary text-decoration-none" style={{ fontSize: '0.875rem' }}>
-                View Current Attachment
-              </a>
-            </div>
-          )}
-          {hasError && (
-            <Form.Control.Feedback type="invalid">
-              {errors[column.id]}
-            </Form.Control.Feedback>
-          )}
-        </Form.Group>
+        <FileUploadField
+          column={column}
+          value={value}
+          onChange={onChange}
+          errors={errors}
+        />
       )
 
     case 'choice': {
@@ -345,6 +538,7 @@ const renderField = (column, value, onChange, errors) => {
 export const TimesheetModal = ({ show, onHide, entry, columns, onSave, onDelete }) => {
   const [formData, setFormData] = useState({})
   const [errors, setErrors] = useState({})
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (show) {
@@ -358,6 +552,7 @@ export const TimesheetModal = ({ show, onHide, entry, columns, onSave, onDelete 
         setFormData(initialData)
       }
       setErrors({})
+      setSaving(false)
     }
   }, [entry, columns, show])
 
@@ -385,10 +580,17 @@ export const TimesheetModal = ({ show, onHide, entry, columns, onSave, onDelete 
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (validate()) {
-      onSave(formData)
+      setSaving(true)
+      try {
+        await onSave(formData)
+      } catch (err) {
+        console.error('Save error:', err)
+      } finally {
+        setSaving(false)
+      }
     }
   }
 
@@ -434,7 +636,8 @@ export const TimesheetModal = ({ show, onHide, entry, columns, onSave, onDelete 
               .map(column => {
                 const value = formData[column.id]
                 const isNotes = column.id === 'col-notes'
-                const colClass = isNotes ? 'col-12' : 'col-md-6'
+                const isAttachment = column.type === 'file'
+                const colClass = (isNotes || isAttachment) ? 'col-12' : 'col-md-6'
 
                 return (
                   <div key={column.id} className={colClass}>
@@ -450,15 +653,23 @@ export const TimesheetModal = ({ show, onHide, entry, columns, onSave, onDelete 
               variant="outline-danger"
               onClick={handleDelete}
               className="me-auto"
+              disabled={saving}
             >
               Delete
             </Button>
           )}
-          <Button variant="secondary" onClick={onHide}>
+          <Button variant="secondary" onClick={onHide} disabled={saving}>
             Cancel
           </Button>
-          <Button variant="primary" type="submit">
-            {entry ? 'Update' : 'Create'} Entry
+          <Button variant="primary" type="submit" disabled={saving}>
+            {saving ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-2" />
+                Saving...
+              </>
+            ) : (
+              <>{entry ? 'Update' : 'Create'} Entry</>
+            )}
           </Button>
         </Modal.Footer>
       </Form>

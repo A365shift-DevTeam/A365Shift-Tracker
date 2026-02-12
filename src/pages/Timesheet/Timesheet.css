@@ -3,6 +3,11 @@
   padding: 24px;
   background-color: transparent;
   min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: #10b981 transparent;
   color: var(--text-primary);
 }
 

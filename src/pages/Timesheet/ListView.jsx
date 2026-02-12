@@ -1,6 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Button, Form, Dropdown } from 'react-bootstrap'
-import { Edit, Trash2, Eye, ArrowUp, ArrowDown, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Plus } from 'lucide-react'
+import { Edit, Trash2, Eye, ArrowUp, ArrowDown, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Plus, Paperclip, FileText, Image, File } from 'lucide-react'
+import { formatFileSize, getFileTypeLabel } from '../../services/storageService'
+
+const getAttachmentIcon = (fileType) => {
+  if (!fileType) return Paperclip
+  if (fileType.startsWith('image/')) return Image
+  if (fileType === 'application/pdf') return FileText
+  return File
+}
 
 const formatValue = (value, column) => {
   if (value === null || value === undefined || value === '') return '-'
@@ -37,9 +45,45 @@ const formatValue = (value, column) => {
   }
 
   if (column.type === 'file' && value) {
+    // Handle new object format { url, fileName, fileType, fileSize }
+    if (typeof value === 'object' && value.url) {
+      const Icon = getAttachmentIcon(value.fileType)
+      return (
+        <a
+          href={value.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="d-inline-flex align-items-center gap-2 text-decoration-none"
+          style={{
+            background: '#eff6ff',
+            color: '#3b82f6',
+            padding: '4px 10px',
+            borderRadius: 8,
+            fontSize: '0.8rem',
+            fontWeight: 500,
+            border: '1px solid #bfdbfe',
+            maxWidth: 180,
+            overflow: 'hidden'
+          }}
+          title={value.fileName}
+        >
+          <Icon size={14} style={{ flexShrink: 0 }} />
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {value.fileName || 'Attachment'}
+          </span>
+        </a>
+      )
+    }
+    // Legacy string URL fallback
     return (
-      <a href={value} target="_blank" rel="noopener noreferrer" className="text-primary">
-        View Attachment
+      <a
+        href={value}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="d-inline-flex align-items-center gap-1 text-primary"
+        style={{ fontSize: '0.85rem' }}
+      >
+        <Paperclip size={14} /> View
       </a>
     )
   }

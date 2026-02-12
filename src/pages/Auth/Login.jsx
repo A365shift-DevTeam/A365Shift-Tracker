@@ -27,8 +27,8 @@ export default function Login() {
     }
 
     return (
-        <div className="container d-flex justify-content-center align-items-center vh-100">
-            <div className="p-5 text-center" style={{ maxWidth: '420px', width: '100%', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '20px' }}>
+        <div className="container d-flex justify-content-center align-items-center vh-100" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' }}>
+            <div className="p-5 text-center" style={{ maxWidth: '420px', width: '100%', background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.6)', borderRadius: '20px', boxShadow: '0 4px 24px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02), inset 0 1px 0 rgba(255,255,255,0.9)' }}>
                 <h2 className="mb-4" style={{ color: 'var(--text-primary)', fontWeight: 800, letterSpacing: '-0.3px' }}>Sign In<span style={{ color: 'var(--accent-primary)' }}>.</span></h2>
                 {error && <div className="alert alert-danger">{error}</div>}
                 <form onSubmit={handleSubmit}>
