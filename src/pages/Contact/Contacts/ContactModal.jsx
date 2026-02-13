@@ -39,6 +39,8 @@ const LOCATIONS = [
   'Paris, France'
 ];
 
+const ENTITY_TYPES = ['Company', 'Individual']
+
 export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
   const [formData, setFormData] = useState({
     name: '',
@@ -49,6 +51,7 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
     location: '', // New field
     linkedin: '', // New field
     status: 'Active',
+    entityType: 'Individual', // New field
     notes: ''
   })
   const [errors, setErrors] = useState({})
@@ -66,6 +69,7 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
           location: contact.location || '',
           linkedin: contact.linkedin || '',
           status: contact.status || 'Active',
+          entityType: contact.entityType || 'Individual',
           notes: contact.notes || ''
         })
       } else {
@@ -78,6 +82,7 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
           location: '',
           linkedin: '',
           status: 'Active',
+          entityType: 'Individual',
           notes: ''
         })
       }
@@ -143,7 +148,21 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
         <Modal.Body className="p-3">
           <Row className="g-2">
             {/* ROW 1: Identity & Role */}
-            <Col md={4}>
+            <Col md={3}>
+              <Form.Group>
+                <Form.Label className="small fw-bold mb-1">Entity Type</Form.Label>
+                <Form.Select
+                  size="sm"
+                  value={formData.entityType}
+                  onChange={(e) => handleChange('entityType', e.target.value)}
+                >
+                  {ENTITY_TYPES.map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={3}>
               <Form.Group>
                 <Form.Label className="small fw-bold mb-1">Name <span className="text-danger">*</span></Form.Label>
                 <Form.Control
@@ -156,7 +175,7 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
                 />
               </Form.Group>
             </Col>
-            <Col md={4}>
+            <Col md={3}>
               <Form.Group>
                 <Form.Label className="small fw-bold mb-1">Job Title</Form.Label>
                 <Form.Select
@@ -171,7 +190,7 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
                 </Form.Select>
               </Form.Group>
             </Col>
-            <Col md={4}>
+            <Col md={3}>
               <Form.Group>
                 <Form.Label className="small fw-bold mb-1">Status <span className="text-danger">*</span></Form.Label>
                 <Form.Select
