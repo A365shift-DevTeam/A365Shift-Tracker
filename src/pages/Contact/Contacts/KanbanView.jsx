@@ -24,7 +24,7 @@ const getAvatarColor = (name) => {
 }
 
 const getColumnColor = (index) => {
-  const colors = ['#3b82f6', '#f97316', '#22c55e', '#64748b', '#8b5cf6', '#ec4899'];
+  const colors = ['#3b82f6', '#f97316', '#22c55e', '#6366f1', '#ec4899', '#64748b'];
   return colors[index % colors.length];
 }
 
@@ -40,7 +40,7 @@ const DroppableColumn = ({ id, children }) => {
         minHeight: '150px',
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: isOver ? 'rgba(59,130,246,0.06)' : 'transparent',
+        backgroundColor: isOver ? 'rgba(59,130,246,0.04)' : 'transparent',
         transition: 'background-color 0.2s',
         flexGrow: 1
       }}
@@ -50,47 +50,53 @@ const DroppableColumn = ({ id, children }) => {
   )
 }
 
-// Shared card content renderer (used by both sortable card and drag overlay)
+// Shared card content renderer
 const CardContent = ({ contact, onEdit, onDelete, showActions = true }) => (
   <Card.Body className="p-3">
-    <div className="d-flex justify-content-between align-items-start">
-      <div className="flex-grow-1 pe-2" style={{ minWidth: 0 }}>
-        <div className="d-flex align-items-center gap-2 mb-2">
-          <div className={`rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm ${getAvatarColor(contact.name)}`}
-            style={{ width: '24px', height: '24px', fontSize: '10px', flexShrink: 0 }}>
-            {getInitials(contact.name)}
-          </div>
-          <div className="kanban-card-title fw-semibold text-dark" title={contact.name}>
+    <div className="d-flex justify-content-between align-items-start mb-2">
+      <div className="d-flex align-items-center gap-2">
+        <div className={`rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm ${getAvatarColor(contact.name)}`}
+          style={{ width: '32px', height: '32px', fontSize: '12px', flexShrink: 0 }}>
+          {getInitials(contact.name)}
+        </div>
+        <div>
+          <div className="kanban-card-title fw-bold text-dark" title={contact.name} style={{ fontSize: '14px' }}>
             {contact.name}
           </div>
-        </div>
-
-        {/* Fields */}
-        <div className="d-flex flex-column gap-1">
-          <div className="kanban-card-field small text-muted text-truncate">
-            <span className="fw-medium">Type: </span>{contact.type || 'Contact'}
-          </div>
-          {contact.company && (
-            <div className="kanban-card-field small text-muted text-truncate">
-              <Building size={12} className="me-1" />{contact.company}
-            </div>
-          )}
-          {contact.email && (
-            <div className="kanban-card-field small text-muted text-truncate">
-              <Mail size={12} className="me-1" />{contact.email}
-            </div>
-          )}
+          {/* Actions - moved next to name or top right? Image shows icons on right */}
         </div>
       </div>
 
       {showActions && onEdit && onDelete && (
-        <div className="kanban-card-actions d-flex flex-column gap-1 opacity-50 ms-1">
-          <OverlayTrigger overlay={<Tooltip>Edit</Tooltip>}>
-            <Edit size={14} className="cursor-pointer hover-primary" onClick={(e) => { e.stopPropagation(); onEdit(contact); }} />
-          </OverlayTrigger>
-          <OverlayTrigger overlay={<Tooltip>Delete</Tooltip>}>
-            <Trash2 size={14} className="cursor-pointer hover-danger" onClick={(e) => { e.stopPropagation(); confirm('Delete?') && onDelete(contact.id); }} />
-          </OverlayTrigger>
+        <div className="d-flex gap-1">
+          <button className="btn btn-link p-0 text-muted hover-primary" onClick={(e) => { e.stopPropagation(); onEdit(contact); }}>
+            <Edit size={14} />
+          </button>
+          <button className="btn btn-link p-0 text-muted hover-danger" onClick={(e) => { e.stopPropagation(); confirm('Delete?') && onDelete(contact.id); }}>
+            <Trash2 size={14} />
+          </button>
+        </div>
+      )}
+    </div>
+
+    {/* Fields */}
+    <div className="d-flex flex-column gap-1 mt-2">
+      <div className="kanban-card-field small text-muted">
+        <span className="fw-medium text-uppercase" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>Type: </span>
+        <span style={{ fontSize: '12px' }}>{contact.type || 'Contact'}</span>
+      </div>
+
+      {contact.company && (
+        <div className="kanban-card-field small text-muted d-flex align-items-center gap-1" style={{ fontSize: '12px' }}>
+          <Building size={12} className="text-secondary opacity-75" />
+          <span>{contact.company}</span>
+        </div>
+      )}
+
+      {contact.email && (
+        <div className="kanban-card-field small text-muted text-truncate d-flex align-items-center gap-1" style={{ fontSize: '12px' }}>
+          <Mail size={12} className="text-secondary opacity-75" />
+          <span>{contact.email}</span>
         </div>
       )}
     </div>
@@ -128,7 +134,7 @@ const SortableContactCard = ({ contact, onEdit, onDelete, onPreview }) => {
     <Card
       ref={setNodeRef}
       style={style}
-      className={`contacts-kanban-card mb-2 border-0 shadow-sm ${isDragging ? 'kanban-card-dragging' : ''}`}
+      className={`kanban-card-new mb-3 border-0 shadow-sm ${isDragging ? 'kanban-card-dragging' : ''}`}
       {...attributes}
       {...listeners}
     >
@@ -137,10 +143,10 @@ const SortableContactCard = ({ contact, onEdit, onDelete, onPreview }) => {
   )
 }
 
-// OVERLAY CARD (plain card, no useSortable — avoids duplicate ID registration)
+// OVERLAY CARD
 const OverlayCard = ({ contact }) => (
   <Card
-    className="contacts-kanban-card shadow-lg border-primary border-2 bg-white kanban-card-overlay"
+    className="kanban-card-new shadow-lg border-primary border-2 bg-white kanban-card-overlay"
     style={{ width: '300px', cursor: 'grabbing' }}
   >
     <CardContent contact={contact} showActions={false} />
@@ -285,17 +291,18 @@ export const KanbanView = ({
         },
       }}
     >
-      <Row className="kanban-container g-3 flex-nowrap overflow-auto py-2">
+      <Row className="kanban-container g-4 flex-nowrap overflow-auto py-2 px-2">
         {columns.map((column, index) => {
           const isDropTarget = activeId && overColumn === column && activeContactColumn !== column
+          const color = getColumnColor(index)
 
           return (
-            <Col key={column} className="flex-grow-1" style={{ minWidth: '300px' }}>
-              <div className={`kanban-column h-100 bg-white bg-opacity-50 rounded-3 border shadow-sm ${isDropTarget ? 'kanban-column-highlight' : 'border-light'}`}>
-                {/* Header */}
+            <Col key={column} className="flex-grow-1" style={{ minWidth: '320px', maxWidth: '380px' }}>
+              <div className={`kanban-column h-100 bg-transparent rounded-3 ${isDropTarget ? 'kanban-column-highlight' : ''}`}>
+                {/* Header - MATCHING IMAGE EXACTLY */}
                 <div
-                  className="kanban-header p-3 border-bottom d-flex justify-content-between align-items-center sticky-top bg-white rounded-top-3"
-                  style={{ borderTop: `4px solid ${getColumnColor(index)}` }}
+                  className="kanban-header p-3 mb-3 bg-white shadow-sm rounded-3 d-flex justify-content-between align-items-center border-top border-4"
+                  style={{ borderTopColor: color }}
                 >
                   {editingColumnId === column ? (
                     <div className="d-flex gap-1 w-100">
@@ -307,11 +314,13 @@ export const KanbanView = ({
                   ) : (
                     <>
                       <div className="d-flex align-items-center gap-2">
-                        <h6 className="mb-0 fw-bold">{column}</h6>
-                        <Badge bg="light" text="dark" className="border rounded-pill ms-1">{groupedContacts[column]?.length || 0}</Badge>
+                        <h6 className="mb-0 fw-bold text-uppercase fs-7 ls-1" style={{ fontSize: '13px', letterSpacing: '0.5px' }}>{column}</h6>
+                        <span className="badge rounded-pill bg-light text-dark border ms-2 px-2 py-1" style={{ fontSize: '11px', fontWeight: '600' }}>
+                          {groupedContacts[column]?.length || 0}
+                        </span>
                       </div>
                       <Dropdown align="end">
-                        <Dropdown.Toggle as="button" className="btn btn-sm btn-link text-muted p-0 no-arrow"><MoreVertical size={16} /></Dropdown.Toggle>
+                        <Dropdown.Toggle as="button" className="btn btn-sm btn-link text-muted p-0 no-arrow hover-dark"><MoreVertical size={16} /></Dropdown.Toggle>
                         <Dropdown.Menu>
                           <Dropdown.Item onClick={() => { setEditingColumnId(column); setEditedColumnTitle(column) }}>Rename</Dropdown.Item>
                           <Dropdown.Item className="text-danger" onClick={() => onDeleteColumn(column)}>Delete</Dropdown.Item>
@@ -323,7 +332,7 @@ export const KanbanView = ({
 
                 {/* Droppable Area */}
                 <DroppableColumn id={column}>
-                  <div className="p-2 d-flex flex-column gap-2" style={{ minHeight: '100px' }}>
+                  <div className="d-flex flex-column gap-3" style={{ minHeight: '100px' }}>
                     <SortableContext items={groupedContacts[column].map(c => c.id)} strategy={verticalListSortingStrategy}>
                       {groupedContacts[column].map(contact => (
                         <SortableContactCard
@@ -336,7 +345,7 @@ export const KanbanView = ({
                       ))}
                     </SortableContext>
                     {groupedContacts[column].length === 0 && (
-                      <div className="text-center text-muted py-4 small border-2 border-dashed rounded opacity-50 m-2">
+                      <div className="text-center text-muted py-5 small border border-dashed rounded-3 bg-white bg-opacity-50 mx-1">
                         Drop items here
                       </div>
                     )}

@@ -268,225 +268,125 @@ const Contacts = () => {
     <div className="contacts-container">
 
       {/* Stats Grid */}
-      <div className="stats-grid">
-        {/* ... (Keep existing stats structure) ... */}
-        <div className="stat-card">
-          <div className="stat-header">
-            <div className="stat-icon-wrapper blue"><User size={24} /></div>
-            <div className="stat-content">
-              <div className="stat-title">Total Contacts</div>
-              <div className="stat-value">{stats.total}</div>
-            </div>
+      {/* Stats Grid - MATCHING IMAGE EXACTLY */}
+      <div className="stats-grid mb-4">
+        <div className="stat-card-new">
+          <div className="stat-icon-box blue-soft">
+            <User size={22} className="text-primary" />
+          </div>
+          <div className="stat-info">
+            <span className="stat-label">Total Contacts</span>
+            <h3 className="stat-number">{stats.total}</h3>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-header">
-            <div className="stat-icon-wrapper green"><Flag size={24} /></div>
-            <div className="stat-content">
-              <div className="stat-title">Total Leads</div>
-              <div className="stat-value">{stats.leads}</div>
-            </div>
+
+        <div className="stat-card-new">
+          <div className="stat-icon-box green-soft">
+            <Flag size={22} className="text-success" />
+          </div>
+          <div className="stat-info">
+            <span className="stat-label">Total Leads</span>
+            <h3 className="stat-number">{stats.leads}</h3>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-header">
-            <div className="stat-icon-wrapper teal"><Briefcase size={24} /></div>
-            <div className="stat-content">
-              <div className="stat-title">Customers</div>
-              <div className="stat-value">{stats.customers}</div>
-            </div>
+
+        <div className="stat-card-new">
+          <div className="stat-icon-box teal-soft">
+            <Briefcase size={22} className="text-info" />
+          </div>
+          <div className="stat-info">
+            <span className="stat-label">Customers</span>
+            <h3 className="stat-number">{stats.customers}</h3>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-header">
-            <div className="stat-icon-wrapper purple"><Building size={24} /></div>
-            <div className="stat-content">
-              <div className="stat-title">Companies</div>
-              <div className="stat-value">{stats.companies}</div>
-            </div>
+
+        <div className="stat-card-new">
+          <div className="stat-icon-box purple-soft">
+            <Building size={22} className="text-purple" />
+          </div>
+          <div className="stat-info">
+            <span className="stat-label">Companies</span>
+            <h3 className="stat-number">{stats.companies}</h3>
           </div>
         </div>
       </div>
 
-      {/* Header & Toolbar (Project Page Style) */}
-      <div className="project-header mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
-
-        {/* Left: Title & Search */}
+      {/* Header & Toolbar - MATCHING IMAGE EXACTLY */}
+      <div className="contacts-toolbar-wrapper mb-4">
         <div className="d-flex align-items-center gap-4">
-          <h4 className="mb-0 fw-bold text-dark">Contacts</h4>
-          <div className="search-wrapper position-relative" style={{ width: '240px' }}>
-            <Form.Control
-              type="text"
-              placeholder="Search contacts..."
-              className="ps-5 bg-white border-secondary-subtle"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              style={{ borderRadius: '8px', fontSize: '13px' }}
-            />
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="position-absolute top-50 start-0 translate-middle-y ms-3" style={{ zIndex: 10, minWidth: 16, minHeight: 16, display: 'block' }}>
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
+          <h3 className="mb-0 fw-bold text-dark">Contacts</h3>
+
+          <div className="search-pill-container">
+            <div className="search-pill">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="me-2">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search contacts..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="search-input-clean"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Right: Toolbar Buttons */}
-        <div className="d-flex align-items-center gap-2">
+        <div className="d-flex align-items-center gap-2 ms-auto">
+          {/* Filter Icons */}
+          <div className="icon-group me-3">
+            <button title="Filter" className={`icon-btn-clean ${filterBy !== 'all' ? 'active' : ''}`}>
+              <Filter size={18} />
+            </button>
+            <button title="Group By" className={`icon-btn-clean ${groupBy !== 'status' ? 'active' : ''}`}>
+              <Layers size={18} />
+            </button>
+            <button title="Sort" className="icon-btn-clean">
+              <ArrowUpDown size={18} />
+            </button>
+            <button title="Settings" className="icon-btn-clean">
+              <Settings size={18} />
+            </button>
+          </div>
 
-          {/* Filter Dropdown */}
-          <Dropdown align="end">
-            <Dropdown.Toggle as="button" className="icon-btn">
-              <div className={`icon-wrapper ${filterBy !== 'all' ? 'active' : ''}`}>
-                <Filter size={18} />
-              </div>
-            </Dropdown.Toggle>
-            <Dropdown.Menu className="timesheet-dropdown-menu p-3" style={{ minWidth: '240px' }}>
-              <Form.Label className="small text-muted fw-bold mb-2">FILTER BY</Form.Label>
-              <Form.Select
-                size="sm"
-                value={filterBy}
-                onChange={(e) => { setFilterBy(e.target.value); setFilterValue(''); }}
-                className="mb-2"
-              >
-                <option value="all">None</option>
-                {filterableColumns.map(col => <option key={col.id} value={col.id}>{col.name}</option>)}
-              </Form.Select>
+          <div className="vr h-50 my-auto opacity-25"></div>
 
-              {filterBy !== 'all' && (
-                <>
-                  <Form.Label className="small text-muted fw-bold mb-2 mt-2">VALUE</Form.Label>
-                  <Form.Select
-                    size="sm"
-                    value={filterValue}
-                    onChange={(e) => setFilterValue(e.target.value)}
-                  >
-                    <option value="">Select...</option>
-                    {getFilterOptions(filterBy).map(val => <option key={val} value={val}>{val}</option>)}
-                  </Form.Select>
-                </>
-              )}
-            </Dropdown.Menu>
-          </Dropdown>
-
-          {/* Group Dropdown */}
-          <Dropdown align="end">
-            <Dropdown.Toggle as="button" className="icon-btn">
-              <div className={`icon-wrapper ${groupBy !== 'status' ? 'active' : ''}`}>
-                <Layers size={18} />
-              </div>
-            </Dropdown.Toggle>
-            <Dropdown.Menu className="timesheet-dropdown-menu p-3" style={{ minWidth: '200px' }}>
-              <Form.Label className="small text-muted fw-bold mb-2">GROUP BY</Form.Label>
-              <Dropdown.Item active={groupBy === 'status'} onClick={() => setGroupBy('status')}>Status</Dropdown.Item>
-              <Dropdown.Item active={groupBy === 'type'} onClick={() => setGroupBy('type')}>Type</Dropdown.Item>
-              <Dropdown.Item active={groupBy === 'company'} onClick={() => setGroupBy('company')}>Company</Dropdown.Item>
-              <Dropdown.Item active={groupBy === 'location'} onClick={() => setGroupBy('location')}>Location</Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
-
-          {/* Sort Dropdown */}
-          <Dropdown align="end">
-            <Dropdown.Toggle as="button" className="icon-btn">
-              <div className="icon-wrapper">
-                <ArrowUpDown size={18} />
-              </div>
-            </Dropdown.Toggle>
-            <Dropdown.Menu className="timesheet-dropdown-menu p-3" style={{ minWidth: '200px' }}>
-              <Form.Label className="small text-muted fw-bold mb-2">SORT BY</Form.Label>
-              <Form.Select size="sm" value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="mb-2">
-                <option value="name">Name</option>
-                <option value="email">Email</option>
-                <option value="company">Company</option>
-                <option value="date">Date Added</option>
-              </Form.Select>
-              <div className="d-flex gap-2">
-                <Button size="sm" variant={sortOrder === 'asc' ? 'primary' : 'light'} className="w-50" onClick={() => setSortOrder('asc')}>Asc</Button>
-                <Button size="sm" variant={sortOrder === 'desc' ? 'primary' : 'light'} className="w-50" onClick={() => setSortOrder('desc')}>Desc</Button>
-              </div>
-            </Dropdown.Menu>
-          </Dropdown>
-
-          {/* Settings Dropdown (New) */}
-          <Dropdown align="end">
-            <Dropdown.Toggle as="button" className="icon-btn">
-              <div className="icon-wrapper">
-                <Settings size={18} />
-              </div>
-            </Dropdown.Toggle>
-            <Dropdown.Menu className="timesheet-dropdown-menu p-3" style={{ minWidth: '200px' }}>
-              <Form.Label className="small text-muted fw-bold mb-2">SETTINGS</Form.Label>
-              <Dropdown.Item onClick={() => setShowAddColumnModal(true)} disabled={groupBy !== 'status' || viewMode !== 'kanban'}>
-                <Plus size={14} className="me-2" /> Add Status Column
-              </Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
-
-          <div className="vr opacity-25 mx-2"></div>
-
-          {/* View Toggle - UPDATED ICONS (Inline SVG - TodoList Standard) */}
-          <div className="view-toggle-group">
+          {/* View Toggle */}
+          <div className="view-toggle-clean mx-3">
             <button
-              className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+              className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
               onClick={() => setViewMode('list')}
-              title="List View"
             >
-              {/* List Icon SVG (lines+dots) */}
-              <svg style={{ minWidth: 18, minHeight: 18, display: 'block' }} xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="8" x2="21" y1="6" y2="6" />
-                <line x1="8" x2="21" y1="12" y2="12" />
-                <line x1="8" x2="21" y1="18" y2="18" />
-                <line x1="3" x2="3.01" y1="6" y2="6" />
-                <line x1="3" x2="3.01" y1="12" y2="12" />
-                <line x1="3" x2="3.01" y1="18" y2="18" />
-              </svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" x2="21" y1="6" y2="6" /><line x1="8" x2="21" y1="12" y2="12" /><line x1="8" x2="21" y1="18" y2="18" /><line x1="3" x2="3.01" y1="6" y2="6" /><line x1="3" x2="3.01" y1="12" y2="12" /><line x1="3" x2="3.01" y1="18" y2="18" /></svg>
             </button>
             <button
-              className={`view-toggle-btn ${viewMode === 'kanban' ? 'active' : ''}`}
+              className={`view-btn ${viewMode === 'kanban' ? 'active' : ''}`}
               onClick={() => setViewMode('kanban')}
-              title="Kanban View"
             >
-              {/* Kanban Icon SVG (Columns) */}
-              <svg style={{ minWidth: 18, minHeight: 18, display: 'block' }} xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 5v11" />
-                <path d="M12 5v6" />
-                <path d="M18 5v14" />
-              </svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 5v11" /><path d="M12 5v6" /><path d="M18 5v14" /></svg>
             </button>
             <button
-              className={`view-toggle-btn ${viewMode === 'chart' ? 'active' : ''}`}
+              className={`view-btn ${viewMode === 'chart' ? 'active' : ''}`}
               onClick={() => setViewMode('chart')}
-              title="Chart View"
             >
-              {/* BarChart3 Icon SVG (L-axis + bars) */}
-              <svg style={{ minWidth: 18, minHeight: 18, display: 'block' }} xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 3v18h18" />
-                <path d="M18 17V9" />
-                <path d="M13 17V5" />
-                <path d="M8 17v-3" />
-              </svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></svg>
             </button>
           </div>
 
           <Button
-            variant="primary"
-            className="d-flex align-items-center gap-2 ms-2 btn-icon-text"
+            className="btn-success-soft d-flex align-items-center gap-2"
             onClick={handleCreateContact}
-            size="sm"
           >
-            <Plus size={16} />
-            Contact
+            <Plus size={18} /> Contact
           </Button>
 
           <Button
-            variant="outline-purple"
-            className="d-flex align-items-center gap-2 ms-1 btn-icon-text"
+            className="btn-purple-soft d-flex align-items-center gap-2"
             onClick={() => setShowAIAssist(true)}
-            size="sm"
-            style={{ borderColor: '#7e22ce', color: '#7e22ce' }}
           >
             ✨ AI
           </Button>
-
         </div>
       </div>
 
