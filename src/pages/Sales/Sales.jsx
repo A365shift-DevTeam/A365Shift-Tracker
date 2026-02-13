@@ -72,7 +72,8 @@ const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onD
 
     // Calculate Progress Percentage
     const maxStageIndex = stages.length > 0 ? stages.length - 1 : 1;
-    const progressPercentage = Math.round((activeStage / maxStageIndex) * 100);
+    const rawPercentage = (activeStage / maxStageIndex) * 100;
+    const progressPercentage = Math.min(100, Math.round(rawPercentage));
 
     const handleDragStart = (e) => {
         e.dataTransfer.setData('text/plain', activeStage)
@@ -101,15 +102,12 @@ const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onD
     }
 
     const handleStageClick = (index) => {
-        // Open modal for confirmation and data entry
-        if (activeStage !== index) {
-            setStageTransition({
-                from: stages[activeStage]?.label || 'Unknown',
-                to: stages[index]?.label || 'Unknown'
-            })
-            // Do NOT update stage yet - wait for modal save
-            setShowNotification(true)
-        }
+        // Open modal for confirmation/history regardless of whether it's the active stage
+        setStageTransition({
+            from: stages[activeStage]?.label || 'Unknown',
+            to: stages[index]?.label || 'Unknown'
+        })
+        setShowNotification(true)
     }
 
     return (
@@ -181,6 +179,22 @@ const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onD
                             const pastColor = '#86efac'; // Light Green
                             const futureColor = '#e5e7eb'; // Light Gray
 
+                            // Calculate days in current stage for Ageing color
+                            let isOverdue = false;
+                            if (isActive) {
+                                // Find the latest entry in history that matches this stage start
+                                // For now, we take the most recent history entry as the start of this stage
+                                // improved logic could allow finding the exact transition
+                                const lastUpdate = history.length > 0 ? new Date(history[0].timestamp) : new Date(); // Fallback to now if no history
+                                const diffTime = Math.abs(new Date() - lastUpdate);
+                                const daysInStage = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                                if (daysInStage > (stage.ageing || 0)) {
+                                    isOverdue = true;
+                                }
+                            }
+                            const ageingColor = isOverdue ? '#ef4444' : '#0f172a'; // Red if overdue, else dark blue
+
                             return (
                                 <div key={index} className="d-flex align-items-center">
                                     {/* Stage Card */}
@@ -235,7 +249,7 @@ const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onD
                                                     width: '24px',
                                                     height: '24px',
                                                     background: isPast ? pastColor : (isActive ? activeColor : futureColor),
-                                                    color: '#0f172a',
+                                                    color: isActive ? ageingColor : '#0f172a',
                                                     fontSize: '11px',
                                                     fontWeight: '800',
                                                     zIndex: 3,
@@ -473,7 +487,8 @@ function Sales() {
     const totalProgress = filteredProjects.length > 0
         ? Math.round(filteredProjects.reduce((acc, curr) => {
             const maxStageIndex = activeStages.length - 1;
-            const progress = maxStageIndex > 0 ? (curr.activeStage / maxStageIndex) * 100 : 0;
+            const rawProgress = maxStageIndex > 0 ? (curr.activeStage / maxStageIndex) * 100 : 0;
+            const progress = Math.min(100, rawProgress);
             return acc + progress;
         }, 0) / filteredProjects.length)
         : 0;
@@ -679,14 +694,14 @@ function Sales() {
                                 size="sm"
                                 onClick={() => setActiveTab('Product')}
                             >
-                                Client
+                                Services & Products
                             </Button>
                             <Button
                                 variant={activeTab === 'Service' ? 'primary' : 'outline-secondary'}
                                 size="sm"
                                 onClick={() => setActiveTab('Service')}
                             >
-                                Service
+                                Clients
                             </Button>
                         </div>
 
