@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FaChartColumn, FaUserGroup, FaClock, FaRightFromBracket, FaHouse } from 'react-icons/fa6';
+import { FaChartColumn, FaUserGroup, FaClock, FaRightFromBracket, FaHouse, FaMoneyBillWave } from 'react-icons/fa6';
 
 export default function MainLayout() {
     const { logout } = useAuth();
@@ -20,6 +20,7 @@ export default function MainLayout() {
         { path: '/sales', icon: <FaChartColumn />, label: 'Sales' },
         { path: '/contact', icon: <FaUserGroup />, label: 'Contacts' },
         { path: '/timesheet', icon: <FaClock />, label: 'Timesheet' },
+        { path: '/finance', icon: <FaMoneyBillWave />, label: 'Finance' },
     ];
 
     return (
