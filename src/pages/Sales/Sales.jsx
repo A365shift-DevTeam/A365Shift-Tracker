@@ -16,6 +16,21 @@ const getDefaultStages = () => [
     { id: 6, label: 'Lost', color: 'orange', ageing: 60 },
 ]
 
+const STAGE_STORAGE_KEYS = {
+    Product: 'sales_stages_product',
+    Service: 'sales_stages_service'
+}
+
+const getStoredStages = (type) => {
+    try {
+        const stored = localStorage.getItem(STAGE_STORAGE_KEYS[type])
+        return stored ? JSON.parse(stored) : getDefaultStages()
+    } catch (e) {
+        console.error('Failed to load stages', e)
+        return getDefaultStages()
+    }
+}
+
 const SalesCard = ({ projectId, stages, activeStage, onStageChange, onDelete, delay, clientName, brandingName, history = [] }) => {
     const [showNotification, setShowNotification] = useState(false)
     const [stageTransition, setStageTransition] = useState({ from: '', to: '' })
@@ -282,8 +297,8 @@ function Sales() {
     const [sortOrder, setSortOrder] = useState('desc')
 
     // Distinct stages for each menu type
-    const [productStages, setProductStages] = useState(getDefaultStages())
-    const [serviceStages, setServiceStages] = useState(getDefaultStages())
+    const [productStages, setProductStages] = useState(() => getStoredStages('Product'))
+    const [serviceStages, setServiceStages] = useState(() => getStoredStages('Service'))
 
     // Projects state
     const [projects, setProjects] = useState([])
@@ -397,6 +412,7 @@ function Sales() {
 
     const handleSaveSettings = (newStages) => {
         setStagesByType(activeTab, newStages)
+        localStorage.setItem(STAGE_STORAGE_KEYS[activeTab], JSON.stringify(newStages))
         setShowSettings(false)
     }
 

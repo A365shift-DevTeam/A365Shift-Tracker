@@ -16,6 +16,9 @@ const BusinessProcessModal = ({
     delay = 0,
     history = []
 }) => {
+    // Sort history by timestamp ascending (Oldest first) "one by one order"
+    const sortedHistory = [...history].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+
     const initialStage = targetStage !== undefined ? targetStage : activeStage
     const [viewedStage, setViewedStage] = useState(initialStage)
     const [formData, setFormData] = useState({
@@ -153,12 +156,12 @@ const BusinessProcessModal = ({
                     <Col md={5} className="bp-status-section">
                         <h6 className="mb-3">Status History</h6>
                         <div className="history-list" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                            {(!history || history.length === 0) ? (
+                            {(!sortedHistory || sortedHistory.length === 0) ? (
                                 <p className="text-muted small">
                                     History and logs for {currentStageLabel} will appear here.
                                 </p>
                             ) : (
-                                history.map((item, idx) => (
+                                sortedHistory.map((item, idx) => (
                                     <div key={idx} className="history-item mb-3 p-2 border-bottom">
                                         <div className="d-flex justify-content-between">
                                             <strong style={{ fontSize: '0.9rem', color: '#1f2937' }}>{item.transition}</strong>
