@@ -31,7 +31,16 @@ const getStoredStages = (type) => {
     }
 }
 
-const SalesCard = ({ projectId, stages, activeStage, onStageChange, onDelete, delay, clientName, brandingName, history = [] }) => {
+const GenerateCustomId = (brandingName, clientName) => {
+    const today = new Date();
+    const date = String(today.getDate()).padStart(2, '0');
+    const year = String(today.getFullYear()).slice(-2);
+    const brandCode = (brandingName || 'A3').substring(0, 2).toUpperCase();
+    const clientCode = (clientName || 'C').slice(-1).toUpperCase();
+    return `${date}${brandCode}${clientCode}${year}`;
+}
+
+const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onDelete, delay, clientName, brandingName, history = [] }) => {
     const [showNotification, setShowNotification] = useState(false)
     const [stageTransition, setStageTransition] = useState({ from: '', to: '' })
 
@@ -60,6 +69,10 @@ const SalesCard = ({ projectId, stages, activeStage, onStageChange, onDelete, de
     // Determine display Client
     const displayClient = clientName ? { name: clientName, color: mockClient.color } : mockClient;
     const client = displayClient;
+
+    // Calculate Progress Percentage
+    const maxStageIndex = stages.length > 0 ? stages.length - 1 : 1;
+    const progressPercentage = Math.round((activeStage / maxStageIndex) * 100);
 
     const handleDragStart = (e) => {
         e.dataTransfer.setData('text/plain', activeStage)
@@ -104,12 +117,12 @@ const SalesCard = ({ projectId, stages, activeStage, onStageChange, onDelete, de
             {/* Header Row: ID and Icons */}
             <div className="d-flex justify-content-between align-items-start mb-1">
                 <div>
-                    <div className="project-id">Project ID: #{String(projectId).slice(-6).toUpperCase()}</div>
+                    <div className="project-id">Project ID: #{project.customId || String(projectId).slice(-6).toUpperCase()}</div>
                     <div className="d-flex flex-column mt-2">
                         <span className="text-secondary" style={{ fontSize: '13px', fontWeight: '500' }}>
                             {delay > 0 ? `Delay ${delay} Days` : 'On Track'}
                         </span>
-                        <span className="fw-bold fs-6">60%</span>
+                        <span className="fw-bold fs-6">{progressPercentage}%</span>
                     </div>
                 </div>
 
@@ -388,7 +401,8 @@ function Sales() {
             rating: 4.0, // Default rating
             delay: 0,
             clientName: newProjectData.clientName || 'New Client',
-            brandingName: newProjectData.brandingName || 'A365Shift'
+            brandingName: newProjectData.brandingName || 'A365Shift',
+            customId: GenerateCustomId(newProjectData.brandingName, newProjectData.clientName)
         }
 
         try {
@@ -665,7 +679,7 @@ function Sales() {
                                 size="sm"
                                 onClick={() => setActiveTab('Product')}
                             >
-                                Clint
+                                Client
                             </Button>
                             <Button
                                 variant={activeTab === 'Service' ? 'primary' : 'outline-secondary'}
@@ -700,6 +714,7 @@ function Sales() {
                     <SalesCard
                         key={project.id}
                         projectId={project.id}
+                        project={project}
                         stages={activeStages}
                         activeStage={project.activeStage}
                         history={project.history}
@@ -744,7 +759,7 @@ function Sales() {
                                 value={newProjectData.type}
                                 onChange={(e) => setNewProjectData({ ...newProjectData, type: e.target.value })}
                             >
-                                <option value="Product">Product</option>
+                                <option value="Product">Client</option>
                                 <option value="Service">Service</option>
                             </Form.Select>
                         </Form.Group>

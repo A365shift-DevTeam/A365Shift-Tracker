@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import Sales from './pages/Sales/Sales';
 import Contact from './pages/Contact/Contacts/Contacts';
 import Timesheet from './pages/Timesheet/Timesheet';
+import TodoList from './pages/TodoList/TodoList';
 import './index.css';
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
             <Route path="sales" element={<Sales />} />
             <Route path="contact" element={<Contact />} />
             <Route path="timesheet" element={<Timesheet />} />
+            <Route path="todolist" element={<TodoList />} />
           </Route>
         </Routes>
       </AuthProvider>
