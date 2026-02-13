@@ -119,7 +119,7 @@ const SalesCard = ({ projectId, stages, activeStage, onStageChange, onDelete, de
                     <Mail size={18} className="icon-outline" strokeWidth={1.5} />
                     <Trash2
                         size={16}
-                        className="icon-delete ms-2"
+                        className="icon-outline icon-delete ms-2"
                         strokeWidth={1.5}
                         onClick={(e) => {
                             e.stopPropagation();
@@ -222,9 +222,9 @@ const SalesCard = ({ projectId, stages, activeStage, onStageChange, onDelete, de
                                                     width: '24px',
                                                     height: '24px',
                                                     background: isPast ? pastColor : (isActive ? activeColor : futureColor),
-                                                    color: 'white',
-                                                    fontSize: '10px',
-                                                    fontWeight: 'bold',
+                                                    color: '#0f172a',
+                                                    fontSize: '11px',
+                                                    fontWeight: '800',
                                                     zIndex: 3,
                                                     flexShrink: 0
                                                 }}
@@ -449,6 +449,9 @@ function Sales() {
         }
     });
 
+    // Calculate Total Projects
+    const totalProjects = filteredProjects.length;
+
     // Calculate Dashboard Metrics
     const totalStages = activeStages.length;
 
@@ -469,6 +472,18 @@ function Sales() {
         <div className="sales-page">
 
             <div className="sales-stats-grid">
+                {/* Card 0: Total Projects */}
+                <div className="stat-card">
+                    <div className="stat-header">
+                        <div className="stat-icon-wrapper purple">
+                            <Briefcase size={24} />
+                        </div>
+                        <div className="stat-content">
+                            <div className="stat-title">Total Project</div>
+                            <div className="stat-value">{totalProjects}</div>
+                        </div>
+                    </div>
+                </div>
                 {/* Card 1: Stages */}
                 <div className="stat-card">
                     <div className="stat-header">
@@ -489,7 +504,7 @@ function Sales() {
                             <CheckCircle size={24} />
                         </div>
                         <div className="stat-content">
-                            <div className="stat-title">Completed</div>
+                            <div className="stat-title">Avg. Percentage</div>
                             <div className="d-flex align-items-baseline gap-2">
                                 <div className="stat-value">{totalProgress}%</div>
                                 <div className="text-success small d-flex align-items-center">
@@ -514,20 +529,7 @@ function Sales() {
                     </div>
                 </div>
 
-                {/* Card 4: Insights */}
-                <div className="stat-card">
-                    <div className="stat-header">
-                        <div className="stat-icon-wrapper teal">
-                            <Search size={24} />
-                        </div>
-                        <div className="stat-content">
-                            <div className="stat-title">Insights</div>
-                            <div className="stat-value" style={{ fontSize: '14px', marginTop: '4px' }}>
-                                <a href="#" className="text-decoration-none" style={{ color: '#0f766e' }}>{activeTab} View</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
             </div>
 
             {/* New Unified Toolbar */}
@@ -663,7 +665,7 @@ function Sales() {
                                 size="sm"
                                 onClick={() => setActiveTab('Product')}
                             >
-                                Product
+                                Clint
                             </Button>
                             <Button
                                 variant={activeTab === 'Service' ? 'primary' : 'outline-secondary'}
