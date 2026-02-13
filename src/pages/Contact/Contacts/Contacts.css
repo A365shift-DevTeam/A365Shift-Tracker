@@ -484,39 +484,71 @@
   color: #0f172a;
 }
 
-/* --- Table Styling --- */
+/* --- Table Container --- */
 .contacts-table-container {
-  background: white;
-  border-radius: 16px;
-  border: 1px solid #f1f5f9;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  border: 1px solid #e2e8f0;
+}
+
+.contacts-scroll-container {
+  overflow-x: auto;
+  overflow-y: visible;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  cursor: grab;
+}
+
+.contacts-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+.contacts-scroll-container.dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.contacts-scroll-container.dragging * {
+  cursor: grabbing;
+}
+
+.contacts-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .contacts-table th {
-  background: #000000;
+  background: #000000 !important;
+  background-color: #000000 !important;
   font-size: 11px;
-  font-weight: 700;
-  color: #ffffff;
+  font-weight: 800;
+  /* Bolder font */
+  color: #ffffff !important;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   padding: 16px 24px;
-  border-bottom: 1px solid #e2e8f0;
+  border: none;
+  /* Remove borders */
   vertical-align: middle;
+  white-space: nowrap;
 }
 
-.contacts-table th:hover {
-  background-color: #000000 !important;
-  color: #ffffff !important;
-  cursor: default;
+.contacts-table thead tr {
+  background: #000000;
+  border-radius: 12px;
 }
 
 .contacts-table th:first-child {
   border-top-left-radius: 12px;
+  border-bottom-left-radius: 0;
 }
 
 .contacts-table th:last-child {
   border-top-right-radius: 12px;
+  border-bottom-right-radius: 0;
 }
 
 .contacts-table td {
@@ -960,4 +992,103 @@
 
 .kanban-scroll-container::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* Resizable Column Styles */
+.resizable-table {
+  table-layout: auto;
+  width: 100%;
+}
+
+.contacts-table th {
+  position: relative;
+  /* Ensure relative positioning for resize handles */
+}
+
+
+
+.contacts-table th,
+.contacts-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resizable-column-header {
+  position: relative;
+}
+
+.column-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -6px;
+  width: 12px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 12px;
+  transition: background-color 0.2s;
+}
+
+.column-resize-handle:hover {
+  background-color: rgba(16, 185, 129, 0.1);
+  border-radius: 4px;
+}
+
+.resize-handle-line {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(180deg, transparent, #10b981, transparent);
+  opacity: 0.3;
+  transition: opacity 0.2s;
+}
+
+.column-resize-handle:hover .resize-handle-line {
+  opacity: 0.8;
+  width: 2px;
+}
+
+.resize-handle-icon {
+  position: absolute;
+  top: calc(100% - 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #10b981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  z-index: 11;
+  opacity: 0;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.column-resize-handle:hover .resize-handle-icon {
+  opacity: 1;
+  transform: translateX(-50%) scale(1.1);
+}
+
+.resize-handle-icon svg {
+  stroke-width: 3;
+}
+
+body.resizing {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+body.resizing * {
+  cursor: col-resize !important;
 }
