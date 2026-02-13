@@ -1,11 +1,7 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-<<<<<<< HEAD
-import { FaChartColumn, FaUserGroup, FaClock, FaRightFromBracket, FaHouse, FaMoneyBillWave } from 'react-icons/fa6';
-=======
-import { FaChartColumn, FaUserGroup, FaClock, FaRightFromBracket, FaHouse, FaListCheck } from 'react-icons/fa6';
->>>>>>> 8759994719d62236796692455c1dc341daae1c03
+import { FaChartColumn, FaUserGroup, FaClock, FaRightFromBracket, FaHouse, FaMoneyBillWave, FaListCheck } from 'react-icons/fa6';
 
 export default function MainLayout() {
     const { logout } = useAuth();
