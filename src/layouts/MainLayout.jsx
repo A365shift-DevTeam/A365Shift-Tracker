@@ -1,7 +1,11 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+<<<<<<< HEAD
 import { FaChartColumn, FaUserGroup, FaClock, FaRightFromBracket, FaHouse, FaMoneyBillWave } from 'react-icons/fa6';
+=======
+import { FaChartColumn, FaUserGroup, FaClock, FaRightFromBracket, FaHouse, FaListCheck } from 'react-icons/fa6';
+>>>>>>> 8759994719d62236796692455c1dc341daae1c03
 
 export default function MainLayout() {
     const { logout } = useAuth();
@@ -18,6 +22,7 @@ export default function MainLayout() {
     const navItems = [
         { path: '/', icon: <FaHouse />, label: 'Dashboard' },
         { path: '/sales', icon: <FaChartColumn />, label: 'Sales' },
+        { path: '/todolist', icon: <FaListCheck />, label: 'Todo List' },
         { path: '/contact', icon: <FaUserGroup />, label: 'Contacts' },
         { path: '/timesheet', icon: <FaClock />, label: 'Timesheet' },
         { path: '/finance', icon: <FaMoneyBillWave />, label: 'Finance' },

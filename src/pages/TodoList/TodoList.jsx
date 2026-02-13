@@ -1,0 +1,314 @@
+import { useState, useEffect } from 'react'
+import { Container, Row, Col, Card, Button, InputGroup, Form } from 'react-bootstrap'
+import { Plus, LayoutGrid, List as ListIcon, Search, SlidersHorizontal, Settings, Calendar, ClipboardList, AlertCircle, Clock, ChevronDown, Filter, BarChart2 } from 'lucide-react'
+import { ListView } from './ListView'
+import { KanbanView } from './KanbanView'
+import { TaskModal } from './TaskModal'
+import { ColumnManager } from './ColumnManager'
+import { taskService } from '../../services/api'
+import './TodoList.css'
+
+const TodoList = () => {
+    // Initial State
+    const [view, setView] = useState('list') // 'list', 'board'
+    const [tasks, setTasks] = useState([])
+    const [loading, setLoading] = useState(true)
+
+    // Fetch Tasks
+    useEffect(() => {
+        const fetchTasks = async () => {
+            try {
+                const data = await taskService.getAll()
+                // Sort by ID desc (assuming numeric IDs)
+                setTasks(data.sort((a, b) => (b.id || 0) - (a.id || 0)))
+            } catch (error) {
+                console.error("Error fetching tasks:", error)
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchTasks()
+    }, [])
+
+    const [columns, setColumns] = useState([
+        { id: 'id', name: 'ID', type: 'number', visible: true, config: { readOnly: true, autoIncrement: true } },
+        { id: 'title', name: 'TITLE', type: 'text', visible: true, required: true },
+        {
+            id: 'status',
+            name: 'STATUS',
+            type: 'choice',
+            visible: true,
+            config: {
+                options: [
+                    { label: 'Pending', color: '#0ea5e9' }, // Blue
+                    { label: 'In Progress', color: '#22c55e' }, // Green
+                    { label: 'Completed', color: '#10b981' },
+                    { label: 'On Hold', color: '#64748b' }
+                ]
+            }
+        },
+        {
+            id: 'priority',
+            name: 'PRIORITY',
+            type: 'choice',
+            visible: true,
+            config: {
+                options: [
+                    { label: 'High', color: '#f97316' }, // Orange
+                    { label: 'Medium', color: '#16a34a' }, // Green
+                    { label: 'Low', color: '#10b981' }
+                ]
+            }
+        },
+        { id: 'dueDate', name: 'DUE DATE', type: 'datetime', visible: true, config: { dateOnly: true } }
+    ])
+
+    const [showTaskModal, setShowTaskModal] = useState(false)
+    const [editingTask, setEditingTask] = useState(null)
+    const [showColumnManager, setShowColumnManager] = useState(false)
+    const [searchQuery, setSearchQuery] = useState('')
+
+    // Computed Stats
+    const totalTasks = tasks.length
+    const highPriorityTasks = tasks.filter(t => t.values.priority === 'High').length
+    const pendingTasks = tasks.filter(t => t.values.status === 'Pending').length
+    const dueSoonTasks = tasks.filter(t => {
+        if (!t.values.dueDate) return false
+        const wDate = new Date(t.values.dueDate)
+        const today = new Date()
+        const diff = wDate - today
+        // Due within 3 days
+        return diff > 0 && diff < (3 * 24 * 60 * 60 * 1000)
+    }).length
+
+    // Handlers
+    const handleAddTask = async (values, notify) => {
+        try {
+            // Generate simple numeric ID based on max existing ID
+            // This is not concurrency-safe but sufficient for single-user/simple demo
+            const maxId = tasks.length > 0 ? Math.max(...tasks.map(t => typeof t.id === 'number' ? t.id : 0)) : 0
+            const newId = maxId + 1
+
+            const newTaskData = {
+                id: newId,
+                notify,
+                values: { ...values },
+                createdAt: new Date().toISOString()
+            }
+
+            const createdTask = await taskService.create(newTaskData)
+            setTasks([createdTask, ...tasks])
+        } catch (error) {
+            console.error("Error creating task:", error)
+            alert("Failed to create task. Please try again.")
+        }
+    }
+
+    const handleUpdateTask = async (updatedValues, notify) => {
+        if (!editingTask || !editingTask.firebaseId) return
+
+        try {
+            await taskService.update(editingTask.firebaseId, {
+                values: updatedValues,
+                notify
+            })
+
+            setTasks(tasks.map(t =>
+                t.id === editingTask.id
+                    ? { ...t, values: updatedValues, notify }
+                    : t
+            ))
+            setEditingTask(null)
+        } catch (error) {
+            console.error("Error updating task:", error)
+            alert("Failed to update task. Please try again.")
+        }
+    }
+
+    const handleDeleteTask = async (taskId) => {
+        const taskToDelete = tasks.find(t => t.id === taskId)
+        if (!taskToDelete || !taskToDelete.firebaseId) return
+
+        if (window.confirm('Are you sure you want to delete this task?')) {
+            try {
+                await taskService.delete(taskToDelete.firebaseId)
+                setTasks(tasks.filter(t => t.id !== taskId))
+            } catch (error) {
+                console.error("Error deleting task:", error)
+                alert("Failed to delete task. Please try again.")
+            }
+        }
+    }
+
+    const handleKanbanUpdate = async (taskId, updates) => {
+        const taskToUpdate = tasks.find(t => t.id === taskId)
+        if (!taskToUpdate || !taskToUpdate.firebaseId) return
+
+        try {
+            await taskService.update(taskToUpdate.firebaseId, updates)
+            setTasks(tasks.map(t =>
+                t.id === taskId ? { ...t, ...updates } : t
+            ))
+        } catch (error) {
+            console.error("Error updating task status:", error)
+        }
+    }
+
+    // Filtered Tasks
+    const filteredTasks = tasks.filter(task => {
+        if (!searchQuery) return true
+        return Object.values(task.values).some(val =>
+            String(val).toLowerCase().includes(searchQuery.toLowerCase())
+        )
+    })
+
+    return (
+        <div className="todo-list-container">
+            {/* Stats Cards */}
+            <div className="stats-grid">
+                <div className="stat-card">
+                    <div className="stat-icon-wrapper blue">
+                        <ClipboardList size={20} strokeWidth={1.5} />
+                    </div>
+                    <div className="stat-value">{totalTasks}</div>
+                    <div className="stat-label">TOTAL TASKS</div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-icon-wrapper orange">
+                        <Clock size={20} strokeWidth={1.5} />
+                    </div>
+                    <div className="stat-value">{highPriorityTasks}</div>
+                    <div className="stat-label">HIGH PRIORITY</div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-icon-wrapper green">
+                        <AlertCircle size={20} strokeWidth={1.5} />
+                    </div>
+                    <div className="stat-value">{pendingTasks}</div>
+                    <div className="stat-label">PENDING TASKS</div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-icon-wrapper purple">
+                        <Calendar size={20} strokeWidth={1.5} />
+                    </div>
+                    <div className="stat-value">{dueSoonTasks}</div>
+                    <div className="stat-label">DUE SOON</div>
+                </div>
+            </div>
+
+            {/* Toolbar */}
+            <div className="todo-toolbar">
+                <div className="d-flex align-items-center gap-3">
+                    <div className="my-tasks-trigger">
+                        <span>My Tasks</span>
+                        <ChevronDown size={14} className="text-muted" />
+                    </div>
+                </div>
+
+                <div className="toolbar-actions">
+                    <button className="btn-toolbar">
+                        <Filter size={16} /> Filters <ChevronDown size={12} className="ms-1" />
+                    </button>
+
+                    <button className="btn-toolbar" onClick={() => setShowColumnManager(true)}>
+                        <Settings size={16} /> View Settings
+                    </button>
+
+                    <div className="view-icons-group">
+                        <button
+                            className={`btn-view-icon ${view === 'list' ? 'active' : ''}`}
+                            onClick={() => setView('list')}
+                            title="List View"
+                        >
+                            <ListIcon size={18} />
+                        </button>
+                        <button
+                            className={`btn-view-icon ${view === 'board' ? 'active' : ''}`}
+                            onClick={() => setView('board')}
+                            title="Board View"
+                        >
+                            <LayoutGrid size={18} />
+                        </button>
+                        <button className="btn-view-icon" title="Graph View">
+                            <BarChart2 size={18} />
+                        </button>
+                    </div>
+
+                    <button
+                        className="btn-new-task"
+                        onClick={() => {
+                            setEditingTask(null)
+                            setShowTaskModal(true)
+                        }}
+                    >
+                        <Plus size={16} /> New Task
+                    </button>
+                </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="todo-content">
+                {loading ? (
+                    <div className="p-5 text-center text-muted">Loading tasks...</div>
+                ) : (
+                    view === 'list' ? (
+                        <ListView
+                            tasks={filteredTasks}
+                            columns={columns}
+                            sortBy="id"
+                            sortOrder="desc"
+                            onSort={() => { }}
+                            onEdit={(task) => {
+                                setEditingTask(task)
+                                setShowTaskModal(true)
+                            }}
+                            onDelete={handleDeleteTask}
+                        />
+                    ) : (
+                        <KanbanView
+                            tasks={filteredTasks}
+                            columns={columns}
+                            onTaskUpdate={handleKanbanUpdate}
+                            onEdit={(task) => {
+                                setEditingTask(task)
+                                setShowTaskModal(true)
+                            }}
+                            onDelete={handleDeleteTask}
+                        />
+                    )
+                )}
+            </div>
+
+            {/* Modals */}
+            <TaskModal
+                show={showTaskModal}
+                onHide={() => setShowTaskModal(false)}
+                task={editingTask}
+                columns={columns}
+                onSave={editingTask ? handleUpdateTask : handleAddTask}
+                onDelete={handleDeleteTask}
+            />
+
+            {showColumnManager && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1050, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ background: 'white', borderRadius: '8px', padding: '20px', width: '90%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto' }}>
+                        <div className="d-flex justify-content-between align-items-center mb-4">
+                            <h4>Customize Columns</h4>
+                            <Button variant="close" onClick={() => setShowColumnManager(false)} />
+                        </div>
+                        <ColumnManager
+                            columns={columns}
+                            onColumnsChange={setColumns}
+                            onReorder={(newOrder) => {
+                                const newColumns = [...columns].sort((a, b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id))
+                                setColumns(newColumns)
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
+        </div>
+    )
+}
+
+export default TodoList

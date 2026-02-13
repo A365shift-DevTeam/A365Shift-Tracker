@@ -26,3 +26,29 @@ export const projectService = {
         return id;
     }
 };
+
+const TASKS_COLLECTION = 'tasks';
+
+export const taskService = {
+    getAll: async () => {
+        const snapshot = await getDocs(collection(db, TASKS_COLLECTION));
+        return snapshot.docs.map(doc => ({ firebaseId: doc.id, ...doc.data() }));
+    },
+
+    create: async (taskData) => {
+        const docRef = await addDoc(collection(db, TASKS_COLLECTION), taskData);
+        return { firebaseId: docRef.id, ...taskData };
+    },
+
+    update: async (firebaseId, updates) => {
+        const docRef = doc(db, TASKS_COLLECTION, firebaseId);
+        await updateDoc(docRef, updates);
+        return { firebaseId, ...updates };
+    },
+
+    delete: async (firebaseId) => {
+        const docRef = doc(db, TASKS_COLLECTION, firebaseId);
+        await deleteDoc(docRef);
+        return firebaseId;
+    }
+};

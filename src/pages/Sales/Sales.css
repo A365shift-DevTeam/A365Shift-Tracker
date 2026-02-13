@@ -223,6 +223,7 @@
 .card-icons-row {
     display: flex;
     gap: 8px;
+    align-items: center;
 }
 
 .icon-outline {
