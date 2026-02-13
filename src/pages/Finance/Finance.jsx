@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Row, Col, Card, Button, Form, Badge, Modal, Dropdown } from 'react-bootstrap'
-import { Plus, TrendingUp, DollarSign, Calendar, TrendingDown, Search, Edit, Trash2, Eye, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from 'lucide-react'
+import { Plus, TrendingUp, DollarSign, Calendar, TrendingDown, Search, Edit, Trash2, Eye, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Settings } from 'lucide-react'
 import { expenseService } from '../../services/expenseService'
 import { incomeService } from '../../services/incomeService'
 import { ExpenseModal } from './ExpenseModal'
 import { IncomeModal } from './IncomeModal'
+import FinanceSettingsModal, { DEFAULT_EXPENSE_FIELDS, DEFAULT_INCOME_FIELDS } from './FinanceSettingsModal'
 import './Finance.css'
 
 const EXPENSE_CATEGORIES = [
@@ -24,6 +25,11 @@ const INCOME_CATEGORIES = [
 const Finance = () => {
   const [expenses, setExpenses] = useState([])
   const [incomes, setIncomes] = useState([])
+  const [showSettingsModal, setShowSettingsModal] = useState(false)
+  const [financeConfig, setFinanceConfig] = useState(() => {
+    const saved = localStorage.getItem('finance_config')
+    return saved ? JSON.parse(saved) : { expenseFields: DEFAULT_EXPENSE_FIELDS, incomeFields: DEFAULT_INCOME_FIELDS }
+  })
   const [showExpenseModal, setShowExpenseModal] = useState(false)
   const [showIncomeModal, setShowIncomeModal] = useState(false)
   const [editingExpense, setEditingExpense] = useState(null)
@@ -521,6 +527,15 @@ const Finance = () => {
 
             <div className="vr mx-2 opacity-25"></div>
 
+            {/* Settings Button */}
+            <button className="icon-btn" onClick={() => setShowSettingsModal(true)} title="Configure Fields">
+              <div className="icon-wrapper">
+                <Settings size={20} />
+              </div>
+            </button>
+
+            <div className="vr mx-2 opacity-25"></div>
+
             {/* View Mode */}
             <div className="btn-group view-mode-toggle me-2">
               <Button
@@ -791,6 +806,7 @@ const Finance = () => {
         expense={editingExpense}
         onSave={handleSaveExpense}
         onDelete={handleDeleteExpense}
+        fields={financeConfig.expenseFields}
       />
 
       {/* Income Modal */}
@@ -803,6 +819,18 @@ const Finance = () => {
         income={editingIncome}
         onSave={handleSaveIncome}
         onDelete={handleDeleteIncome}
+        fields={financeConfig.incomeFields}
+      />
+
+      {/* Settings Modal */}
+      <FinanceSettingsModal
+        show={showSettingsModal}
+        onHide={() => setShowSettingsModal(false)}
+        currentConfig={financeConfig}
+        onSaveConfig={(newConfig) => {
+          setFinanceConfig(newConfig)
+          localStorage.setItem('finance_config', JSON.stringify(newConfig))
+        }}
       />
 
       {/* Detail View Modal */}
