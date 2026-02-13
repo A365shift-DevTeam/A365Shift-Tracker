@@ -1,11 +1,17 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Button, Form } from 'react-bootstrap'
-import { Edit, Trash2, Eye, ArrowUp, ArrowDown, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, MoreHorizontal, Building, User } from 'lucide-react'
+import { Edit, Trash2, Eye, ArrowUp, ArrowDown, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, MoreHorizontal, Building, User, Plus } from 'lucide-react'
 
 export const ListView = ({ contacts, sortBy, sortOrder, onSort, onEdit, onDelete, onPreview }) => {
   const [currentPage, setCurrentPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const tableRef = useRef(null)
+
+  // -- Resizing State --
+  const [columnWidths, setColumnWidths] = useState({})
+  const [resizingColumn, setResizingColumn] = useState(null)
+  const [resizeStartX, setResizeStartX] = useState(0)
+  const [resizeStartWidth, setResizeStartWidth] = useState(0)
 
   const columns = [
     { id: 'name', name: 'Name' },
@@ -49,6 +55,80 @@ export const ListView = ({ contacts, sortBy, sortOrder, onSort, onEdit, onDelete
   const goToNextPage = () => setCurrentPage(prev => Math.min(totalPages, prev + 1))
   const goToLastPage = () => setCurrentPage(totalPages)
 
+  // -- Resizing Logic --
+  const visibleColumns = columns // All defined columns are visible in this view
+
+  const handleResizeStart = useCallback((columnId, e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setResizingColumn(columnId)
+    setResizeStartX(e.clientX)
+
+    const table = tableRef.current
+    if (table) {
+      const headerCells = table.querySelectorAll('thead th')
+      const columnIndex = visibleColumns.findIndex(col => col.id === columnId)
+      if (headerCells[columnIndex]) {
+        const currentWidth = headerCells[columnIndex].offsetWidth
+        setResizeStartWidth(currentWidth)
+      }
+    }
+  }, [visibleColumns])
+
+  const handleResizeMove = useCallback((e) => {
+    if (!resizingColumn) return
+    const diff = e.clientX - resizeStartX
+    const newWidth = Math.max(50, resizeStartWidth + diff)
+    setColumnWidths(prev => ({
+      ...prev,
+      [resizingColumn]: newWidth
+    }))
+  }, [resizingColumn, resizeStartX, resizeStartWidth])
+
+  const handleResizeEnd = useCallback(() => {
+    setResizingColumn(null)
+  }, [])
+
+  useEffect(() => {
+    if (resizingColumn) {
+      document.addEventListener('mousemove', handleResizeMove)
+      document.addEventListener('mouseup', handleResizeEnd)
+      document.body.classList.add('resizing')
+      document.body.style.cursor = 'col-resize'
+      document.body.style.userSelect = 'none'
+
+      return () => {
+        document.removeEventListener('mousemove', handleResizeMove)
+        document.removeEventListener('mouseup', handleResizeEnd)
+        document.body.classList.remove('resizing')
+        document.body.style.cursor = ''
+        document.body.style.userSelect = ''
+      }
+    }
+  }, [resizingColumn, handleResizeMove, handleResizeEnd])
+
+  const getColumnWidth = (columnId) => {
+    return columnWidths[columnId] || undefined
+  }
+
+  // Persist column widths
+  useEffect(() => {
+    const savedWidths = localStorage.getItem('contacts_column_widths')
+    if (savedWidths) {
+      try {
+        setColumnWidths(JSON.parse(savedWidths))
+      } catch (e) {
+        console.error('Error loading column widths:', e)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (Object.keys(columnWidths).length > 0) {
+      localStorage.setItem('contacts_column_widths', JSON.stringify(columnWidths))
+    }
+  }, [columnWidths])
+
   const getStatusBadgeClass = (status) => {
     switch (status) {
       case 'Active': return 'badge-enterprise badge-green'
@@ -63,26 +143,84 @@ export const ListView = ({ contacts, sortBy, sortOrder, onSort, onEdit, onDelete
     return type === 'Company' ? 'badge-enterprise badge-blue' : 'badge-enterprise badge-gray'
   }
 
+  // --- Drag-to-scroll horizontally (hidden scrollbar) ---
+  const scrollContainerRef = useRef(null)
+  const [isDraggingScroll, setIsDraggingScroll] = useState(false)
+  const dragStartXRef = useRef(0)
+  const dragScrollLeftRef = useRef(0)
+
+  const handleDragScrollStart = (e) => {
+    if (e.button !== 0) return
+    const tag = e.target.tagName
+    if (['BUTTON', 'A', 'INPUT', 'SELECT', 'SVG', 'path', 'line', 'polyline'].includes(tag)) return
+    setIsDraggingScroll(true)
+    dragStartXRef.current = e.pageX
+    dragScrollLeftRef.current = scrollContainerRef.current.scrollLeft
+  }
+
+  useEffect(() => {
+    if (!isDraggingScroll) return
+
+    const onMove = (e) => {
+      e.preventDefault()
+      const walk = (e.pageX - dragStartXRef.current) * 1.5
+      scrollContainerRef.current.scrollLeft = dragScrollLeftRef.current - walk
+    }
+    const onUp = () => setIsDraggingScroll(false)
+
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+    return () => {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+  }, [isDraggingScroll])
+
   return (
     <div className="contacts-list-view-container">
       <div className="contacts-table-container">
-        <div className="table-responsive">
-          <table ref={tableRef} className="table contacts-table">
+        <div
+          className={`contacts-scroll-container ${isDraggingScroll ? 'dragging' : ''}`}
+          ref={scrollContainerRef}
+          onMouseDown={handleDragScrollStart}
+        >
+          <table ref={tableRef} className="table contacts-table resizable-table">
             <thead>
               <tr>
-                {columns.map((column) => (
-                  <th
-                    key={column.id}
-                    style={{ cursor: 'pointer', userSelect: 'none' }}
-                    onClick={() => handleSort(column.id)}
-                    className="sortable-header"
-                  >
-                    <div className="d-flex align-items-center gap-2">
-                      {column.name}
-                      {getSortIcon(column.id)}
-                    </div>
-                  </th>
-                ))}
+                {columns.map((column) => {
+                  const columnWidth = getColumnWidth(column.id)
+                  return (
+                    <th
+                      key={column.id}
+                      style={{
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        width: columnWidth || undefined,
+                        minWidth: columnWidth || '100px',
+                        position: 'relative',
+                        whiteSpace: 'nowrap'
+                      }}
+                      onClick={() => handleSort(column.id)}
+                      className="sortable-header resizable-column-header"
+                    >
+                      <div className="d-flex align-items-center gap-2">
+                        {column.name}
+                        {getSortIcon(column.id)}
+                      </div>
+                      <div
+                        className="column-resize-handle"
+                        onMouseDown={(e) => handleResizeStart(column.id, e)}
+                        onClick={(e) => e.stopPropagation()}
+                        title="Drag to resize column"
+                      >
+                        <div className="resize-handle-line"></div>
+                        <div className="resize-handle-icon">
+                          <Plus size={12} />
+                        </div>
+                      </div>
+                    </th>
+                  )
+                })}
                 <th style={{ width: '100px', textAlign: 'center' }}>ACTIONS</th>
               </tr>
             </thead>
@@ -97,7 +235,7 @@ export const ListView = ({ contacts, sortBy, sortOrder, onSort, onEdit, onDelete
                 paginatedContacts.map(contact => (
                   <tr key={contact.id} className="contacts-table-row">
                     {/* Name Column */}
-                    <td>
+                    <td style={{ width: getColumnWidth('name') || undefined, minWidth: getColumnWidth('name') || '100px' }}>
                       <div className="contact-cell-primary">
                         <span className="contact-name">{contact.name || '-'}</span>
                         <span className="contact-subtext">
@@ -107,7 +245,7 @@ export const ListView = ({ contacts, sortBy, sortOrder, onSort, onEdit, onDelete
                     </td>
 
                     {/* Job Title Column */}
-                    <td>
+                    <td style={{ width: getColumnWidth('jobTitle') || undefined, minWidth: getColumnWidth('jobTitle') || '100px' }}>
                       <div className="contact-cell-primary">
                         <span className="fw-medium text-dark">{contact.jobTitle || 'Unknown Role'}</span>
                         <span className="contact-subtext">{contact.department || contact.company}</span>
@@ -115,12 +253,12 @@ export const ListView = ({ contacts, sortBy, sortOrder, onSort, onEdit, onDelete
                     </td>
 
                     {/* Phone Column */}
-                    <td className="fw-medium text-secondary">
+                    <td className="fw-medium text-secondary" style={{ width: getColumnWidth('phone') || undefined, minWidth: getColumnWidth('phone') || '100px' }}>
                       {contact.phone || '-'}
                     </td>
 
                     {/* Company Column */}
-                    <td>
+                    <td style={{ width: getColumnWidth('company') || undefined, minWidth: getColumnWidth('company') || '100px' }}>
                       <div className="contact-cell-primary">
                         <span className="fw-medium text-dark">{contact.company || '-'}</span>
                         <span className="contact-subtext">{contact.company}</span>
@@ -128,19 +266,19 @@ export const ListView = ({ contacts, sortBy, sortOrder, onSort, onEdit, onDelete
                     </td>
 
                     {/* Location Column */}
-                    <td className="text-secondary">
+                    <td className="text-secondary" style={{ width: getColumnWidth('location') || undefined, minWidth: getColumnWidth('location') || '100px' }}>
                       {contact.location || 'San Francisco, CA'}
                     </td>
 
                     {/* Entity Type Column */}
-                    <td>
+                    <td style={{ width: getColumnWidth('type') || undefined, minWidth: getColumnWidth('type') || '100px' }}>
                       <span className={getTypeBadgeClass('Company')}>
                         Company
                       </span>
                     </td>
 
                     {/* Status Column */}
-                    <td>
+                    <td style={{ width: getColumnWidth('status') || undefined, minWidth: getColumnWidth('status') || '100px' }}>
                       <span className={getStatusBadgeClass(contact.status)}>
                         {contact.status || '-'}
                       </span>

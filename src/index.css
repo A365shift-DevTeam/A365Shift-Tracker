@@ -224,13 +224,30 @@ body {
 }
 
 .table thead th {
-  background: var(--bg-card-hover) !important;
-  color: var(--text-muted) !important;
-  border-bottom: 1px solid var(--border-color) !important;
+  background: #000000 !important;
+  color: #ffffff !important;
+  border-bottom: none !important;
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  font-weight: 600;
+  font-weight: 800;
+  vertical-align: middle;
+}
+
+.table thead th:first-child {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 0;
+}
+
+.table thead th:last-child {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 0;
+}
+
+/* Remove hover effects on headers */
+.table thead th:hover {
+  background: #000000 !important;
+  color: #ffffff !important;
 }
 
 .table td {

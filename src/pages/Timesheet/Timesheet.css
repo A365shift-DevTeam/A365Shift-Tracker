@@ -91,9 +91,8 @@
 }
 
 /* --- Toolbar --- */
-.timesheet-toolbar {
-  /* No background/border — sits flat on page */
-}
+/* --- Toolbar --- */
+/* .timesheet-toolbar { } */
 
 /* Icon Buttons */
 .timesheet-container .icon-btn {
@@ -185,10 +184,10 @@
 }
 
 .timesheet-table thead th {
-  background: #1a1a2e !important;
-  background-color: #1a1a2e !important;
+  background: #000000 !important;
+  background-color: #000000 !important;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   color: #ffffff !important;
   text-transform: uppercase;
   padding: 14px 16px;
@@ -198,18 +197,18 @@
 }
 
 .timesheet-table thead th:first-child {
-  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  border-radius: 12px 0 0 0;
 }
 
 .timesheet-table thead th:last-child {
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  border-radius: 0 12px 0 0;
 }
 
 .timesheet-table thead th:hover,
 .timesheet-table thead th:focus,
 .timesheet-table thead th:active {
-  background: #1a1a2e !important;
-  background-color: #1a1a2e !important;
+  background: #000000 !important;
+  background-color: #000000 !important;
   color: #ffffff !important;
 }
 
@@ -506,8 +505,15 @@ body.resizing * {
 }
 
 @keyframes timesheetFadeIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .timesheet-dropdown-menu .dropdown-item {
