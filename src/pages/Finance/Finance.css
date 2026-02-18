@@ -609,6 +609,22 @@
 }
 
 /* Responsive */
+@media (max-width: 1200px) {
+  .stats-list-container {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .stat-item {
+    min-width: 180px;
+    flex: 1 1 45%;
+  }
+
+  .stat-divider {
+    display: none;
+  }
+}
+
 @media (max-width: 992px) {
   .finance-split-view .col-lg-6 {
     margin-bottom: 30px;
@@ -618,6 +634,26 @@
 @media (max-width: 768px) {
   .finance-container {
     padding: 16px;
+  }
+
+  .stats-list-container {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .stat-item {
+    min-width: 100%;
+    padding: 8px 0;
+  }
+
+  .stat-divider {
+    display: none;
+  }
+
+  .finance-board {
+    padding: 16px;
+    min-height: 300px;
   }
 
   .finance-kanban .col-md-3,
@@ -659,6 +695,25 @@
   .summary-card {
     margin-bottom: 12px;
   }
+
+  .finance-title {
+    font-size: 1.5rem;
+  }
+
+  .finance-table thead th {
+    padding: 12px 12px;
+    font-size: 10px;
+  }
+
+  .finance-table tbody td {
+    padding: 12px;
+    font-size: 0.8rem;
+  }
+
+  .income-amount,
+  .expense-amount {
+    font-size: 1.2rem;
+  }
 }
 
 @media (max-width: 576px) {
@@ -667,6 +722,40 @@
     padding: 10px 16px;
   }
 }
+
+@media (max-width: 480px) {
+  .finance-container {
+    padding: 12px;
+  }
+
+  .finance-board {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .finance-title {
+    font-size: 1.25rem;
+  }
+
+  .stat-icon-wrapper {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+  }
+
+  .stat-value {
+    font-size: 0.95rem;
+  }
+
+  .stat-label {
+    font-size: 0.65rem;
+  }
+
+  .board-title {
+    font-size: 1rem;
+  }
+}
+
 
 /* Empty State */
 .finance-column-body .text-center {

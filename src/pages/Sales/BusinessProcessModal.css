@@ -137,13 +137,25 @@
 
 /* Animations */
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .business-process-overlay {
@@ -159,6 +171,39 @@
 }
 
 /* Responsive */
+@media (max-width: 992px) {
+    .bp-content-body .row {
+        flex-direction: column;
+    }
+
+    .bp-sidebar {
+        border-right: none;
+        border-bottom: 1px solid #e2e8f0;
+        flex-direction: row;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 8px;
+        padding: 12px 16px;
+        min-height: auto;
+    }
+
+    .bp-stage-btn {
+        white-space: nowrap;
+        min-width: fit-content;
+        padding: 10px 16px;
+    }
+
+    .bp-form-section {
+        padding: 20px;
+    }
+
+    .bp-status-section {
+        border-left: none;
+        border-top: 1px solid #e2e8f0;
+        padding: 20px;
+    }
+}
+
 @media (max-width: 768px) {
     .bp-modal-header {
         padding: 12px 16px;
@@ -174,6 +219,18 @@
     }
 
     .bp-sidebar {
-        padding: 16px 12px;
+        padding: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .bp-form-section .form-control {
+        font-size: 14px;
+        padding: 8px 10px;
+    }
+
+    .bp-stage-btn {
+        font-size: 12px;
+        padding: 8px 12px;
     }
 }

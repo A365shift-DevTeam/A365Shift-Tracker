@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Button, Form } from 'react-bootstrap'
-import { Edit, Trash2, Eye, ArrowUp, ArrowDown, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, MoreHorizontal, Building, User, Plus } from 'lucide-react'
+import { Edit, Trash2, Eye, ArrowUp, ArrowDown, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, MoreHorizontal, Building, User, Plus, ArrowUpRight } from 'lucide-react'
 
-export const ListView = ({ contacts, sortBy, sortOrder, onSort, onEdit, onDelete, onPreview }) => {
+export const ListView = ({ contacts, sortBy, sortOrder, onSort, onEdit, onDelete, onPreview, onConvertToSales }) => {
   const [currentPage, setCurrentPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const tableRef = useRef(null)
@@ -299,6 +299,9 @@ export const ListView = ({ contacts, sortBy, sortOrder, onSort, onEdit, onDelete
                           }
                         }} style={{ cursor: 'pointer' }}>
                           <Trash2 size={18} />
+                        </div>
+                        <div className="action-icon-wrapper text-success" onClick={() => onConvertToSales(contact)} style={{ cursor: 'pointer' }} title="Convert to Sales Client">
+                          <ArrowUpRight size={18} />
                         </div>
                       </div>
                     </td>

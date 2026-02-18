@@ -762,15 +762,21 @@
   .filter-row {
     grid-template-columns: 1fr 1fr;
   }
+
+  .kanban-container {
+    height: auto;
+  }
 }
 
 @media (max-width: 768px) {
   .stats-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
 
   .filter-row {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
 
   .contacts-container {
@@ -786,7 +792,92 @@
     gap: 12px;
     align-items: stretch;
   }
+
+  .contacts-toolbar-wrapper {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+    padding: 12px 16px;
+  }
+
+  .search-pill-container {
+    width: 100%;
+  }
+
+  .icon-group {
+    justify-content: flex-end;
+  }
+
+  /* Kanban: horizontal scroll container */
+  .kanban-container {
+    height: auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+  }
+
+  .kanban-column {
+    min-width: 260px;
+    flex-shrink: 0;
+  }
+
+  .contacts-table td,
+  .contacts-table th {
+    padding: 12px 12px;
+    font-size: 12px;
+  }
+
+  .stat-card-new {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .stat-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
+  .stat-number {
+    font-size: 20px;
+  }
+
+  .ai-chat-history {
+    height: 300px;
+    padding: 16px;
+  }
 }
+
+@media (max-width: 480px) {
+  .contacts-container {
+    padding: 12px;
+  }
+
+  .contacts-toolbar-card {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .filter-input {
+    padding: 8px 36px 8px 12px;
+    font-size: 12px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+  }
+
+  .add-contact-btn,
+  .ai-assist-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .kanban-column {
+    min-width: 240px;
+  }
+}
+
 
 /* --- View Toggle Buttons --- */
 .view-toggle-group {

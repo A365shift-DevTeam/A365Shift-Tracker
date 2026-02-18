@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { User, Mail, Contact, Settings, Plus, CheckCircle, Trash2, Briefcase, DollarSign, Timer, Flag, AlertTriangle, ArrowUpRight, Search, Monitor, Phone, FileText, MessageSquare } from 'lucide-react'
+import { User, Mail, Contact, Settings, Plus, CheckCircle, Trash2, Briefcase, DollarSign, Timer, Flag, AlertTriangle, ArrowUpRight, Search, Monitor, Phone, FileText, MessageSquare, Edit } from 'lucide-react'
 import { Button, Modal, Form } from 'react-bootstrap'
 import './Sales.css'
 import StageConfigModal from './StageConfigModal'
@@ -40,7 +40,11 @@ const GenerateCustomId = (brandingName, clientName) => {
     return `${date}${brandCode}${clientCode}${year}`;
 }
 
+<<<<<<< Updated upstream
 const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onDelete, delay, clientName, brandingName, history = [] }) => {
+=======
+const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onDelete, onEdit, delay, clientName, brandingName, title, history = [] }) => {
+>>>>>>> Stashed changes
     const [showNotification, setShowNotification] = useState(false)
     const [stageTransition, setStageTransition] = useState({ from: '', to: '' })
 
@@ -112,11 +116,16 @@ const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onD
 
     return (
         <div className="sales-card d-block">
+            {/* Title Row - Top */}
+            <div className="text-dark fw-semibold mb-1 text-center" style={{ fontSize: '13px' }}>
+                {title || 'Untitled Project'}
+            </div>
+
             {/* Header Row: ID and Icons */}
-            <div className="d-flex justify-content-between align-items-start mb-1">
+            <div className="d-flex justify-content-between align-items-start mb-0">
                 <div>
                     <div className="project-id">Project ID: #{project.customId || String(projectId).slice(-6).toUpperCase()}</div>
-                    <div className="d-flex flex-column mt-2">
+                    <div className="d-flex flex-column">
                         <span className="text-secondary" style={{ fontSize: '13px', fontWeight: '500' }}>
                             {delay > 0 ? `Delay ${delay} Days` : 'On Track'}
                         </span>
@@ -125,9 +134,28 @@ const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onD
                 </div>
 
                 <div className="card-icons-row">
-                    <User size={18} className="icon-outline" strokeWidth={1.5} />
-                    <MessageSquare size={18} className="icon-outline" strokeWidth={1.5} />
-                    <Mail size={18} className="icon-outline" strokeWidth={1.5} />
+                    <Edit
+                        size={16}
+                        className="icon-outline icon-edit"
+                        strokeWidth={1.5}
+                        style={{ cursor: 'pointer' }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit();
+                        }}
+                        title="Edit Project"
+                    />
+                    <FileText
+                        size={18}
+                        className="icon-outline"
+                        strokeWidth={1.5}
+                        style={{ cursor: 'pointer' }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            // Navigate to invoice page - to be implemented
+                        }}
+                        title="Create Invoice"
+                    />
                     <Trash2
                         size={16}
                         className="icon-outline icon-delete ms-2"
@@ -279,23 +307,20 @@ const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onD
                 </div>
             </div>
 
+<<<<<<< Updated upstream
             {/* Subtext Row - Moved outside to preserve vertical alignment of main row */}
             <div className="text-secondary small fw-medium mt-1 text-center" style={{ fontSize: '11px' }}>
                 SAP Project ,Waiting for Vendor
             </div>
 
+=======
+>>>>>>> Stashed changes
             {/* Business Process Modal */}
             <BusinessProcessModal
                 show={showNotification}
                 handleClose={() => setShowNotification(false)}
                 handleSave={(data) => {
                     console.log('Form data saved:', data)
-                    // Actually update the stage now
-                    // Find actual index from label if needed, or pass directly
-                    // In handleDrop/Click we use index, but here we need to reconstruct what to call
-                    // Ideally we should pass the target index to modal, but modal handles stage selection internally too
-                    // Let's rely on data.stageIndex from modal
-
                     if (data.stageIndex !== undefined) {
                         onStageChange(data.stageIndex, data)
                     }
@@ -308,7 +333,7 @@ const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onD
                 delay={delay}
                 history={history}
             />
-        </div >
+        </div>
     )
 }
 
@@ -401,6 +426,11 @@ function Sales() {
     const [showAddModal, setShowAddModal] = useState(false)
     const [newProjectData, setNewProjectData] = useState({ clientName: '', brandingName: 'A365Shift', type: 'Product' })
 
+    // Edit Project State
+    const [showEditModal, setShowEditModal] = useState(false)
+    const [editingProject, setEditingProject] = useState(null)
+    const [editProjectData, setEditProjectData] = useState({ title: '', clientName: '', brandingName: '', type: 'Product' })
+
     const handleAddProject = () => {
         setNewProjectData({ clientName: '', brandingName: 'A365Shift', type: activeTab })
         setShowAddModal(true)
@@ -431,6 +461,38 @@ function Sales() {
     const handleDeleteProject = async (projectId) => {
         await projectService.delete(projectId);
         setProjects(projects.filter(p => p.id !== projectId));
+    }
+
+    const handleEditProject = (project) => {
+        setEditingProject(project)
+        setEditProjectData({
+            title: project.title || '',
+            clientName: project.clientName || '',
+            brandingName: project.brandingName || '',
+            type: project.type || 'Product'
+        })
+        setShowEditModal(true)
+    }
+
+    const handleSaveEditProject = async () => {
+        if (!editingProject) return
+        const updates = {
+            title: editProjectData.title,
+            clientName: editProjectData.clientName,
+            brandingName: editProjectData.brandingName,
+            type: editProjectData.type
+        }
+        // Optimistic update
+        setProjects(prev => prev.map(p =>
+            p.id === editingProject.id ? { ...p, ...updates } : p
+        ))
+        setShowEditModal(false)
+        try {
+            await projectService.update(editingProject.id, updates)
+        } catch (error) {
+            console.error('Failed to update project:', error)
+            loadProjects()
+        }
     }
 
     // Configure Global Stages for the ACTIVE TAB
@@ -739,6 +801,7 @@ function Sales() {
                         brandingName={project.brandingName}
                         onStageChange={(newStage, data) => updateProjectStage(project.id, newStage, data)}
                         onDelete={() => handleDeleteProject(project.id)}
+                        onEdit={() => handleEditProject(project)}
                     />
                 ))}
             </div>
@@ -786,6 +849,62 @@ function Sales() {
                     </Button>
                     <Button variant="primary" onClick={handleCreateProject}>
                         Create Project
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Edit Project Modal */}
+            <Modal show={showEditModal} onHide={() => setShowEditModal(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Edit Project</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Project Title</Form.Label>
+                            <Form.Control
+                                type="text"
+                                placeholder="Enter project title"
+                                value={editProjectData.title}
+                                onChange={(e) => setEditProjectData({ ...editProjectData, title: e.target.value })}
+                            />
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Branding Name (Left)</Form.Label>
+                            <Form.Control
+                                type="text"
+                                placeholder="e.g. A365Shift"
+                                value={editProjectData.brandingName}
+                                onChange={(e) => setEditProjectData({ ...editProjectData, brandingName: e.target.value })}
+                            />
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Client Name (Right)</Form.Label>
+                            <Form.Control
+                                type="text"
+                                placeholder="Enter client name"
+                                value={editProjectData.clientName}
+                                onChange={(e) => setEditProjectData({ ...editProjectData, clientName: e.target.value })}
+                            />
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Project Type</Form.Label>
+                            <Form.Select
+                                value={editProjectData.type}
+                                onChange={(e) => setEditProjectData({ ...editProjectData, type: e.target.value })}
+                            >
+                                <option value="Product">Product</option>
+                                <option value="Service">Service</option>
+                            </Form.Select>
+                        </Form.Group>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+                        Cancel
+                    </Button>
+                    <Button variant="primary" onClick={handleSaveEditProject}>
+                        <Edit size={14} className="me-1" /> Save Changes
                     </Button>
                 </Modal.Footer>
             </Modal>

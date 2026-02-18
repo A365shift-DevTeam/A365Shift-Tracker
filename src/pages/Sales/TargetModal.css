@@ -87,3 +87,34 @@
 .status-content-area::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .modal-xl {
+        max-width: 96vw;
+    }
+
+    .stage-pill-btn {
+        padding: 5px 12px;
+        font-size: 12px;
+    }
+
+    .status-header-box {
+        padding: 10px;
+    }
+
+    .status-content-area {
+        min-height: 150px;
+    }
+
+    .bp-content-body .row {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .stage-pill-btn {
+        padding: 4px 10px;
+        font-size: 11px;
+    }
+}

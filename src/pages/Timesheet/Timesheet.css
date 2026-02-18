@@ -766,6 +766,19 @@ body.resizing * {
 }
 
 /* --- Responsive --- */
+@media (max-width: 1024px) {
+  .timesheet-container .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .timesheet-preview-modal .modal-dialog,
+  .timesheet-edit-modal .modal-dialog,
+  .timesheet-column-manager-modal .modal-dialog,
+  .timesheet-column-edit-modal .modal-dialog {
+    max-width: 90vw;
+  }
+}
+
 @media (max-width: 768px) {
   .timesheet-container {
     padding: 16px;
@@ -773,6 +786,7 @@ body.resizing * {
 
   .timesheet-container .stats-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
 
   .timesheet-content {
@@ -784,10 +798,62 @@ body.resizing * {
     padding: 12px 8px;
     font-size: 0.8125rem;
   }
+
+  .timesheet-container .stat-value {
+    font-size: 24px;
+  }
+
+  .timesheet-container .stat-icon-wrapper {
+    width: 40px;
+    height: 40px;
+  }
+
+  .timesheet-container .view-toggle-group {
+    flex-wrap: wrap;
+  }
+
+  .timesheet-preview-modal .modal-dialog,
+  .timesheet-edit-modal .modal-dialog,
+  .timesheet-column-manager-modal .modal-dialog,
+  .timesheet-column-edit-modal .modal-dialog {
+    max-width: 96vw;
+  }
+
+  .timesheet-group {
+    padding: 12px;
+  }
+
+  .timesheet-group-header {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
 }
 
 @media (max-width: 480px) {
+  .timesheet-container {
+    padding: 12px;
+  }
+
   .timesheet-container .stats-grid {
     grid-template-columns: 1fr;
+  }
+
+  .timesheet-container .stat-card {
+    padding: 12px;
+  }
+
+  .timesheet-container .stat-value {
+    font-size: 20px;
+  }
+
+  .timesheet-content {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .timesheet-add-btn {
+    width: 100%;
+    justify-content: center;
   }
 }

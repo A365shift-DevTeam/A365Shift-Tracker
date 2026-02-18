@@ -2,9 +2,14 @@ import { useState, useEffect, useMemo } from 'react'
 import { Button, Dropdown, Form, Badge, Modal, Card, Row, Col } from 'react-bootstrap'
 import {
   Plus, Filter, MoreVertical,
-  ArrowUpDown, Check, X, Layers, User, Flag, Briefcase, Building, Phone, Edit, Settings
+  ArrowUpDown, Check, X, Layers, User, Flag, Briefcase, Building, Phone, Edit, Settings, ArrowUpRight
 } from 'lucide-react'
 import { contactService } from '../../../services/contactService'
+<<<<<<< Updated upstream
+=======
+import { projectService } from '../../../services/api'
+import ExportButton from '../../../components/ExportButton'
+>>>>>>> Stashed changes
 import { ListView } from './ListView'
 import { KanbanView } from './KanbanView'
 import { ChartView } from './ChartView'
@@ -42,6 +47,11 @@ const Contacts = () => {
   // Add Column Modal
   const [showAddColumnModal, setShowAddColumnModal] = useState(false)
   const [newColumnName, setNewColumnName] = useState('')
+
+  // Convert to Sales State
+  const [showConvertModal, setShowConvertModal] = useState(false)
+  const [convertingContact, setConvertingContact] = useState(null)
+  const [convertType, setConvertType] = useState('Product')
 
   useEffect(() => {
     loadContacts()
@@ -247,12 +257,49 @@ const Contacts = () => {
   }
 
   const handleAIFilterApply = (filters) => {
-    // Map AI filters to our single filter system or reset
-    // This might need adaptation if AI returns complex filters
-    // For now, if AI provides a status, we filter by status
     if (filters.status && filters.status !== 'all') {
       setFilterBy('status')
       setFilterValue(filters.status)
+    }
+  }
+
+  // --- Convert to Sales ---
+  const handleConvertToSales = (contact) => {
+    setConvertingContact(contact)
+    setConvertType('Product')
+    setShowConvertModal(true)
+  }
+
+  const handleConfirmConvert = async () => {
+    if (!convertingContact) return
+    const c = convertingContact
+    const today = new Date()
+    const date = String(today.getDate()).padStart(2, '0')
+    const year = String(today.getFullYear()).slice(-2)
+    const brandCode = (c.company || 'A3').substring(0, 2).toUpperCase()
+    const clientCode = (c.name || 'C').slice(-1).toUpperCase()
+    const customId = `${date}${brandCode}${clientCode}${year}`
+
+    const newProject = {
+      activeStage: 0,
+      history: [],
+      type: convertType,
+      rating: 4.0,
+      delay: 0,
+      title: `${c.name} - ${c.company || 'Direct'}`,
+      clientName: c.name || 'New Client',
+      brandingName: c.company || 'A365Shift',
+      customId
+    }
+
+    try {
+      await projectService.create(newProject)
+      alert(`✅ Contact "${c.name}" converted to a ${convertType} sales project!`)
+      setShowConvertModal(false)
+      setConvertingContact(null)
+    } catch (error) {
+      console.error('Error converting contact to sales:', error)
+      alert('Failed to convert contact. Please try again.')
     }
   }
 
@@ -404,6 +451,7 @@ const Contacts = () => {
             onEdit={handleEditContact}
             onDelete={handleDeleteContact}
             onPreview={handlePreviewContact}
+            onConvertToSales={handleConvertToSales}
           />
         )}
 
@@ -540,6 +588,44 @@ const Contacts = () => {
         <Modal.Footer className="border-0 pt-0">
           <Button variant="light" size="sm" onClick={() => setShowAddColumnModal(false)}>Cancel</Button>
           <Button variant="primary" size="sm" onClick={handleCreateColumnConfirm} disabled={!newColumnName.trim()}>Add Status</Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* CONVERT TO SALES MODAL */}
+      <Modal show={showConvertModal} onHide={() => setShowConvertModal(false)} centered size="sm">
+        <Modal.Header closeButton className="border-0 pb-0">
+          <Modal.Title className="h6 fw-bold">Convert to Sales Client</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="pt-3">
+          {convertingContact && (
+            <div className="mb-3">
+              <div className="d-flex align-items-center gap-2 mb-3 p-2 bg-light rounded-3">
+                <div className="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center fw-bold" style={{ width: 36, height: 36, fontSize: 14 }}>
+                  {convertingContact.name?.substring(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <div className="fw-bold small">{convertingContact.name}</div>
+                  <div className="text-muted" style={{ fontSize: 11 }}>{convertingContact.company || 'No Company'}</div>
+                </div>
+              </div>
+              <Form.Group>
+                <Form.Label className="small text-muted fw-bold">Project Type</Form.Label>
+                <Form.Select
+                  value={convertType}
+                  onChange={(e) => setConvertType(e.target.value)}
+                >
+                  <option value="Product">Product</option>
+                  <option value="Service">Service</option>
+                </Form.Select>
+              </Form.Group>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer className="border-0 pt-0">
+          <Button variant="light" size="sm" onClick={() => setShowConvertModal(false)}>Cancel</Button>
+          <Button variant="success" size="sm" onClick={handleConfirmConvert} className="d-flex align-items-center gap-1">
+            <ArrowUpRight size={14} /> Convert
+          </Button>
         </Modal.Footer>
       </Modal>
 
