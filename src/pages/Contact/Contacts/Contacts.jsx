@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import { contactService } from '../../../services/contactService'
 import { projectService } from '../../../services/api'
-import ExportButton from '../../../components/ExportButton'
+
 import { ListView } from './ListView'
 import { KanbanView } from './KanbanView'
 import { ChartView } from './ChartView'
