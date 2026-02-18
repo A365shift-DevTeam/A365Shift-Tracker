@@ -56,11 +56,8 @@ export default function Login() {
                         {loading ? 'Logging in...' : 'Login'}
                     </button>
                 </form>
-                <div className="mt-3">
-                    <span className="text-muted">Don't have an account? </span>
-                    <Link to="/signup" style={{ color: 'var(--accent-secondary)' }}>Sign Up</Link>
-                </div>
             </div>
         </div>
+
     );
 }
