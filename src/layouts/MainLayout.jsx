@@ -155,7 +155,7 @@ export default function MainLayout() {
 
     /* ───── DESKTOP LAYOUT ───── */
     return (
-        <div className="d-flex" style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' }}>
+        <div className="d-flex" style={{ height: '100vh', overflow: 'hidden', background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' }}>
             {/* Sidebar */}
             <div
                 className="d-flex flex-column p-3 m-3"

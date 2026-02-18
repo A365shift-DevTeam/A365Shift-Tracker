@@ -25,8 +25,8 @@ const TrackerStyles = () => (
         }
 
         /* --- Global Utils --- */
-        .text-white { color: #212529 !important; }
-        .text-white-50 { color: #6c757d !important; }
+        .text-dark { color: #212529 !important; }
+        .text-muted { color: #6c757d !important; }
         .text-primary { color: #0d6efd !important; }
         .text-success { color: #198754 !important; }
         .text-danger { color: #dc3545 !important; }
@@ -54,10 +54,10 @@ const TrackerStyles = () => (
         .btn-primary { background-color: #0d6efd; color: white; border-color: #0d6efd; }
         .btn-primary:hover { background-color: #0b5ed7; }
         
-        .btn-outline-light { color: #f8f9fa; border-color: #f8f9fa; background: transparent; }
-        .btn-outline-light:hover { color: #000; background-color: #f8f9fa; }
+        .btn-outline-primary { color: #0d6efd; border-color: #0d6efd; background: transparent; }
+        .btn-outline-primary:hover { color: #fff; background-color: #0d6efd; }
 
-        .btn-outline-secondary { color: #adb5bd; border-color: #adb5bd; background: transparent; }
+        .btn-outline-secondary { color: #6c757d; border-color: #6c757d; background: transparent; }
         .btn-outline-secondary:hover { color: #fff; background-color: #6c757d; }
 
         .btn-outline-success { color: #198754; border-color: #198754; background: transparent; }
@@ -72,7 +72,7 @@ const TrackerStyles = () => (
         .btn-link { background: none; border: none; padding: 0; text-decoration: none; }
         .btn-link:hover { text-decoration: underline; }
 
-        /* --- Invoice Stage Cards (Light Theme for Invoice View) --- */
+        /* --- Invoice Stage Cards --- */
         .invoice-view {
             max-width: 1200px;
             margin: 0 auto;
@@ -80,22 +80,23 @@ const TrackerStyles = () => (
 
         .stage {
             background: #fff;
-            border: 1px solid #ddd;
+            border: 1px solid #e9ecef;
             border-radius: 10px;
             margin: 16px 0;
             overflow: hidden;
             color: #000;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
         }
 
         .bar {
-            background: #ffe600;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
             padding: 10px 14px;
             font-weight: 700;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            color: #000;
+            color: #212529;
         }
 
         .stage-p { padding: 14px; }
@@ -111,59 +112,75 @@ const TrackerStyles = () => (
         .stage-input, .stage-select {
             width: 100%;
             padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
             background: #fff;
-            color: #000;
+            color: #212529;
+            transition: border-color 0.2s;
+        }
+        .stage-input:focus, .stage-select:focus {
+            outline: none;
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
         }
 
-        .stage-label { font-weight: 600; color: #333; }
+        .stage-label { font-weight: 600; color: #495057; }
 
         .stage-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        .stage-table th, .stage-table td { border: 1px solid #ddd; padding: 10px; text-align: left; vertical-align: middle; }
-        .stage-table th { background: #eef3ff; color: #333; font-weight: 600; font-size: 0.9rem; }
+        .stage-table th, .stage-table td { border: 1px solid #dee2e6; padding: 10px; text-align: left; vertical-align: middle; }
+        .stage-table th { background: #f8f9fa; color: #495057; font-weight: 600; font-size: 0.9rem; }
         
+        /* KPIs */
+        .stage-kpi { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 1rem; }
+        .stage-card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px 16px; min-width: 200px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .stage-muted { color: #6c757d; font-size: 0.85rem; margin-bottom: 4px; }
+        .kpi-value { font-weight: 700; font-size: 1.1rem; color: #212529; }
+
         /* --- Dashboard Cards (Light Theme) --- */
         .dashboard-card {
             background: #ffffff;
-            border: 1px solid #dee2e6;
+            border: 1px solid #e9ecef;
             border-radius: 0.5rem;
             overflow: hidden;
             height: 100%;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
         }
         .dashboard-card-body { padding: 1.5rem; }
         .dashboard-card-header {
             padding: 1rem 1.5rem;
-            background: transparent;
-            border-bottom: 1px solid #dee2e6;
+            background: #fff;
+            border-bottom: 1px solid #f1f3f5;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         
          /* --- Tables (Light) --- */
-        .table-dark {
+        .table-custom {
             width: 100%;
             color: #212529;
             border-collapse: collapse;
         }
-        .table-dark th, .table-dark td {
+        .table-custom th, .table-custom td {
             padding: 0.75rem;
             border-bottom: 1px solid #dee2e6;
         }
-        .table-dark th {
+        .table-custom th {
             font-size: 0.75rem;
             text-transform: uppercase;
             color: #6c757d;
             font-weight: 600;
+            background-color: #f8f9fa;
         }
-        .table-dark tr:hover { background-color: rgba(0,0,0,0.05); cursor: pointer; }
+        .table-custom tr:hover { background-color: #f8f9fa; cursor: pointer; }
 
         /* Utilities */
         .d-flex { display: flex; }
         .align-items-center { align-items: center; }
+        .justify-content-center { justify-content: center; }
         .justify-content-between { justify-content: space-between; }
+        .text-center { text-align: center; }
+        .text-end { text-align: right; }
         .gap-1 { gap: 0.25rem; }
         .gap-2 { gap: 0.5rem; }
         .gap-3 { gap: 1rem; }
@@ -171,6 +188,7 @@ const TrackerStyles = () => (
         .mb-3 { margin-bottom: 1rem; }
         .mb-4 { margin-bottom: 1.5rem; }
         .mb-5 { margin-bottom: 3rem; }
+        .p-1 { padding: 0.25rem; }
         .p-2 { padding: 0.5rem; }
         .p-3 { padding: 1rem; }
         .rounded { border-radius: 0.375rem !important; }
@@ -189,6 +207,9 @@ const TrackerStyles = () => (
             .col-md-6 { flex: 0 0 50%; max-width: 50%; }
             .col-md-8 { flex: 0 0 66.666667%; max-width: 66.666667%; }
         }
+        
+        .btn-icon { background: none; border: none; cursor: pointer; padding: 4px; display: inline-flex; align-items: center; justify-content: center; color: inherit; }
+        .btn-icon:hover { opacity: 0.8; }
     `}</style>
 );
 
@@ -247,6 +268,7 @@ const generateInvoicePDF = (milestone, details, taxes) => {
 
     doc.setFontSize(10); doc.setFont(undefined, 'normal');
     doc.text("Payment Terms: Due within 30 days.", 14, finalY + 30);
+    doc.text("Bank Details: Bank Name, Account: XXXXXX, Swift: XXXXX", 14, finalY + 35);
 
     doc.save(`Invoice_${milestone.name.replace(/[^a-z0-9]/gi, '_')}.pdf`);
 };
@@ -269,6 +291,7 @@ const generatePaymentInvoicePDF = (stakeholder, details, dealValue) => {
     doc.text(details.delivery || "Your Company Name", 200, 22, { align: 'right' });
     doc.setFontSize(10);
     doc.text("Business Address Line 1", 200, 28, { align: 'right' });
+    doc.text("City, Country, Zip", 200, 33, { align: 'right' });
 
     doc.text("Pay To:", 14, 55);
     doc.setFontSize(14); doc.setFont(undefined, 'bold');
@@ -276,6 +299,8 @@ const generatePaymentInvoicePDF = (stakeholder, details, dealValue) => {
     doc.setFont(undefined, 'normal');
     doc.setFontSize(10);
     doc.text(`Project: ${details.projectId}`, 14, 70);
+    doc.text(`Client: ${details.clientName || 'N/A'}`, 14, 76);
+    if (stakeholder.paidDate) doc.text(`Paid Date: ${stakeholder.paidDate}`, 14, 82);
 
     autoTable(doc, {
         startY: 92,
@@ -298,6 +323,10 @@ const generatePaymentInvoicePDF = (stakeholder, details, dealValue) => {
     doc.setFontSize(12); doc.setFont(undefined, 'bold');
     doc.text(`Net Pay:`, 140, finalY + 10);
     doc.text(`${currency} ${netPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY + 10, { align: 'right' });
+
+    doc.setFontSize(10); doc.setFont(undefined, 'normal');
+    doc.text("Payment Terms: Due within 30 days.", 14, finalY + 30);
+    doc.text("Bank Details: Bank Name, Account: XXXXXX, Swift: XXXXX", 14, finalY + 35);
 
     doc.save(`Payment_Invoice_${(stakeholder.name || 'stakeholder').replace(/[^a-z0-9]/gi, '_')}.pdf`);
 };
@@ -339,6 +368,34 @@ const generateProjectReportPDF = (details, stakeholders, milestones, taxes) => {
         startY: finalY + 5, head: [['Name / Role', 'Share %', 'Amount']], body: stakeholderBody, theme: 'striped', headStyles: { fillColor: [41, 128, 185] }
     });
 
+    finalY = doc.lastAutoTable.finalY + 15;
+    doc.setFontSize(14);
+    doc.text("Invoicing Schedule", 14, finalY);
+
+    const totalTaxRate = chargesList.reduce((sum, c) => sum + (parseFloat(c.percentage) || 0), 0);
+    const invoiceBody = milestones.map(m => {
+        const base = (details.dealValue * m.percentage) / 100;
+        const tax = (base * totalTaxRate) / 100;
+        const total = base + tax;
+        return [
+            m.name,
+            `${m.percentage}%`,
+            m.status,
+            `${currency} ${base.toLocaleString()}`,
+            `${currency} ${tax.toLocaleString()}`,
+            `${currency} ${total.toLocaleString()}`
+        ];
+    });
+
+    autoTable(doc, {
+        startY: finalY + 5,
+        head: [['Milestone', '%', 'Status', 'Base', 'Tax', 'Total']],
+        body: invoiceBody,
+        theme: 'grid',
+        headStyles: { fillColor: [39, 174, 96] },
+        styles: { fontSize: 9 }
+    });
+
     doc.save(`${details.projectId}_Full_Report.pdf`);
 };
 
@@ -377,13 +434,57 @@ const exportProjectReport = (details, stakeholders, milestones, taxes) => {
     const wb = XLSX.utils.book_new();
     const currency = details.currency;
     const totalDistributed = stakeholders.reduce((sum, s) => sum + (details.dealValue * s.percentage) / 100, 0);
+    const totalInvoiced = milestones.reduce((sum, m) => sum + (details.dealValue * m.percentage) / 100, 0);
+    const netProfit = details.dealValue - totalDistributed;
+
+    const chargesList = Array.isArray(taxes) ? taxes : (taxes.gst ? [{ name: 'GST', percentage: taxes.gst }] : []);
+    const totalChargePct = chargesList.reduce((sum, c) => sum + (parseFloat(c.percentage) || 0), 0);
+    const chargesBreakdown = chargesList.map(c => `${c.name}: ${c.percentage}%`).join(', ');
 
     const dashboardData = [
-        ["PROJECT FINANCIAL DASHBOARD"], ["Key Metrics"],
-        ["Total Deal Value", details.dealValue], ["Total Distributed", totalDistributed]
+        ["PROJECT FINANCIAL DASHBOARD"],
+        ["Generated On", new Date().toLocaleString()],
+        [],
+        ["KEY METRICS"],
+        ["Total Deal Value", details.dealValue],
+        ["Currency", currency],
+        ["Total Distributed", totalDistributed],
+        ["Net Profit (Projected)", netProfit],
+        ["Profit Margin", `${((netProfit / details.dealValue) * 100).toFixed(2)}%`],
+        ["Total Invoiced", totalInvoiced],
+        [],
+        ["FINANCIAL CONFIGURATION"],
+        ["Charges Applied", chargesBreakdown || "None"],
+        ["Total Charge %", `${totalChargePct}%`],
+        [],
+        ["PROJECT DETAILS"],
+        ["Project ID", details.projectId],
+        ["Client", details.clientName],
+        ["Delivery", details.delivery],
+        ["Location", details.location]
     ];
     const wsDashboard = XLSX.utils.aoa_to_sheet(dashboardData);
+    wsDashboard['!cols'] = [{ wch: 25 }, { wch: 25 }];
     XLSX.utils.book_append_sheet(wb, wsDashboard, "Dashboard");
+
+    const stakeholderHeader = ["Role / Name", "Share %", `Amount (${currency})`, "Payout Tax %"];
+    const stakeholderData = stakeholders.map(s => [
+        s.name, `${s.percentage}%`, (details.dealValue * s.percentage) / 100, `${s.payoutTax || 0}%`
+    ]);
+    const wsStakeholders = XLSX.utils.aoa_to_sheet([stakeholderHeader, ...stakeholderData]);
+    wsStakeholders['!cols'] = [{ wch: 30 }, { wch: 15 }, { wch: 20 }, { wch: 15 }];
+    XLSX.utils.book_append_sheet(wb, wsStakeholders, "Stakeholders");
+
+    const milestoneHeader = ["Milestone", "Percentage", "Status", `Base (${currency})`, `Tax/Charges (${currency})`, `Total (${currency})`];
+    const milestoneData = milestones.map(m => {
+        const base = (details.dealValue * m.percentage) / 100;
+        const tax = (base * totalChargePct) / 100;
+        const total = base + tax;
+        return [m.name, `${m.percentage}%`, m.status, base, tax, total];
+    });
+    const wsMilestones = XLSX.utils.aoa_to_sheet([milestoneHeader, ...milestoneData]);
+    wsMilestones['!cols'] = [{ wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+    XLSX.utils.book_append_sheet(wb, wsMilestones, "Invoicing Schedule");
 
     const safeName = (details.projectId || 'Project').replace(/[^a-z0-9]/gi, '_');
     XLSX.writeFile(wb, `${safeName}_Full_Report.xlsx`);
@@ -441,8 +542,8 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
             {/* Header */}
             <div className="d-flex justify-content-between align-items-center mb-5">
                 <div>
-                    <h2 className="fw-bold text-white mb-1">Project Dashboard</h2>
-                    <p className="text-white-50 m-0">Overview of all financial projects</p>
+                    <h2 className="fw-bold text-dark mb-1">Project Dashboard</h2>
+                    <p className="text-muted m-0">Overview of all financial projects</p>
                 </div>
                 <div className="d-flex gap-2">
                     <button className="btn btn-primary" onClick={onCreateProject}><Plus size={18} /> New Project</button>
@@ -455,7 +556,7 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
                 <div className="dashboard-card col-md-3">
                     <div className="dashboard-card-body">
                         <div className="d-flex justify-content-between mb-3">
-                            <div><p className="text-white-50 small mb-1">Total Revenue</p><h3 className="text-white fw-bold m-0">${totalRevenue.toLocaleString()}</h3></div>
+                            <div><p className="text-muted small mb-1">Total Revenue</p><h3 className="text-dark fw-bold m-0">${totalRevenue.toLocaleString()}</h3></div>
                             <div className="p-2 bg-success bg-opacity-10 rounded"><DollarSign className="text-success" size={24} /></div>
                         </div>
                     </div>
@@ -463,7 +564,7 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
                 <div className="dashboard-card col-md-3">
                     <div className="dashboard-card-body">
                         <div className="d-flex justify-content-between mb-3">
-                            <div><p className="text-white-50 small mb-1">Active Projects</p><h3 className="text-white fw-bold m-0">{activeProjects}</h3></div>
+                            <div><p className="text-muted small mb-1">Active Projects</p><h3 className="text-dark fw-bold m-0">{activeProjects}</h3></div>
                             <div className="p-2 bg-primary bg-opacity-10 rounded"><Briefcase className="text-primary" size={24} /></div>
                         </div>
                     </div>
@@ -471,7 +572,7 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
                 <div className="dashboard-card col-md-3">
                     <div className="dashboard-card-body">
                         <div className="d-flex justify-content-between mb-3">
-                            <div><p className="text-white-50 small mb-1">Total Splits</p><h3 className="text-white fw-bold m-0">${totalSplits.toLocaleString()}</h3></div>
+                            <div><p className="text-muted small mb-1">Total Splits</p><h3 className="text-dark fw-bold m-0">${totalSplits.toLocaleString()}</h3></div>
                             <div className="p-2 bg-danger bg-opacity-10 rounded"><Users className="text-danger" size={24} /></div>
                         </div>
                     </div>
@@ -479,7 +580,7 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
                 <div className="dashboard-card col-md-3">
                     <div className="dashboard-card-body">
                         <div className="d-flex justify-content-between mb-3">
-                            <div><p className="text-white-50 small mb-1">Total Collected</p><h3 className="text-white fw-bold m-0">${totalCollected.toLocaleString()}</h3></div>
+                            <div><p className="text-muted small mb-1">Total Collected</p><h3 className="text-dark fw-bold m-0">${totalCollected.toLocaleString()}</h3></div>
                             <div className="p-2 bg-warning bg-opacity-10 rounded"><Wallet className="text-warning" size={24} /></div>
                         </div>
                     </div>
@@ -491,13 +592,13 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
                 <div className="col-md-8 mb-4">
                     <div className="dashboard-card">
                         <div className="dashboard-card-header">
-                            <h5 className="text-white m-0">{chartMetric} by Project</h5>
+                            <h5 className="text-dark m-0">{chartMetric} by Project</h5>
                             <button className="btn btn-sm btn-outline-secondary" onClick={() => setChartMetric(chartMetric === 'Revenue' ? 'Splits' : 'Revenue')}>Toggle Metric</button>
                         </div>
                         <div className="dashboard-card-body" style={{ height: 300 }}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={chartData}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#e9ecef" />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                                     <XAxis dataKey="name" stroke="#6c757d" />
                                     <YAxis stroke="#6c757d" />
                                     <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#dee2e6', color: '#212529' }} />
@@ -509,7 +610,7 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
                 </div>
                 <div className="col-md-4 mb-4">
                     <div className="dashboard-card">
-                        <div className="dashboard-card-header"><h5 className="text-white m-0">Status Distribution</h5></div>
+                        <div className="dashboard-card-header"><h5 className="text-dark m-0">Status Distribution</h5></div>
                         <div className="dashboard-card-body" style={{ height: 300 }}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
@@ -526,9 +627,9 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
 
             {/* Project List */}
             <div className="dashboard-card">
-                <div className="dashboard-card-header"><h5 className="text-white m-0">Recent Projects</h5></div>
+                <div className="dashboard-card-header"><h5 className="text-dark m-0">Recent Projects</h5></div>
                 <div className="table-responsive">
-                    <table className="table-dark">
+                    <table className="table-custom">
                         <thead>
                             <tr>
                                 <th>Project Name</th><th>Client</th><th>Deal Value</th><th>Collected</th><th>Status</th><th>Action</th>
@@ -539,12 +640,12 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
                                 const collected = project.milestones.reduce((sum, m) => m.status === 'Paid' ? sum + ((project.dealValue * m.percentage) / 100) : sum, 0);
                                 return (
                                     <tr key={project.id} onClick={() => onOpenProject(project.id)}>
-                                        <td><div className="fw-bold text-white">{project.projectId}</div></td>
+                                        <td><div className="fw-bold text-dark">{project.projectId}</div></td>
                                         <td>{project.clientName}</td>
-                                        <td className="font-monospace text-white fw-bold">{project.currency} {parseFloat(project.dealValue).toLocaleString()}</td>
+                                        <td className="font-monospace text-dark fw-bold">{project.currency} {parseFloat(project.dealValue).toLocaleString()}</td>
                                         <td className="font-monospace text-warning">{project.currency} {collected.toLocaleString()}</td>
                                         <td><span className="text-success">Active</span></td>
-                                        <td><button className="btn btn-sm btn-outline-light rounded-circle"><ArrowRight size={14} /></button></td>
+                                        <td><button className="btn btn-sm btn-outline-primary rounded-circle"><ArrowRight size={14} /></button></td>
                                     </tr>
                                 );
                             })}
@@ -582,23 +683,47 @@ const BusinessDetails = ({ details, updateDetails }) => (
 const StakeholderManager = ({ stakeholders, addStakeholder, removeStakeholder, updateStakeholder, dealValue, currency }) => {
     const totalPct = stakeholders.reduce((sum, s) => sum + (parseFloat(s.percentage) || 0), 0);
     const totalAmt = stakeholders.reduce((sum, s) => sum + ((dealValue * (parseFloat(s.percentage) || 0)) / 100), 0);
+
     return (
         <div className="stage">
-            <div className="bar"><span>Stage 2 — Share Percentage</span><button className="btn btn-sm btn-dark" onClick={addStakeholder}><Plus size={14} /> Add Party</button></div>
+            <div className="bar">
+                <span>Stage 2 — Share Percentage</span>
+                <button className="btn btn-sm btn-dark d-flex align-items-center gap-1" onClick={addStakeholder}>
+                    <Plus size={14} /> Add Party
+                </button>
+            </div>
             <div className="stage-p">
                 <table className="stage-table">
-                    <thead><tr><th>Party</th><th style={{ width: '150px' }}>%</th><th>Amount ({currency})</th><th style={{ width: '50px' }}></th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>Party</th><th style={{ width: '150px' }}>%</th><th>Amount ({currency})</th><th style={{ width: '50px' }}></th>
+                        </tr>
+                    </thead>
                     <tbody>
-                        {stakeholders.map(s => (
-                            <tr key={s.id}>
-                                <td><input className="stage-input" value={s.name} onChange={(e) => updateStakeholder(s.id, 'name', e.target.value)} /></td>
-                                <td><input type="number" className="stage-input" value={s.percentage} onChange={(e) => updateStakeholder(s.id, 'percentage', e.target.value)} /></td>
-                                <td className="font-monospace">{currency} {(dealValue * s.percentage / 100).toLocaleString()}</td>
-                                <td><button className="btn-link text-danger" onClick={() => removeStakeholder(s.id)}><Trash2 size={16} /></button></td>
-                            </tr>
-                        ))}
+                        {stakeholders.map((stakeholder) => {
+                            const value = (dealValue * stakeholder.percentage) / 100;
+                            return (
+                                <tr key={stakeholder.id}>
+                                    <td>
+                                        <input className="stage-input" value={stakeholder.name} onChange={(e) => updateStakeholder(stakeholder.id, 'name', e.target.value)} placeholder="e.g. Lead / Investor" />
+                                    </td>
+                                    <td>
+                                        <input type="number" className="stage-input" value={stakeholder.percentage} onChange={(e) => updateStakeholder(stakeholder.id, 'percentage', e.target.value)} />
+                                    </td>
+                                    <td className="font-monospace">{currency} {value.toLocaleString()}</td>
+                                    <td className="text-center">
+                                        <button className="btn-icon text-danger" onClick={() => removeStakeholder(stakeholder.id)}><Trash2 size={16} /></button>
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                        {stakeholders.length === 0 && <tr><td colSpan="4" className="text-center text-muted p-3">No parties added.</td></tr>}
                     </tbody>
-                    <tfoot><tr><th>Total</th><th>{totalPct.toFixed(2)}%</th><th>{currency} {totalAmt.toLocaleString()}</th><th></th></tr></tfoot>
+                    <tfoot>
+                        <tr>
+                            <th>Total</th><th>{totalPct.toFixed(2)}%</th><th>{currency} {totalAmt.toLocaleString()}</th><th></th>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
@@ -610,32 +735,85 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
     const totalPaid = paidMilestones.reduce((sum, m) => sum + ((dealValue * m.percentage) / 100), 0);
     const paidPct = dealValue ? ((totalPaid / dealValue) * 100) : 0;
 
+    const calculateAgeing = (invoiceDate, paidDate) => {
+        if (!invoiceDate) return '-';
+        const start = new Date(invoiceDate);
+        const end = paidDate ? new Date(paidDate) : new Date();
+        const diffTime = Math.abs(end - start);
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    };
+
     return (
         <div className="stage">
-            <div className="bar"><span>Stage 3 — Invoice Cycle</span><button className="btn btn-sm btn-dark" onClick={addMilestone}><Plus size={14} /> Add Payment</button></div>
+            <div className="bar">
+                <span>Stage 3 — Invoice Cycle</span>
+                <button className="btn btn-sm btn-dark d-flex align-items-center gap-1" onClick={addMilestone}>
+                    <Plus size={14} /> Add Payment
+                </button>
+            </div>
             <div className="stage-p">
-                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-                    <div style={{ padding: '0.5rem', border: '1px solid #ddd', borderRadius: '8px', background: '#f8f9fa' }}>
-                        <small className="text-muted">Total Paid</small><div className="fw-bold">{details.currency} {totalPaid.toLocaleString()}</div>
+                <div className="stage-kpi">
+                    <div className="stage-card">
+                        <div className="stage-muted">Total Paid</div>
+                        <div className="kpi-value">{details.currency} {totalPaid.toLocaleString()}</div>
+                    </div>
+                    <div className="stage-card">
+                        <div className="stage-muted">Status (Paid %)</div>
+                        <div className="kpi-value">{paidPct.toFixed(2)}%</div>
                     </div>
                 </div>
+
                 <table className="stage-table">
-                    <thead><tr><th>#</th><th>Payment</th><th>%</th><th>Net ({details.currency})</th><th>Action</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Payment</th>
+                            <th style={{ width: '80px' }}>%</th>
+                            <th>Invoice Date</th>
+                            <th>Raised ({details.currency})</th>
+                            <th>Paid ({details.currency})</th>
+                            <th>Paid Date</th>
+                            <th>Ageing (days)</th>
+                            <th className="text-center">Action</th>
+                        </tr>
+                    </thead>
                     <tbody>
-                        {milestones.map((m, idx) => (
-                            <tr key={m.id}>
-                                <td>{idx + 1}</td>
-                                <td><input className="stage-input" value={m.name} onChange={(e) => updateMilestone(m.id, 'name', e.target.value)} placeholder="Desc" /></td>
-                                <td><input type="number" className="stage-input" value={m.percentage} onChange={(e) => updateMilestone(m.id, 'percentage', e.target.value)} /></td>
-                                <td className="font-monospace text-success fw-bold">{details.currency} {(dealValue * m.percentage / 100).toLocaleString()}</td>
-                                <td>
-                                    <div className="d-flex gap-2">
-                                        <button className="btn-link text-success" onClick={() => generateInvoicePDF(m, details, taxes)}><FileDown size={18} /></button>
-                                        <button className="btn-link text-danger" onClick={() => removeMilestone(m.id)}><Trash2 size={18} /></button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
+                        {milestones.map((milestone, index) => {
+                            const raisedAmount = (dealValue * milestone.percentage) / 100;
+                            return (
+                                <tr key={milestone.id}>
+                                    <td>{index + 1}</td>
+                                    <td>
+                                        <input className="stage-input" value={milestone.name} onChange={(e) => updateMilestone(milestone.id, 'name', e.target.value)} placeholder="Description" />
+                                    </td>
+                                    <td>
+                                        <input type="number" className="stage-input text-end" value={milestone.percentage} onChange={(e) => updateMilestone(milestone.id, 'percentage', e.target.value)} />
+                                    </td>
+                                    <td>
+                                        <input type="date" className="stage-input" value={milestone.invoiceDate || ''} onChange={(e) => updateMilestone(milestone.id, 'invoiceDate', e.target.value)} />
+                                    </td>
+                                    <td className="font-monospace">{details.currency} {raisedAmount.toLocaleString()}</td>
+                                    <td className="font-monospace text-success fw-bold">{details.currency} {raisedAmount.toLocaleString()}</td>
+                                    <td>
+                                        <input type="date" className="stage-input" value={milestone.paidDate || ''} onChange={(e) => updateMilestone(milestone.id, 'paidDate', e.target.value)} />
+                                    </td>
+                                    <td className="text-center font-monospace">
+                                        {calculateAgeing(milestone.invoiceDate, milestone.paidDate)}
+                                    </td>
+                                    <td className="text-center">
+                                        <div className="d-flex justify-content-center gap-2">
+                                            <button className="btn-icon text-success" onClick={() => generateInvoicePDF(milestone, details, taxes)} title="Download Invoice">
+                                                <FileDown size={18} />
+                                            </button>
+                                            <button className="btn-icon text-danger" onClick={() => removeMilestone(milestone.id)} title="Delete Item">
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                        {milestones.length === 0 && <tr><td colSpan="9" className="text-center text-muted p-3">No payments added.</td></tr>}
                     </tbody>
                 </table>
             </div>
@@ -645,6 +823,9 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
 
 const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, removeStakeholder, updateStakeholder, milestones, addMilestone, removeMilestone, updateMilestone, charges, addCharge, removeCharge, updateCharge }) => {
     const dVal = parseFloat(details.dealValue) || 0;
+    const totalChargePct = charges ? charges.reduce((sum, c) => sum + (parseFloat(c.percentage) || 0), 0) : 0;
+    const totalChargeAmt = charges ? charges.reduce((sum, c) => sum + ((dVal * (parseFloat(c.percentage) || 0)) / 100), 0) : 0;
+
     return (
         <div className="invoice-view">
             <div className="d-flex justify-content-between align-items-center mb-4 p-3 bg-white rounded shadow-sm border">
@@ -658,29 +839,112 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
                 </div>
             </div>
 
+            {/* Stage 1 */}
             <BusinessDetails details={details} updateDetails={updateDetails} />
+
+            {/* Stage 2 Part 1: Shares */}
             <StakeholderManager stakeholders={stakeholders} addStakeholder={addStakeholder} removeStakeholder={removeStakeholder} updateStakeholder={updateStakeholder} dealValue={dVal} currency={details.currency} />
 
+            {/* Stage 2 Part 2: Finance Charges */}
             <div className="stage">
-                <div className="bar"><span>Stage 2 — Finance Charges</span><button className="btn btn-sm btn-dark" onClick={addCharge}>+ Add Charge</button></div>
+                <div className="bar">
+                    <span>Stage 2 — Finance Charges</span>
+                    <button className="btn btn-sm btn-dark" onClick={addCharge}>+ Add Charge</button>
+                </div>
                 <div className="stage-p">
                     <table className="stage-table">
-                        <thead><tr><th>Name</th><th>%</th><th>Amount</th><th></th></tr></thead>
+                        <thead><tr><th>Charge Name</th><th style={{ width: '150px' }}>%</th><th>Amount ({details.currency})</th><th style={{ width: '50px' }}></th></tr></thead>
                         <tbody>
-                            {charges.map(c => (
+                            {charges && charges.map(c => (
                                 <tr key={c.id}>
                                     <td><input className="stage-input" value={c.name} onChange={(e) => updateCharge(c.id, 'name', e.target.value)} /></td>
                                     <td><input type="number" className="stage-input" value={c.percentage} onChange={(e) => updateCharge(c.id, 'percentage', e.target.value)} /></td>
-                                    <td>{details.currency} {(dVal * c.percentage / 100).toLocaleString()}</td>
+                                    <td className="font-monospace">{details.currency} {(dVal * c.percentage / 100).toLocaleString()}</td>
                                     <td><button className="btn-link text-danger" onClick={() => removeCharge(c.id)}><Trash2 size={16} /></button></td>
                                 </tr>
                             ))}
                         </tbody>
+                        <tfoot>
+                            <tr>
+                                <th>Total Expense</th>
+                                <th>{totalChargePct.toFixed(2)}%</th>
+                                <th>{details.currency} {totalChargeAmt.toLocaleString()}</th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
 
+            {/* Stage 3: Invoice Cycle */}
             <PaymentMilestones milestones={milestones} addMilestone={addMilestone} removeMilestone={removeMilestone} updateMilestone={updateMilestone} dealValue={dVal} details={details} taxes={charges} />
+
+            {/* Stage 4: Payment Process */}
+            <div className="stage">
+                <div className="bar">Stage 4 — Payment Process</div>
+                <div className="stage-p">
+                    <table className="stage-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Party</th>
+                                <th>Value %</th>
+                                <th>Pay ({details.currency})</th>
+                                <th>Tax %</th>
+                                <th>Tax Amt</th>
+                                <th>Paid Date</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {stakeholders && stakeholders.map((s, idx) => {
+                                const payAmt = (dVal * s.percentage) / 100;
+                                const taxRate = parseFloat(s.payoutTax) || 0;
+                                const taxAmt = (payAmt * taxRate) / 100;
+
+                                return (
+                                    <tr key={s.id}>
+                                        <td>{idx + 1}</td>
+                                        <td><span className="fw-bold">{s.name}</span></td>
+                                        <td>
+                                            <input type="number" className="stage-input text-center p-1" style={{ width: '80px' }} value={s.percentage} onChange={(e) => updateStakeholder(s.id, 'percentage', e.target.value)} />
+                                        </td>
+                                        <td className="font-monospace fw-bold">{details.currency} {payAmt.toLocaleString()}</td>
+                                        <td>
+                                            <input type="number" className="stage-input p-1 text-center" style={{ width: '60px' }} value={s.payoutTax || 0} onChange={(e) => updateStakeholder(s.id, 'payoutTax', e.target.value)} />
+                                        </td>
+                                        <td className="font-monospace text-danger">{details.currency} {taxAmt.toLocaleString()}</td>
+                                        <td>
+                                            <input type="date" className="stage-input p-1" value={s.paidDate || ''} onChange={(e) => updateStakeholder(s.id, 'paidDate', e.target.value)} />
+                                        </td>
+                                        <td>
+                                            <select
+                                                className="stage-select p-1"
+                                                value={s.payoutStatus || 'Pending'}
+                                                onChange={(e) => updateStakeholder(s.id, 'payoutStatus', e.target.value)}
+                                                style={{
+                                                    borderColor: s.payoutStatus === 'Paid Successfully' ? '#198754' : '#ccc',
+                                                    color: s.payoutStatus === 'Paid Successfully' ? '#198754' : '#000'
+                                                }}
+                                            >
+                                                <option value="Pending">Pending</option>
+                                                <option value="Processing">Processing</option>
+                                                <option value="Paid Successfully">Paid Successfully</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <button className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" title="Download Invoice" onClick={() => generatePaymentInvoicePDF(s, details, dVal)}>
+                                                <FileDown size={16} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     );
 };
@@ -696,8 +960,8 @@ const ProjectTrackerComplete = () => {
         {
             id: 1, projectId: 'ABC123', dateCreated: new Date().toISOString(), clientName: 'ABC Company', delivery: 'Ambot365',
             dealValue: 100000, currency: 'AED', location: 'Dubai',
-            stakeholders: [{ id: 1, name: 'Lead', percentage: 2, payoutTax: 10 }],
-            milestones: [{ id: 1, name: 'Initiate Invoice', percentage: 20, status: 'Completed' }],
+            stakeholders: [{ id: 1, name: 'Lead', percentage: 2, payoutTax: 10, payoutStatus: 'Pending', paidDate: '' }],
+            milestones: [{ id: 1, name: 'Initiate Invoice', percentage: 20, status: 'Completed', invoiceDate: new Date().toISOString().split('T')[0], paidDate: '' }],
             charges: [{ id: 1, name: 'GST', percentage: 18 }]
         }
     ]);
@@ -719,12 +983,12 @@ const ProjectTrackerComplete = () => {
     const updateDetails = (f, v) => updateProject(p => ({ ...p, [f]: v }));
 
     // Stakeholders logic
-    const addStakeholder = () => updateProject(p => ({ ...p, stakeholders: [...p.stakeholders, { id: Date.now(), name: 'New', percentage: 0, payoutTax: 0 }] }));
+    const addStakeholder = () => updateProject(p => ({ ...p, stakeholders: [...p.stakeholders, { id: Date.now(), name: 'New', percentage: 0, payoutTax: 0, payoutStatus: 'Pending', paidDate: '' }] }));
     const removeStakeholder = (id) => updateProject(p => ({ ...p, stakeholders: p.stakeholders.filter(s => s.id !== id) }));
     const updateStakeholder = (id, f, v) => updateProject(p => ({ ...p, stakeholders: p.stakeholders.map(s => s.id === id ? { ...s, [f]: v } : s) }));
 
     // Milestones logic
-    const addMilestone = () => updateProject(p => ({ ...p, milestones: [...p.milestones, { id: Date.now(), name: 'New Stage', percentage: 0, status: 'Pending' }] }));
+    const addMilestone = () => updateProject(p => ({ ...p, milestones: [...p.milestones, { id: Date.now(), name: 'New Stage', percentage: 0, status: 'Pending', invoiceDate: '', paidDate: '' }] }));
     const removeMilestone = (id) => updateProject(p => ({ ...p, milestones: p.milestones.filter(m => m.id !== id) }));
     const updateMilestone = (id, f, v) => updateProject(p => ({ ...p, milestones: p.milestones.map(m => m.id === id ? { ...m, [f]: v } : m) }));
 
