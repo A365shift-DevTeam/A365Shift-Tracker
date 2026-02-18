@@ -552,7 +552,7 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
             </div>
 
             {/* KPI Cards */}
-            <div className="row mb-5" style={{ gap: '1rem' }}>
+            <div className="row mb-5">
                 <div className="dashboard-card col-md-3">
                     <div className="dashboard-card-body">
                         <div className="d-flex justify-content-between mb-3">
@@ -771,9 +771,10 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
                             <th style={{ width: '80px' }}>%</th>
                             <th>Invoice Date</th>
                             <th>Raised ({details.currency})</th>
-                            <th>Paid ({details.currency})</th>
                             <th>Paid Date</th>
+                            <th>Paid ({details.currency})</th>
                             <th>Ageing (days)</th>
+                            <th>Status</th>
                             <th className="text-center">Action</th>
                         </tr>
                     </thead>
@@ -792,13 +793,29 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
                                     <td>
                                         <input type="date" className="stage-input" value={milestone.invoiceDate || ''} onChange={(e) => updateMilestone(milestone.id, 'invoiceDate', e.target.value)} />
                                     </td>
-                                    <td className="font-monospace">{details.currency} {raisedAmount.toLocaleString()}</td>
-                                    <td className="font-monospace text-success fw-bold">{details.currency} {raisedAmount.toLocaleString()}</td>
+                                    <td className="font-monospace" style={{ whiteSpace: 'nowrap' }}>{details.currency} {raisedAmount.toLocaleString()}</td>
                                     <td>
                                         <input type="date" className="stage-input" value={milestone.paidDate || ''} onChange={(e) => updateMilestone(milestone.id, 'paidDate', e.target.value)} />
                                     </td>
+                                    <td className="font-monospace text-success fw-bold" style={{ whiteSpace: 'nowrap' }}>{details.currency} {raisedAmount.toLocaleString()}</td>
                                     <td className="text-center font-monospace">
                                         {calculateAgeing(milestone.invoiceDate, milestone.paidDate)}
+                                    </td>
+                                    <td>
+                                        <select
+                                            className="stage-select"
+                                            value={milestone.status || 'Pending'}
+                                            onChange={(e) => updateMilestone(milestone.id, 'status', e.target.value)}
+                                            style={{
+                                                borderColor: milestone.status === 'Paid' ? '#198754' : '#ccc',
+                                                color: milestone.status === 'Paid' ? '#198754' : '#000'
+                                            }}
+                                        >
+                                            <option value="Pending">Pending</option>
+                                            <option value="Raised">Raised</option>
+                                            <option value="Paid">Paid</option>
+                                            <option value="Overdue">Overdue</option>
+                                        </select>
                                     </td>
                                     <td className="text-center">
                                         <div className="d-flex justify-content-center gap-2">
@@ -813,7 +830,7 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
                                 </tr>
                             );
                         })}
-                        {milestones.length === 0 && <tr><td colSpan="9" className="text-center text-muted p-3">No payments added.</td></tr>}
+                        {milestones.length === 0 && <tr><td colSpan="10" className="text-center text-muted p-3">No payments added.</td></tr>}
                     </tbody>
                 </table>
             </div>
