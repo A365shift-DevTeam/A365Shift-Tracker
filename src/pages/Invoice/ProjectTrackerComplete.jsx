@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
     LayoutDashboard, FileDown, Briefcase, MapPin, Globe, CreditCard, Building, Users,
     Plus, Trash2, ArrowLeft, DollarSign, FileText, ArrowRight, Filter, Wallet, CheckCircle
@@ -683,20 +684,30 @@ const BusinessDetails = ({ details, updateDetails }) => (
     </div>
 );
 
-const StakeholderManager = ({ stakeholders, addStakeholder, removeStakeholder, updateStakeholder, dealValue, currency }) => {
+const StageTwoCombined = ({ stakeholders, addStakeholder, removeStakeholder, updateStakeholder, charges, addCharge, removeCharge, updateCharge, dealValue, currency }) => {
     const totalPct = stakeholders.reduce((sum, s) => sum + (parseFloat(s.percentage) || 0), 0);
     const totalAmt = stakeholders.reduce((sum, s) => sum + ((dealValue * (parseFloat(s.percentage) || 0)) / 100), 0);
+
+    const totalChargePct = charges ? charges.reduce((sum, c) => sum + (parseFloat(c.percentage) || 0), 0) : 0;
+    const totalChargeAmt = charges ? charges.reduce((sum, c) => sum + ((dealValue * (parseFloat(c.percentage) || 0)) / 100), 0) : 0;
 
     return (
         <div className="stage">
             <div className="bar">
-                <span>Stage 2 — Share Percentage</span>
-                <button className="btn btn-sm btn-white d-flex align-items-center gap-1" onClick={addStakeholder}>
-                    <Plus size={14} /> Add Party
-                </button>
+                <span>Stage 2 — Project Splits & Finance Charges</span>
+                <div className="d-flex gap-2">
+                    <button className="btn btn-sm btn-white d-flex align-items-center gap-1" onClick={addStakeholder}>
+                        <Plus size={14} /> Add Party
+                    </button>
+                    <button className="btn btn-sm btn-white d-flex align-items-center gap-1" onClick={addCharge}>
+                        <Plus size={14} /> Add Charge
+                    </button>
+                </div>
             </div>
             <div className="stage-p">
-                <table className="stage-table">
+                {/* Share Percentage Section */}
+                <h6 className="fw-bold mb-3 text-muted">Share Percentage</h6>
+                <table className="stage-table mb-4">
                     <thead>
                         <tr>
                             <th>Party</th><th style={{ width: '150px' }}>%</th><th>Amount ({currency})</th><th style={{ width: '50px' }}></th>
@@ -725,6 +736,30 @@ const StakeholderManager = ({ stakeholders, addStakeholder, removeStakeholder, u
                     <tfoot>
                         <tr>
                             <th>Total</th><th>{totalPct.toFixed(2)}%</th><th>{currency} {totalAmt.toLocaleString()}</th><th></th>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                {/* Finance Charges Section */}
+                <h6 className="fw-bold mb-3 text-muted border-top pt-4">Finance Charges</h6>
+                <table className="stage-table">
+                    <thead><tr><th>Charge Name</th><th style={{ width: '150px' }}>%</th><th>Amount ({currency})</th><th style={{ width: '50px' }}></th></tr></thead>
+                    <tbody>
+                        {charges && charges.map(c => (
+                            <tr key={c.id}>
+                                <td><input className="stage-input" value={c.name} onChange={(e) => updateCharge(c.id, 'name', e.target.value)} /></td>
+                                <td><input type="number" className="stage-input" value={c.percentage} onChange={(e) => updateCharge(c.id, 'percentage', e.target.value)} /></td>
+                                <td className="font-monospace">{currency} {(dealValue * c.percentage / 100).toLocaleString()}</td>
+                                <td><button className="btn-link text-danger" onClick={() => removeCharge(c.id)}><Trash2 size={16} /></button></td>
+                            </tr>
+                        ))}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>Total Expense</th>
+                            <th>{totalChargePct.toFixed(2)}%</th>
+                            <th>{currency} {totalChargeAmt.toLocaleString()}</th>
+                            <th></th>
                         </tr>
                     </tfoot>
                 </table>
@@ -862,39 +897,19 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
             {/* Stage 1 */}
             <BusinessDetails details={details} updateDetails={updateDetails} />
 
-            {/* Stage 2 Part 1: Shares */}
-            <StakeholderManager stakeholders={stakeholders} addStakeholder={addStakeholder} removeStakeholder={removeStakeholder} updateStakeholder={updateStakeholder} dealValue={dVal} currency={details.currency} />
-
-            {/* Stage 2 Part 2: Finance Charges */}
-            <div className="stage">
-                <div className="bar">
-                    <span>Stage 2 — Finance Charges</span>
-                    <button className="btn btn-sm btn-white" onClick={addCharge}>+ Add Charge</button>
-                </div>
-                <div className="stage-p">
-                    <table className="stage-table">
-                        <thead><tr><th>Charge Name</th><th style={{ width: '150px' }}>%</th><th>Amount ({details.currency})</th><th style={{ width: '50px' }}></th></tr></thead>
-                        <tbody>
-                            {charges && charges.map(c => (
-                                <tr key={c.id}>
-                                    <td><input className="stage-input" value={c.name} onChange={(e) => updateCharge(c.id, 'name', e.target.value)} /></td>
-                                    <td><input type="number" className="stage-input" value={c.percentage} onChange={(e) => updateCharge(c.id, 'percentage', e.target.value)} /></td>
-                                    <td className="font-monospace">{details.currency} {(dVal * c.percentage / 100).toLocaleString()}</td>
-                                    <td><button className="btn-link text-danger" onClick={() => removeCharge(c.id)}><Trash2 size={16} /></button></td>
-                                </tr>
-                            ))}
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <th>Total Expense</th>
-                                <th>{totalChargePct.toFixed(2)}%</th>
-                                <th>{details.currency} {totalChargeAmt.toLocaleString()}</th>
-                                <th></th>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
+            {/* Stage 2: Project Splits & Finance Charges */}
+            <StageTwoCombined
+                stakeholders={stakeholders}
+                addStakeholder={addStakeholder}
+                removeStakeholder={removeStakeholder}
+                updateStakeholder={updateStakeholder}
+                charges={charges}
+                addCharge={addCharge}
+                removeCharge={removeCharge}
+                updateCharge={updateCharge}
+                dealValue={dVal}
+                currency={details.currency}
+            />
 
             {/* Stage 3: Invoice Cycle */}
             <PaymentMilestones milestones={milestones} addMilestone={addMilestone} removeMilestone={removeMilestone} updateMilestone={updateMilestone} dealValue={dVal} details={details} taxes={charges} />
@@ -974,6 +989,8 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
 // ==========================================
 
 const ProjectTrackerComplete = () => {
+    const location = useLocation();
+
     const [view, setView] = useState('dashboard');
     const [activeProjectId, setActiveProjectId] = useState(null);
     const [projects, setProjects] = useState([
@@ -985,6 +1002,40 @@ const ProjectTrackerComplete = () => {
             charges: [{ id: 1, name: 'GST', percentage: 18 }]
         }
     ]);
+
+    useEffect(() => {
+        if (location.state && location.state.project) {
+            const receivedProject = location.state.project;
+            // Check if already exists to avoid duplicates (though local state resets on mount, this is good practice)
+            setProjects(prevProjects => {
+                const exists = prevProjects.find(p => p.id === receivedProject.id);
+                if (exists) {
+                    setActiveProjectId(receivedProject.id);
+                    setView('invoice');
+                    return prevProjects;
+                }
+
+                // Map Sales data to Invoice structure
+                const newProject = {
+                    id: receivedProject.id,
+                    projectId: receivedProject.customId || `PROJ-${receivedProject.id}`,
+                    dateCreated: new Date().toISOString(),
+                    clientName: receivedProject.clientName || 'Unknown Client',
+                    delivery: receivedProject.brandingName || '',
+                    dealValue: 0,
+                    currency: 'AED',
+                    location: 'Dubai',
+                    stakeholders: [],
+                    milestones: [],
+                    charges: [{ id: 1, name: 'GST', percentage: 0 }]
+                };
+
+                setActiveProjectId(newProject.id);
+                setView('invoice');
+                return [...prevProjects, newProject];
+            });
+        }
+    }, [location.state]);
 
     const activeProject = projects.find(p => p.id === activeProjectId);
 

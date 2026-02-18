@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { User, Mail, Contact, Settings, Plus, CheckCircle, Trash2, Briefcase, DollarSign, Timer, Flag, AlertTriangle, ArrowUpRight, Search, Monitor, Phone, FileText, MessageSquare, Edit } from 'lucide-react'
 import { Button, Modal, Form } from 'react-bootstrap'
 import './Sales.css'
@@ -40,7 +41,7 @@ const GenerateCustomId = (brandingName, clientName) => {
     return `${date}${brandCode}${clientCode}${year}`;
 }
 
-const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onDelete, onEdit, delay, clientName, brandingName, title, history = [] }) => {
+const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onDelete, onEdit, onInvoice, delay, clientName, brandingName, title, history = [] }) => {
     const [showNotification, setShowNotification] = useState(false)
     const [stageTransition, setStageTransition] = useState({ from: '', to: '' })
 
@@ -148,7 +149,7 @@ const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onD
                         style={{ cursor: 'pointer' }}
                         onClick={(e) => {
                             e.stopPropagation();
-                            // Navigate to invoice page - to be implemented
+                            onInvoice();
                         }}
                         title="Create Invoice"
                     />
@@ -328,6 +329,7 @@ const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onD
 }
 
 function Sales() {
+    const navigate = useNavigate();
     const [showSettings, setShowSettings] = useState(false)
     const [activeTab, setActiveTab] = useState('Product') // 'Product' or 'Service'
 
@@ -484,6 +486,10 @@ function Sales() {
             loadProjects()
         }
     }
+
+    const handleInvoice = (project) => {
+        navigate('/invoice', { state: { project } });
+    };
 
     // Configure Global Stages for the ACTIVE TAB
     const handleConfigure = () => {
@@ -793,6 +799,7 @@ function Sales() {
                         onStageChange={(newStage, data) => updateProjectStage(project.id, newStage, data)}
                         onDelete={() => handleDeleteProject(project.id)}
                         onEdit={() => handleEditProject(project)}
+                        onInvoice={() => handleInvoice(project)}
                     />
                 ))}
             </div>
