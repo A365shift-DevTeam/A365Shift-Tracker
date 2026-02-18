@@ -5,11 +5,8 @@ import {
   ArrowUpDown, Check, X, Layers, User, Flag, Briefcase, Building, Phone, Edit, Settings, ArrowUpRight
 } from 'lucide-react'
 import { contactService } from '../../../services/contactService'
-<<<<<<< Updated upstream
-=======
 import { projectService } from '../../../services/api'
 import ExportButton from '../../../components/ExportButton'
->>>>>>> Stashed changes
 import { ListView } from './ListView'
 import { KanbanView } from './KanbanView'
 import { ChartView } from './ChartView'

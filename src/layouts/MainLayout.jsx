@@ -16,11 +16,8 @@ function useIsMobile(breakpoint = 768) {
 export default function MainLayout() {
     const { logout } = useAuth();
     const location = useLocation();
-<<<<<<< Updated upstream
-=======
     const [isHovered, setIsHovered] = React.useState(false);
     const isMobile = useIsMobile();
->>>>>>> Stashed changes
 
     const handleLogout = async () => {
         try {
@@ -31,21 +28,12 @@ export default function MainLayout() {
     };
 
     const navItems = [
-<<<<<<< Updated upstream
-        { path: '/', icon: <FaHouse />, label: 'Dashboard' },
-        { path: '/sales', icon: <FaChartColumn />, label: 'Sales' },
-        { path: '/todolist', icon: <FaListCheck />, label: 'Todo List' },
-        { path: '/contact', icon: <FaUserGroup />, label: 'Contacts' },
-        { path: '/timesheet', icon: <FaClock />, label: 'Timesheet' },
-        { path: '/finance', icon: <FaMoneyBillWave />, label: 'Finance' },
-=======
         { path: '/', icon: <FaHouse size={20} />, label: 'Dashboard' },
         { path: '/sales', icon: <FaChartColumn size={20} />, label: 'Sales' },
         { path: '/todolist', icon: <FaListCheck size={20} />, label: 'Todo' },
         { path: '/contact', icon: <FaUserGroup size={20} />, label: 'Contacts' },
         { path: '/timesheet', icon: <FaClock size={20} />, label: 'Time' },
         { path: '/finance', icon: <FaMoneyBillWave size={20} />, label: 'Finance' },
->>>>>>> Stashed changes
     ];
 
     /* ───── MOBILE LAYOUT ───── */
@@ -181,15 +169,10 @@ export default function MainLayout() {
                     boxShadow: '0 4px 24px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02), inset 0 1px 0 rgba(255, 255, 255, 0.9)'
                 }}
             >
-<<<<<<< Updated upstream
-                <a href="/" className="d-flex align-items-center mb-3 text-decoration-none px-2">
-                    <span className="fs-5 fw-bold" style={{
-=======
                 <Link to="/" className="d-flex align-items-center mb-3 text-decoration-none px-2" style={{ height: '40px' }}>
                     <div className="d-flex align-items-center justify-content-center" style={{ minWidth: '24px' }}>
                     </div>
                     <span className="fs-5 fw-bold text-nowrap" style={{
->>>>>>> Stashed changes
                         background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
@@ -198,7 +181,7 @@ export default function MainLayout() {
                     }}>
                         A365 Tracker
                     </span>
-                </a>
+                </Link>
                 <hr style={{ borderColor: 'rgba(0,0,0,0.08)', opacity: 0.5 }} />
                 <ul className="nav nav-pills flex-column mb-auto gap-1">
                     {navItems.map((item) => {

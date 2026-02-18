@@ -40,11 +40,7 @@ const GenerateCustomId = (brandingName, clientName) => {
     return `${date}${brandCode}${clientCode}${year}`;
 }
 
-<<<<<<< Updated upstream
-const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onDelete, delay, clientName, brandingName, history = [] }) => {
-=======
 const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onDelete, onEdit, delay, clientName, brandingName, title, history = [] }) => {
->>>>>>> Stashed changes
     const [showNotification, setShowNotification] = useState(false)
     const [stageTransition, setStageTransition] = useState({ from: '', to: '' })
 
@@ -307,14 +303,8 @@ const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onD
                 </div>
             </div>
 
-<<<<<<< Updated upstream
-            {/* Subtext Row - Moved outside to preserve vertical alignment of main row */}
-            <div className="text-secondary small fw-medium mt-1 text-center" style={{ fontSize: '11px' }}>
-                SAP Project ,Waiting for Vendor
-            </div>
 
-=======
->>>>>>> Stashed changes
+
             {/* Business Process Modal */}
             <BusinessProcessModal
                 show={showNotification}
