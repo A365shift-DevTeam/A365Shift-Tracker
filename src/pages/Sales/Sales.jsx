@@ -746,14 +746,14 @@ function Sales() {
                                 size="sm"
                                 onClick={() => setActiveTab('Product')}
                             >
-                                Services & Products
+                                Products
                             </Button>
                             <Button
                                 variant={activeTab === 'Service' ? 'primary' : 'outline-secondary'}
                                 size="sm"
                                 onClick={() => setActiveTab('Service')}
                             >
-                                Clients
+                              Services 
                             </Button>
                         </div>
 
@@ -827,7 +827,7 @@ function Sales() {
                                 value={newProjectData.type}
                                 onChange={(e) => setNewProjectData({ ...newProjectData, type: e.target.value })}
                             >
-                                <option value="Product">Client</option>
+                                <option value="Product">Product</option>
                                 <option value="Service">Service</option>
                             </Form.Select>
                         </Form.Group>

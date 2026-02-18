@@ -158,8 +158,11 @@ export default function MainLayout() {
             {/* Sidebar */}
             <div
                 className="d-flex flex-column p-3 m-3"
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
                 style={{
-                    width: '240px',
+                    width: isHovered ? '240px' : '80px',
+                    transition: 'width 0.3s ease, background 0.3s ease',
                     background: 'rgba(255, 255, 255, 0.85)',
                     backdropFilter: 'blur(16px)',
                     WebkitBackdropFilter: 'blur(16px)',
@@ -169,18 +172,21 @@ export default function MainLayout() {
                     boxShadow: '0 4px 24px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02), inset 0 1px 0 rgba(255, 255, 255, 0.9)'
                 }}
             >
-                <Link to="/" className="d-flex align-items-center mb-3 text-decoration-none px-2" style={{ height: '40px' }}>
+                <Link to="/" className={`d-flex align-items-center mb-3 text-decoration-none px-2 ${!isHovered ? 'justify-content-center' : ''}`} style={{ height: '40px' }}>
                     <div className="d-flex align-items-center justify-content-center" style={{ minWidth: '24px' }}>
+                        {!isHovered && <FaChartColumn size={24} color="#3b82f6" />}
                     </div>
-                    <span className="fs-5 fw-bold text-nowrap" style={{
-                        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text',
-                        letterSpacing: '-0.3px'
-                    }}>
-                        A365 Tracker
-                    </span>
+                    {isHovered && (
+                        <span className="fs-5 fw-bold text-nowrap" style={{
+                            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            backgroundClip: 'text',
+                            letterSpacing: '-0.3px'
+                        }}>
+                            A365 Tracker
+                        </span>
+                    )}
                 </Link>
                 <hr style={{ borderColor: 'rgba(0,0,0,0.08)', opacity: 0.5 }} />
                 <ul className="nav nav-pills flex-column mb-auto gap-1">
@@ -190,7 +196,7 @@ export default function MainLayout() {
                             <li className="nav-item" key={item.path}>
                                 <Link
                                     to={item.path}
-                                    className="nav-link d-flex align-items-center gap-3 px-3 py-2"
+                                    className={`nav-link d-flex align-items-center ${isHovered ? 'gap-3 px-3' : 'justify-content-center px-0'} py-2`}
                                     style={{
                                         color: isActive ? '#3b82f6' : '#64748b',
                                         background: isActive ? 'rgba(59, 130, 246, 0.08)' : 'transparent',
@@ -198,11 +204,16 @@ export default function MainLayout() {
                                         borderRadius: '10px',
                                         fontWeight: isActive ? 600 : 500,
                                         fontSize: '0.9rem',
-                                        transition: 'all 0.2s ease'
+                                        transition: 'all 0.2s ease',
+                                        whiteSpace: 'nowrap',
+                                        overflow: 'hidden'
                                     }}
+                                    title={!isHovered ? item.label : ''}
                                 >
-                                    {item.icon}
-                                    {item.label}
+                                    <div style={{ minWidth: '20px', display: 'flex', justifyContent: 'center' }}>
+                                        {item.icon}
+                                    </div>
+                                    {isHovered && <span>{item.label}</span>}
                                 </Link>
                             </li>
                         );
@@ -211,7 +222,7 @@ export default function MainLayout() {
                 <hr style={{ borderColor: 'rgba(0,0,0,0.08)', opacity: 0.5 }} />
                 <button
                     onClick={handleLogout}
-                    className="btn d-flex align-items-center gap-2 w-100 justify-content-center py-2"
+                    className={`btn d-flex align-items-center w-100 py-2 ${isHovered ? 'gap-2 justify-content-center' : 'justify-content-center px-0'}`}
                     style={{
                         background: 'rgba(239, 68, 68, 0.06)',
                         border: '1px solid rgba(239, 68, 68, 0.12)',
@@ -219,10 +230,14 @@ export default function MainLayout() {
                         borderRadius: '10px',
                         fontWeight: 500,
                         fontSize: '0.85rem',
-                        transition: 'all 0.2s ease'
+                        transition: 'all 0.2s ease',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden'
                     }}
+                    title={!isHovered ? 'Sign out' : ''}
                 >
-                    <FaRightFromBracket /> Sign out
+                    <FaRightFromBracket />
+                    {isHovered && <span>Sign out</span>}
                 </button>
             </div>
 

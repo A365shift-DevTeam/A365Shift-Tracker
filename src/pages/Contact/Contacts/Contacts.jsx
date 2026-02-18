@@ -21,7 +21,7 @@ const Contacts = () => {
   const [isLoading, setIsLoading] = useState(true)
 
   // View State
-  const [viewMode, setViewMode] = useState('kanban') // 'list', 'kanban', 'chart'
+  const [viewMode, setViewMode] = useState('list') // 'list', 'kanban', 'chart'
   const [showContactModal, setShowContactModal] = useState(false)
   const [showAIAssist, setShowAIAssist] = useState(false)
   const [editingContact, setEditingContact] = useState(null)
