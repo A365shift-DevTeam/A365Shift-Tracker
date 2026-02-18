@@ -1,0 +1,763 @@
+import React, { useState } from 'react';
+import {
+    LayoutDashboard, FileDown, Briefcase, MapPin, Globe, CreditCard, Building, Users,
+    Plus, Trash2, ArrowLeft, DollarSign, FileText, ArrowRight, Filter, Wallet, CheckCircle
+} from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+import {
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
+} from 'recharts';
+
+// ==========================================
+// 1. STYLES (Injected CSS)
+// ==========================================
+const TrackerStyles = () => (
+    <style>{`
+        /* Premium Light Theme (Adapted) */
+        .tracker-wrapper {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            color: #333;
+            min-height: 100vh;
+            background: #f4f6f9;
+            padding: 2rem;
+        }
+
+        /* --- Global Utils --- */
+        .text-white { color: #212529 !important; }
+        .text-white-50 { color: #6c757d !important; }
+        .text-primary { color: #0d6efd !important; }
+        .text-success { color: #198754 !important; }
+        .text-danger { color: #dc3545 !important; }
+        .text-warning { color: #ffc107 !important; }
+        
+        .fw-bold { font-weight: 700 !important; }
+        .small { font-size: 0.875rem; }
+        .font-monospace { font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace; }
+
+        /* --- Buttons --- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.875rem; }
+        
+        .btn-primary { background-color: #0d6efd; color: white; border-color: #0d6efd; }
+        .btn-primary:hover { background-color: #0b5ed7; }
+        
+        .btn-outline-light { color: #f8f9fa; border-color: #f8f9fa; background: transparent; }
+        .btn-outline-light:hover { color: #000; background-color: #f8f9fa; }
+
+        .btn-outline-secondary { color: #adb5bd; border-color: #adb5bd; background: transparent; }
+        .btn-outline-secondary:hover { color: #fff; background-color: #6c757d; }
+
+        .btn-outline-success { color: #198754; border-color: #198754; background: transparent; }
+        .btn-outline-success:hover { color: #fff; background-color: #198754; }
+
+        .btn-outline-danger { color: #dc3545; border-color: #dc3545; background: transparent; }
+        .btn-outline-danger:hover { color: #fff; background-color: #dc3545; }
+
+        .btn-dark { background-color: #212529; color: white; border-color: #212529; }
+        .btn-dark:hover { background-color: #424649; }
+
+        .btn-link { background: none; border: none; padding: 0; text-decoration: none; }
+        .btn-link:hover { text-decoration: underline; }
+
+        /* --- Invoice Stage Cards (Light Theme for Invoice View) --- */
+        .invoice-view {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .stage {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin: 16px 0;
+            overflow: hidden;
+            color: #000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .bar {
+            background: #ffe600;
+            padding: 10px 14px;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #000;
+        }
+
+        .stage-p { padding: 14px; }
+
+        .grid-stage {
+            display: grid;
+            grid-template-columns: 220px 1fr 180px 1fr;
+            gap: 10px;
+            align-items: center;
+        }
+        @media (max-width: 900px) { .grid-stage { grid-template-columns: 1fr; } }
+
+        .stage-input, .stage-select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background: #fff;
+            color: #000;
+        }
+
+        .stage-label { font-weight: 600; color: #333; }
+
+        .stage-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        .stage-table th, .stage-table td { border: 1px solid #ddd; padding: 10px; text-align: left; vertical-align: middle; }
+        .stage-table th { background: #eef3ff; color: #333; font-weight: 600; font-size: 0.9rem; }
+        
+        /* --- Dashboard Cards (Light Theme) --- */
+        .dashboard-card {
+            background: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            height: 100%;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        .dashboard-card-body { padding: 1.5rem; }
+        .dashboard-card-header {
+            padding: 1rem 1.5rem;
+            background: transparent;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+         /* --- Tables (Light) --- */
+        .table-dark {
+            width: 100%;
+            color: #212529;
+            border-collapse: collapse;
+        }
+        .table-dark th, .table-dark td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .table-dark th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #6c757d;
+            font-weight: 600;
+        }
+        .table-dark tr:hover { background-color: rgba(0,0,0,0.05); cursor: pointer; }
+
+        /* Utilities */
+        .d-flex { display: flex; }
+        .align-items-center { align-items: center; }
+        .justify-content-between { justify-content: space-between; }
+        .gap-1 { gap: 0.25rem; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-3 { gap: 1rem; }
+        .mb-1 { margin-bottom: 0.25rem; }
+        .mb-3 { margin-bottom: 1rem; }
+        .mb-4 { margin-bottom: 1.5rem; }
+        .mb-5 { margin-bottom: 3rem; }
+        .p-2 { padding: 0.5rem; }
+        .p-3 { padding: 1rem; }
+        .rounded { border-radius: 0.375rem !important; }
+        .rounded-circle { border-radius: 50% !important; }
+        .bg-opacity-10 { --bs-bg-opacity: 0.1; }
+        .bg-primary { background-color: rgba(13, 110, 253, var(--bs-bg-opacity, 1)) !important; }
+        .bg-success { background-color: rgba(25, 135, 84, var(--bs-bg-opacity, 1)) !important; }
+        .bg-danger { background-color: rgba(220, 53, 69, var(--bs-bg-opacity, 1)) !important; }
+        .bg-warning { background-color: rgba(255, 193, 7, var(--bs-bg-opacity, 1)) !important; }
+        
+        .row { display: flex; flex-wrap: wrap; margin-right: -0.75rem; margin-left: -0.75rem; }
+        .col-md-3, .col-md-4, .col-md-6, .col-md-8 { padding-right: 0.75rem; padding-left: 0.75rem; width: 100%; }
+        @media (min-width: 768px) {
+            .col-md-3 { flex: 0 0 25%; max-width: 25%; }
+            .col-md-4 { flex: 0 0 33.333333%; max-width: 33.333333%; }
+            .col-md-6 { flex: 0 0 50%; max-width: 50%; }
+            .col-md-8 { flex: 0 0 66.666667%; max-width: 66.666667%; }
+        }
+    `}</style>
+);
+
+// ==========================================
+// 2. UTILITY SERVICES (PDF & Excel)
+// ==========================================
+
+const generateInvoicePDF = (milestone, details, taxes) => {
+    const doc = new jsPDF();
+    const currency = details.currency || 'AED';
+    const baseAmount = (details.dealValue * milestone.percentage) / 100;
+    const chargesList = Array.isArray(taxes) ? taxes : (taxes.gst ? [{ name: 'GST', percentage: taxes.gst }] : []);
+    const totalTaxAmount = chargesList.reduce((sum, charge) => sum + ((baseAmount * (parseFloat(charge.percentage) || 0)) / 100), 0);
+    const totalAmount = baseAmount + totalTaxAmount;
+
+    doc.setFontSize(22); doc.setTextColor(40); doc.text("INVOICE", 14, 22);
+    doc.setFontSize(10); doc.setTextColor(100);
+    doc.text(`Invoice #: INV-${milestone.id}-${Date.now().toString().slice(-4)}`, 14, 30);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 35);
+    doc.text(`Status: ${milestone.status}`, 14, 40);
+
+    doc.setFontSize(12); doc.setTextColor(0);
+    doc.text(details.delivery || "Your Company Name", 200, 22, { align: 'right' });
+    doc.setFontSize(10);
+    doc.text("Business Address Line 1", 200, 28, { align: 'right' });
+    doc.text("City, Country, Zip", 200, 33, { align: 'right' });
+
+    doc.text("Bill To:", 14, 55);
+    doc.setFontSize(12); doc.text(details.clientName || "Client Name", 14, 62);
+    doc.setFontSize(10);
+    doc.text(details.location || "Client Location", 14, 68);
+    doc.text(`Project ID: ${details.projectId}`, 14, 74);
+
+    autoTable(doc, {
+        startY: 85,
+        head: [['Description', 'Percentage', `Amount (${currency})`]],
+        body: [[milestone.name, `${milestone.percentage}%`, baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })]],
+        theme: 'striped', headStyles: { fillColor: [66, 66, 66] }
+    });
+
+    let finalY = doc.lastAutoTable.finalY + 10;
+    doc.text(`Subtotal:`, 140, finalY);
+    doc.text(`${currency} ${baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
+
+    chargesList.forEach(charge => {
+        finalY += 6;
+        const amt = (baseAmount * (parseFloat(charge.percentage) || 0)) / 100;
+        doc.text(`${charge.name} (${charge.percentage}%):`, 140, finalY);
+        doc.text(`${currency} ${amt.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
+    });
+
+    doc.setDrawColor(200); doc.line(140, finalY + 4, 200, finalY + 4);
+    doc.setFontSize(12); doc.setFont(undefined, 'bold');
+    doc.text(`Total:`, 140, finalY + 10);
+    doc.text(`${currency} ${totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY + 10, { align: 'right' });
+
+    doc.setFontSize(10); doc.setFont(undefined, 'normal');
+    doc.text("Payment Terms: Due within 30 days.", 14, finalY + 30);
+
+    doc.save(`Invoice_${milestone.name.replace(/[^a-z0-9]/gi, '_')}.pdf`);
+};
+
+const generatePaymentInvoicePDF = (stakeholder, details, dealValue) => {
+    const doc = new jsPDF();
+    const currency = details.currency || 'AED';
+    const payAmt = (dealValue * (parseFloat(stakeholder.percentage) || 0)) / 100;
+    const taxRate = parseFloat(stakeholder.payoutTax) || 0;
+    const taxAmt = (payAmt * taxRate) / 100;
+    const netPay = payAmt - taxAmt;
+
+    doc.setFontSize(22); doc.setTextColor(40); doc.text("PAYMENT INVOICE", 14, 22);
+    doc.setFontSize(10); doc.setTextColor(100);
+    doc.text(`Invoice #: PAY-${stakeholder.id}-${Date.now().toString().slice(-4)}`, 14, 30);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 35);
+    doc.text(`Status: ${stakeholder.payoutStatus || 'Pending'}`, 14, 40);
+
+    doc.setFontSize(12); doc.setTextColor(0);
+    doc.text(details.delivery || "Your Company Name", 200, 22, { align: 'right' });
+    doc.setFontSize(10);
+    doc.text("Business Address Line 1", 200, 28, { align: 'right' });
+
+    doc.text("Pay To:", 14, 55);
+    doc.setFontSize(14); doc.setFont(undefined, 'bold');
+    doc.text(stakeholder.name || "Stakeholder", 14, 63);
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(10);
+    doc.text(`Project: ${details.projectId}`, 14, 70);
+
+    autoTable(doc, {
+        startY: 92,
+        head: [['Description', 'Share %', `Amount (${currency})`]],
+        body: [[`Payment to ${stakeholder.name}`, `${stakeholder.percentage}%`, `${currency} ${payAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}`]],
+        theme: 'striped', headStyles: { fillColor: [66, 66, 66] }
+    });
+
+    let finalY = doc.lastAutoTable.finalY + 10;
+    doc.text(`Subtotal:`, 140, finalY);
+    doc.text(`${currency} ${payAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
+
+    if (taxRate > 0) {
+        finalY += 6;
+        doc.text(`Tax (${taxRate}%):`, 140, finalY);
+        doc.text(`- ${currency} ${taxAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
+    }
+
+    doc.setDrawColor(200); doc.line(140, finalY + 4, 200, finalY + 4);
+    doc.setFontSize(12); doc.setFont(undefined, 'bold');
+    doc.text(`Net Pay:`, 140, finalY + 10);
+    doc.text(`${currency} ${netPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY + 10, { align: 'right' });
+
+    doc.save(`Payment_Invoice_${(stakeholder.name || 'stakeholder').replace(/[^a-z0-9]/gi, '_')}.pdf`);
+};
+
+const generateProjectReportPDF = (details, stakeholders, milestones, taxes) => {
+    const doc = new jsPDF();
+    const currency = details.currency || 'AED';
+    const totalDistributed = stakeholders.reduce((sum, s) => sum + (details.dealValue * s.percentage) / 100, 0);
+    const netProfit = details.dealValue - totalDistributed;
+    const chargesList = Array.isArray(taxes) ? taxes : (taxes.gst ? [{ name: 'GST', percentage: taxes.gst }] : []);
+    const totalChargesString = chargesList.map(c => `${c.name}: ${c.percentage}%`).join(', ');
+
+    doc.setFontSize(24); doc.setTextColor(40); doc.text("PROJECT FINANCIAL REPORT", 14, 22);
+    doc.setFontSize(10); doc.setTextColor(100);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 30);
+    doc.text(`Project ID: ${details.projectId}`, 14, 35);
+
+    doc.setFontSize(14); doc.setTextColor(0); doc.text("Executive Summary", 14, 50);
+
+    const summaryData = [
+        ["Deal Value", `${currency} ${details.dealValue.toLocaleString()}`],
+        ["Total Distributed", `${currency} ${totalDistributed.toLocaleString()}`],
+        ["Net Profit (Projected)", `${currency} ${netProfit.toLocaleString()}`],
+        ["Tax Configuration", totalChargesString || "None"]
+    ];
+
+    autoTable(doc, {
+        startY: 55, body: summaryData, theme: 'plain', styles: { fontSize: 11, cellPadding: 2 }, columnStyles: { 0: { fontStyle: 'bold', width: 80 } }
+    });
+
+    let finalY = doc.lastAutoTable.finalY + 15;
+    doc.setFontSize(14); doc.text("Stakeholder Distribution", 14, finalY);
+
+    const stakeholderBody = stakeholders.map(s => [
+        s.name, `${s.percentage}%`, `${currency} ${(details.dealValue * s.percentage / 100).toLocaleString()}`
+    ]);
+
+    autoTable(doc, {
+        startY: finalY + 5, head: [['Name / Role', 'Share %', 'Amount']], body: stakeholderBody, theme: 'striped', headStyles: { fillColor: [41, 128, 185] }
+    });
+
+    doc.save(`${details.projectId}_Full_Report.pdf`);
+};
+
+const generateDashboardPDF = (projects, filter) => {
+    const doc = new jsPDF();
+    const totalRevenue = projects.reduce((sum, p) => sum + (parseFloat(p.dealValue) || 0), 0);
+    const activeProjects = projects.filter(p => !p.isArchived).length;
+    const totalCollected = projects.reduce((sum, p) => sum + p.milestones.reduce((mSum, m) => m.status === 'Paid' ? mSum + ((p.dealValue * m.percentage) / 100) : mSum, 0), 0);
+
+    doc.setFontSize(24); doc.setTextColor(40); doc.text("EXECUTIVE DASHBOARD", 14, 22);
+    doc.setFontSize(10); doc.setTextColor(100);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 30);
+    doc.text(`Filter View: ${filter}`, 14, 35);
+
+    doc.setDrawColor(200); doc.setFillColor(245, 245, 245); doc.rect(14, 45, 182, 30, 'F');
+    doc.setFontSize(12); doc.setTextColor(0);
+    doc.text("Total Revenue", 30, 55); doc.text("Active Projects", 90, 55); doc.text("Total Collected", 150, 55);
+    doc.setFontSize(16); doc.setFont(undefined, 'bold');
+    doc.text(`$${totalRevenue.toLocaleString()}`, 30, 65); doc.text(`${activeProjects}`, 90, 65); doc.text(`$${totalCollected.toLocaleString()}`, 150, 65);
+
+    doc.setFontSize(14); doc.setFont(undefined, 'normal'); doc.text("Project Performance Details", 14, 90);
+
+    const tableBody = projects.map(p => {
+        const collected = p.milestones.reduce((mSum, m) => m.status === 'Paid' ? mSum + ((p.dealValue * m.percentage) / 100) : mSum, 0);
+        return [p.projectId, p.clientName, `${p.currency} ${p.dealValue.toLocaleString()}`, `${p.currency} ${collected.toLocaleString()}`, p.isArchived ? "Archived" : "Active"];
+    });
+
+    autoTable(doc, {
+        startY: 95, head: [['ID', 'Client', 'Value', 'Collected', 'Status']], body: tableBody, theme: 'striped', headStyles: { fillColor: [52, 73, 94] }
+    });
+
+    doc.save(`Dashboard_Report_${filter}.pdf`);
+};
+
+const exportProjectReport = (details, stakeholders, milestones, taxes) => {
+    const wb = XLSX.utils.book_new();
+    const currency = details.currency;
+    const totalDistributed = stakeholders.reduce((sum, s) => sum + (details.dealValue * s.percentage) / 100, 0);
+
+    const dashboardData = [
+        ["PROJECT FINANCIAL DASHBOARD"], ["Key Metrics"],
+        ["Total Deal Value", details.dealValue], ["Total Distributed", totalDistributed]
+    ];
+    const wsDashboard = XLSX.utils.aoa_to_sheet(dashboardData);
+    XLSX.utils.book_append_sheet(wb, wsDashboard, "Dashboard");
+
+    const safeName = (details.projectId || 'Project').replace(/[^a-z0-9]/gi, '_');
+    XLSX.writeFile(wb, `${safeName}_Full_Report.xlsx`);
+};
+
+const exportDashboardExcel = (projects, filter) => {
+    const wb = XLSX.utils.book_new();
+    const totalRevenue = projects.reduce((sum, p) => sum + (parseFloat(p.dealValue) || 0), 0);
+    const summaryData = [
+        ["EXECUTIVE DASHBOARD REPORT"], ["Filter Applied", filter], [],
+        ["Total Revenue", totalRevenue], [], ["DISTRIBUTION BY PROJECT"], ["Project", "Value"]
+    ];
+    projects.forEach(p => summaryData.push([p.projectId, p.dealValue]));
+    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, wsSummary, "Executive Summary");
+    XLSX.writeFile(wb, `Dashboard_Report_${filter}.xlsx`);
+};
+
+// ==========================================
+// 3. SUB COMPONENTS (Dashboard & Invoice)
+// ==========================================
+
+const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
+    const [filter, setFilter] = useState('All');
+    const [chartMetric, setChartMetric] = useState('Revenue');
+
+    // Filter Logic
+    const filteredProjects = projects.filter(p => {
+        if (filter === 'All') return true;
+        const pDate = new Date(p.dateCreated);
+        const now = new Date();
+        if (filter === 'Yearly') return pDate.getFullYear() === now.getFullYear();
+        if (filter === 'Monthly') return pDate.getMonth() === now.getMonth() && pDate.getFullYear() === now.getFullYear();
+        return true;
+    });
+
+    // KPI Calcs
+    const totalRevenue = filteredProjects.reduce((sum, p) => sum + (parseFloat(p.dealValue) || 0), 0);
+    const activeProjects = filteredProjects.filter(p => !p.isArchived).length;
+    const totalSplits = filteredProjects.reduce((sum, p) => sum + p.stakeholders.reduce((sSum, s) => sSum + ((parseFloat(p.dealValue) || 0) * s.percentage) / 100, 0), 0);
+    const totalCollected = filteredProjects.reduce((sum, p) => sum + p.milestones.reduce((mSum, m) => m.status === 'Paid' ? mSum + ((p.dealValue * m.percentage) / 100) : mSum, 0), 0);
+
+    const chartData = filteredProjects.map(p => ({
+        name: p.projectId,
+        value: chartMetric === 'Revenue' ? (parseFloat(p.dealValue) || 0) :
+            chartMetric === 'Splits' ? p.stakeholders.reduce((sSum, s) => sSum + ((parseFloat(p.dealValue) || 0) * s.percentage) / 100, 0) :
+                p.milestones.reduce((mSum, m) => m.status === 'Paid' ? mSum + ((p.dealValue * m.percentage) / 100) : mSum, 0)
+    }));
+
+    const statusData = [{ name: 'Active', value: activeProjects }, { name: 'Completed', value: filteredProjects.length - activeProjects }];
+    const COLORS = ['#0d6efd', '#198754', '#ffc107', '#dc3545'];
+
+    return (
+        <div className="container py-4">
+            {/* Header */}
+            <div className="d-flex justify-content-between align-items-center mb-5">
+                <div>
+                    <h2 className="fw-bold text-white mb-1">Project Dashboard</h2>
+                    <p className="text-white-50 m-0">Overview of all financial projects</p>
+                </div>
+                <div className="d-flex gap-2">
+                    <button className="btn btn-primary" onClick={onCreateProject}><Plus size={18} /> New Project</button>
+                    <button className="btn btn-outline-success" onClick={() => exportDashboardExcel(filteredProjects, filter)}><FileDown size={16} /> Export</button>
+                </div>
+            </div>
+
+            {/* KPI Cards */}
+            <div className="row mb-5" style={{ gap: '1rem' }}>
+                <div className="dashboard-card col-md-3">
+                    <div className="dashboard-card-body">
+                        <div className="d-flex justify-content-between mb-3">
+                            <div><p className="text-white-50 small mb-1">Total Revenue</p><h3 className="text-white fw-bold m-0">${totalRevenue.toLocaleString()}</h3></div>
+                            <div className="p-2 bg-success bg-opacity-10 rounded"><DollarSign className="text-success" size={24} /></div>
+                        </div>
+                    </div>
+                </div>
+                <div className="dashboard-card col-md-3">
+                    <div className="dashboard-card-body">
+                        <div className="d-flex justify-content-between mb-3">
+                            <div><p className="text-white-50 small mb-1">Active Projects</p><h3 className="text-white fw-bold m-0">{activeProjects}</h3></div>
+                            <div className="p-2 bg-primary bg-opacity-10 rounded"><Briefcase className="text-primary" size={24} /></div>
+                        </div>
+                    </div>
+                </div>
+                <div className="dashboard-card col-md-3">
+                    <div className="dashboard-card-body">
+                        <div className="d-flex justify-content-between mb-3">
+                            <div><p className="text-white-50 small mb-1">Total Splits</p><h3 className="text-white fw-bold m-0">${totalSplits.toLocaleString()}</h3></div>
+                            <div className="p-2 bg-danger bg-opacity-10 rounded"><Users className="text-danger" size={24} /></div>
+                        </div>
+                    </div>
+                </div>
+                <div className="dashboard-card col-md-3">
+                    <div className="dashboard-card-body">
+                        <div className="d-flex justify-content-between mb-3">
+                            <div><p className="text-white-50 small mb-1">Total Collected</p><h3 className="text-white fw-bold m-0">${totalCollected.toLocaleString()}</h3></div>
+                            <div className="p-2 bg-warning bg-opacity-10 rounded"><Wallet className="text-warning" size={24} /></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Charts */}
+            <div className="row mb-5">
+                <div className="col-md-8 mb-4">
+                    <div className="dashboard-card">
+                        <div className="dashboard-card-header">
+                            <h5 className="text-white m-0">{chartMetric} by Project</h5>
+                            <button className="btn btn-sm btn-outline-secondary" onClick={() => setChartMetric(chartMetric === 'Revenue' ? 'Splits' : 'Revenue')}>Toggle Metric</button>
+                        </div>
+                        <div className="dashboard-card-body" style={{ height: 300 }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={chartData}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e9ecef" />
+                                    <XAxis dataKey="name" stroke="#6c757d" />
+                                    <YAxis stroke="#6c757d" />
+                                    <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#dee2e6', color: '#212529' }} />
+                                    <Bar dataKey="value" fill="#0d6efd" radius={[4, 4, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </div>
+                <div className="col-md-4 mb-4">
+                    <div className="dashboard-card">
+                        <div className="dashboard-card-header"><h5 className="text-white m-0">Status Distribution</h5></div>
+                        <div className="dashboard-card-body" style={{ height: 300 }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie data={statusData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                                        {statusData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                                    </Pie>
+                                    <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#dee2e6', color: '#212529' }} />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Project List */}
+            <div className="dashboard-card">
+                <div className="dashboard-card-header"><h5 className="text-white m-0">Recent Projects</h5></div>
+                <div className="table-responsive">
+                    <table className="table-dark">
+                        <thead>
+                            <tr>
+                                <th>Project Name</th><th>Client</th><th>Deal Value</th><th>Collected</th><th>Status</th><th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredProjects.map(project => {
+                                const collected = project.milestones.reduce((sum, m) => m.status === 'Paid' ? sum + ((project.dealValue * m.percentage) / 100) : sum, 0);
+                                return (
+                                    <tr key={project.id} onClick={() => onOpenProject(project.id)}>
+                                        <td><div className="fw-bold text-white">{project.projectId}</div></td>
+                                        <td>{project.clientName}</td>
+                                        <td className="font-monospace text-white fw-bold">{project.currency} {parseFloat(project.dealValue).toLocaleString()}</td>
+                                        <td className="font-monospace text-warning">{project.currency} {collected.toLocaleString()}</td>
+                                        <td><span className="text-success">Active</span></td>
+                                        <td><button className="btn btn-sm btn-outline-light rounded-circle"><ArrowRight size={14} /></button></td>
+                                    </tr>
+                                );
+                            })}
+                            {filteredProjects.length === 0 && <tr><td colSpan="6" className="text-center py-4 text-muted">No projects found.</td></tr>}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const BusinessDetails = ({ details, updateDetails }) => (
+    <div className="stage">
+        <div className="bar">Stage 1 — Business Details</div>
+        <div className="grid-stage">
+            <label className="stage-label">Project ID</label>
+            <input className="stage-input" value={details.projectId} onChange={(e) => updateDetails('projectId', e.target.value)} />
+            <label className="stage-label">Client Name</label>
+            <input className="stage-input" value={details.clientName} onChange={(e) => updateDetails('clientName', e.target.value)} />
+            <label className="stage-label">Delivery</label>
+            <input className="stage-input" value={details.delivery || ''} onChange={(e) => updateDetails('delivery', e.target.value)} placeholder="Ambot365" />
+            <label className="stage-label">Billing Location</label>
+            <input className="stage-input" value={details.location} onChange={(e) => updateDetails('location', e.target.value)} />
+            <label className="stage-label">Deal Value</label>
+            <input type="number" className="stage-input" value={details.dealValue} onChange={(e) => updateDetails('dealValue', e.target.value)} />
+            <label className="stage-label">Currency</label>
+            <select className="stage-select" value={details.currency} onChange={(e) => updateDetails('currency', e.target.value)}>
+                <option value="AED">AED</option><option value="USD">USD</option><option value="INR">INR</option>
+            </select>
+        </div>
+    </div>
+);
+
+const StakeholderManager = ({ stakeholders, addStakeholder, removeStakeholder, updateStakeholder, dealValue, currency }) => {
+    const totalPct = stakeholders.reduce((sum, s) => sum + (parseFloat(s.percentage) || 0), 0);
+    const totalAmt = stakeholders.reduce((sum, s) => sum + ((dealValue * (parseFloat(s.percentage) || 0)) / 100), 0);
+    return (
+        <div className="stage">
+            <div className="bar"><span>Stage 2 — Share Percentage</span><button className="btn btn-sm btn-dark" onClick={addStakeholder}><Plus size={14} /> Add Party</button></div>
+            <div className="stage-p">
+                <table className="stage-table">
+                    <thead><tr><th>Party</th><th style={{ width: '150px' }}>%</th><th>Amount ({currency})</th><th style={{ width: '50px' }}></th></tr></thead>
+                    <tbody>
+                        {stakeholders.map(s => (
+                            <tr key={s.id}>
+                                <td><input className="stage-input" value={s.name} onChange={(e) => updateStakeholder(s.id, 'name', e.target.value)} /></td>
+                                <td><input type="number" className="stage-input" value={s.percentage} onChange={(e) => updateStakeholder(s.id, 'percentage', e.target.value)} /></td>
+                                <td className="font-monospace">{currency} {(dealValue * s.percentage / 100).toLocaleString()}</td>
+                                <td><button className="btn-link text-danger" onClick={() => removeStakeholder(s.id)}><Trash2 size={16} /></button></td>
+                            </tr>
+                        ))}
+                    </tbody>
+                    <tfoot><tr><th>Total</th><th>{totalPct.toFixed(2)}%</th><th>{currency} {totalAmt.toLocaleString()}</th><th></th></tr></tfoot>
+                </table>
+            </div>
+        </div>
+    );
+};
+
+const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMilestone, dealValue, details, taxes }) => {
+    const paidMilestones = milestones.filter(m => m.status === 'Paid');
+    const totalPaid = paidMilestones.reduce((sum, m) => sum + ((dealValue * m.percentage) / 100), 0);
+    const paidPct = dealValue ? ((totalPaid / dealValue) * 100) : 0;
+
+    return (
+        <div className="stage">
+            <div className="bar"><span>Stage 3 — Invoice Cycle</span><button className="btn btn-sm btn-dark" onClick={addMilestone}><Plus size={14} /> Add Payment</button></div>
+            <div className="stage-p">
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                    <div style={{ padding: '0.5rem', border: '1px solid #ddd', borderRadius: '8px', background: '#f8f9fa' }}>
+                        <small className="text-muted">Total Paid</small><div className="fw-bold">{details.currency} {totalPaid.toLocaleString()}</div>
+                    </div>
+                </div>
+                <table className="stage-table">
+                    <thead><tr><th>#</th><th>Payment</th><th>%</th><th>Net ({details.currency})</th><th>Action</th></tr></thead>
+                    <tbody>
+                        {milestones.map((m, idx) => (
+                            <tr key={m.id}>
+                                <td>{idx + 1}</td>
+                                <td><input className="stage-input" value={m.name} onChange={(e) => updateMilestone(m.id, 'name', e.target.value)} placeholder="Desc" /></td>
+                                <td><input type="number" className="stage-input" value={m.percentage} onChange={(e) => updateMilestone(m.id, 'percentage', e.target.value)} /></td>
+                                <td className="font-monospace text-success fw-bold">{details.currency} {(dealValue * m.percentage / 100).toLocaleString()}</td>
+                                <td>
+                                    <div className="d-flex gap-2">
+                                        <button className="btn-link text-success" onClick={() => generateInvoicePDF(m, details, taxes)}><FileDown size={18} /></button>
+                                        <button className="btn-link text-danger" onClick={() => removeMilestone(m.id)}><Trash2 size={18} /></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+};
+
+const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, removeStakeholder, updateStakeholder, milestones, addMilestone, removeMilestone, updateMilestone, charges, addCharge, removeCharge, updateCharge }) => {
+    const dVal = parseFloat(details.dealValue) || 0;
+    return (
+        <div className="invoice-view">
+            <div className="d-flex justify-content-between align-items-center mb-4 p-3 bg-white rounded shadow-sm border">
+                <div className="d-flex align-items-center gap-3">
+                    <div className="p-2 bg-primary bg-opacity-10 rounded-circle"><LayoutDashboard size={24} className="text-primary" /></div>
+                    <div><h4 className="m-0 fw-bold">Deal Finance Tracker</h4><span className="text-muted small">Professional Financial Management</span></div>
+                </div>
+                <div className="d-flex gap-2">
+                    <button className="btn btn-sm btn-outline-danger" onClick={() => generateProjectReportPDF(details, stakeholders, milestones, charges)}>PDF Report</button>
+                    <button className="btn btn-sm btn-outline-success" onClick={() => exportProjectReport(details, stakeholders, milestones, charges)}>Excel Export</button>
+                </div>
+            </div>
+
+            <BusinessDetails details={details} updateDetails={updateDetails} />
+            <StakeholderManager stakeholders={stakeholders} addStakeholder={addStakeholder} removeStakeholder={removeStakeholder} updateStakeholder={updateStakeholder} dealValue={dVal} currency={details.currency} />
+
+            <div className="stage">
+                <div className="bar"><span>Stage 2 — Finance Charges</span><button className="btn btn-sm btn-dark" onClick={addCharge}>+ Add Charge</button></div>
+                <div className="stage-p">
+                    <table className="stage-table">
+                        <thead><tr><th>Name</th><th>%</th><th>Amount</th><th></th></tr></thead>
+                        <tbody>
+                            {charges.map(c => (
+                                <tr key={c.id}>
+                                    <td><input className="stage-input" value={c.name} onChange={(e) => updateCharge(c.id, 'name', e.target.value)} /></td>
+                                    <td><input type="number" className="stage-input" value={c.percentage} onChange={(e) => updateCharge(c.id, 'percentage', e.target.value)} /></td>
+                                    <td>{details.currency} {(dVal * c.percentage / 100).toLocaleString()}</td>
+                                    <td><button className="btn-link text-danger" onClick={() => removeCharge(c.id)}><Trash2 size={16} /></button></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <PaymentMilestones milestones={milestones} addMilestone={addMilestone} removeMilestone={removeMilestone} updateMilestone={updateMilestone} dealValue={dVal} details={details} taxes={charges} />
+        </div>
+    );
+};
+
+// ==========================================
+// 4. MAIN COMPONENT (App Logic)
+// ==========================================
+
+const ProjectTrackerComplete = () => {
+    const [view, setView] = useState('dashboard');
+    const [activeProjectId, setActiveProjectId] = useState(null);
+    const [projects, setProjects] = useState([
+        {
+            id: 1, projectId: 'ABC123', dateCreated: new Date().toISOString(), clientName: 'ABC Company', delivery: 'Ambot365',
+            dealValue: 100000, currency: 'AED', location: 'Dubai',
+            stakeholders: [{ id: 1, name: 'Lead', percentage: 2, payoutTax: 10 }],
+            milestones: [{ id: 1, name: 'Initiate Invoice', percentage: 20, status: 'Completed' }],
+            charges: [{ id: 1, name: 'GST', percentage: 18 }]
+        }
+    ]);
+
+    const activeProject = projects.find(p => p.id === activeProjectId);
+
+    const handleCreateProject = () => {
+        const newProj = {
+            id: Date.now(), projectId: `PROJ-${Math.floor(Math.random() * 999)}`, dateCreated: new Date().toISOString(),
+            clientName: 'New Client', delivery: '', dealValue: 0, currency: 'AED', location: '',
+            stakeholders: [], milestones: [], charges: [{ id: 1, name: 'GST', percentage: 0 }]
+        };
+        setProjects([...projects, newProj]);
+        setActiveProjectId(newProj.id);
+        setView('invoice');
+    };
+
+    const updateProject = (fn) => setProjects(projects.map(p => p.id === activeProjectId ? fn(p) : p));
+    const updateDetails = (f, v) => updateProject(p => ({ ...p, [f]: v }));
+
+    // Stakeholders logic
+    const addStakeholder = () => updateProject(p => ({ ...p, stakeholders: [...p.stakeholders, { id: Date.now(), name: 'New', percentage: 0, payoutTax: 0 }] }));
+    const removeStakeholder = (id) => updateProject(p => ({ ...p, stakeholders: p.stakeholders.filter(s => s.id !== id) }));
+    const updateStakeholder = (id, f, v) => updateProject(p => ({ ...p, stakeholders: p.stakeholders.map(s => s.id === id ? { ...s, [f]: v } : s) }));
+
+    // Milestones logic
+    const addMilestone = () => updateProject(p => ({ ...p, milestones: [...p.milestones, { id: Date.now(), name: 'New Stage', percentage: 0, status: 'Pending' }] }));
+    const removeMilestone = (id) => updateProject(p => ({ ...p, milestones: p.milestones.filter(m => m.id !== id) }));
+    const updateMilestone = (id, f, v) => updateProject(p => ({ ...p, milestones: p.milestones.map(m => m.id === id ? { ...m, [f]: v } : m) }));
+
+    // Charges logic
+    const addCharge = () => updateProject(p => ({ ...p, charges: [...p.charges, { id: Date.now(), name: 'New', percentage: 0 }] }));
+    const removeCharge = (id) => updateProject(p => ({ ...p, charges: p.charges.filter(c => c.id !== id) }));
+    const updateCharge = (id, f, v) => updateProject(p => ({ ...p, charges: p.charges.map(c => c.id === id ? { ...c, [f]: v } : c) }));
+
+    return (
+        <div className="tracker-wrapper">
+            <TrackerStyles />
+            {view === 'invoice' && activeProject && (
+                <div className="mb-4 container">
+                    <button className="btn btn-outline-dark" onClick={() => { setView('dashboard'); setActiveProjectId(null); }}>
+                        <ArrowLeft size={16} /> Back to Dashboard
+                    </button>
+                </div>
+            )}
+
+            {view === 'dashboard' ? (
+                <Dashboard projects={projects} onOpenProject={(id) => { setActiveProjectId(id); setView('invoice'); }} onCreateProject={handleCreateProject} />
+            ) : activeProject ? (
+                <InvoiceMain
+                    details={activeProject} updateDetails={updateDetails}
+                    stakeholders={activeProject.stakeholders} addStakeholder={addStakeholder} removeStakeholder={removeStakeholder} updateStakeholder={updateStakeholder}
+                    milestones={activeProject.milestones} addMilestone={addMilestone} removeMilestone={removeMilestone} updateMilestone={updateMilestone}
+                    charges={activeProject.charges} addCharge={addCharge} removeCharge={removeCharge} updateCharge={updateCharge}
+                />
+            ) : (
+                <div className="text-white text-center">Project not found.</div>
+            )}
+        </div>
+    );
+};
+
+export default ProjectTrackerComplete;

@@ -11,6 +11,7 @@ import Contact from './pages/Contact/Contacts/Contacts';
 import Timesheet from './pages/Timesheet/Timesheet';
 import Finance from './pages/Finance/Finance';
 import TodoList from './pages/TodoList/TodoList';
+import Invoice from './pages/Invoice/Invoice';
 import './index.css';
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
             <Route path="timesheet" element={<Timesheet />} />
             <Route path="finance" element={<Finance />} />
             <Route path="todolist" element={<TodoList />} />
+            <Route path="invoice" element={<Invoice />} />
           </Route>
         </Routes>
       </AuthProvider>
