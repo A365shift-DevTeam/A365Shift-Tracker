@@ -69,6 +69,9 @@ const TrackerStyles = () => (
         .btn-dark { background-color: #212529; color: white; border-color: #212529; }
         .btn-dark:hover { background-color: #424649; }
 
+        .btn-white { background-color: #fff; color: #000; border-color: #fff; }
+        .btn-white:hover { background-color: #e2e6ea; }
+
         .btn-link { background: none; border: none; padding: 0; text-decoration: none; }
         .btn-link:hover { text-decoration: underline; }
 
@@ -89,14 +92,14 @@ const TrackerStyles = () => (
         }
 
         .bar {
-            background: #f8f9fa;
+            background: #000;
             border-bottom: 1px solid #e9ecef;
             padding: 10px 14px;
             font-weight: 700;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            color: #212529;
+            color: #fff;
         }
 
         .stage-p { padding: 14px; }
@@ -688,7 +691,7 @@ const StakeholderManager = ({ stakeholders, addStakeholder, removeStakeholder, u
         <div className="stage">
             <div className="bar">
                 <span>Stage 2 — Share Percentage</span>
-                <button className="btn btn-sm btn-dark d-flex align-items-center gap-1" onClick={addStakeholder}>
+                <button className="btn btn-sm btn-white d-flex align-items-center gap-1" onClick={addStakeholder}>
                     <Plus size={14} /> Add Party
                 </button>
             </div>
@@ -747,7 +750,7 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
         <div className="stage">
             <div className="bar">
                 <span>Stage 3 — Invoice Cycle</span>
-                <button className="btn btn-sm btn-dark d-flex align-items-center gap-1" onClick={addMilestone}>
+                <button className="btn btn-sm btn-white d-flex align-items-center gap-1" onClick={addMilestone}>
                     <Plus size={14} /> Add Payment
                 </button>
             </div>
@@ -849,7 +852,7 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
             <div className="stage">
                 <div className="bar">
                     <span>Stage 2 — Finance Charges</span>
-                    <button className="btn btn-sm btn-dark" onClick={addCharge}>+ Add Charge</button>
+                    <button className="btn btn-sm btn-white" onClick={addCharge}>+ Add Charge</button>
                 </div>
                 <div className="stage-p">
                     <table className="stage-table">
