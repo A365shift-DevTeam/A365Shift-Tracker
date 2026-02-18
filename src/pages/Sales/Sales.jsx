@@ -154,7 +154,7 @@ const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onD
                     />
                     <Trash2
                         size={16}
-                        className="icon-outline icon-delete ms-2"
+                        className="icon-outline icon-delete"
                         strokeWidth={1.5}
                         onClick={(e) => {
                             e.stopPropagation();
@@ -753,7 +753,7 @@ function Sales() {
                                 size="sm"
                                 onClick={() => setActiveTab('Service')}
                             >
-                              Services 
+                                Services
                             </Button>
                         </div>
 
@@ -789,6 +789,7 @@ function Sales() {
                         delay={project.delay}
                         clientName={project.clientName}
                         brandingName={project.brandingName}
+                        title={project.title}
                         onStageChange={(newStage, data) => updateProjectStage(project.id, newStage, data)}
                         onDelete={() => handleDeleteProject(project.id)}
                         onEdit={() => handleEditProject(project)}
