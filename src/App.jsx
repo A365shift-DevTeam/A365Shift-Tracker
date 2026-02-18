@@ -4,7 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 import MainLayout from './layouts/MainLayout';
 import Login from './pages/Auth/Login';
-import Signup from './pages/Auth/Signup';
+
 import Dashboard from './pages/Dashboard/Dashboard';
 import Sales from './pages/Sales/Sales';
 import Contact from './pages/Contact/Contacts/Contacts';
@@ -20,7 +20,7 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+
 
           <Route path="/" element={
             <PrivateRoute>
