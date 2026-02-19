@@ -49,6 +49,7 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
     phone: '',
     company: '',
     location: '', // New field
+    address: '', // New Address field
     linkedin: '', // New field
     status: 'Active',
     entityType: 'Individual', // New field
@@ -67,6 +68,7 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
           phone: contact.phone || '',
           company: contact.company || '',
           location: contact.location || '',
+          address: contact.address || '',
           linkedin: contact.linkedin || '',
           status: contact.status || 'Active',
           entityType: contact.entityType || 'Individual',
@@ -80,6 +82,7 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
           phone: '',
           company: '',
           location: '',
+          address: '',
           linkedin: '',
           status: 'Active',
           entityType: 'Individual',
@@ -246,7 +249,7 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
             </Col>
 
             {/* ROW 3: Organization */}
-            <Col md={6}>
+            <Col md={4}>
               <Form.Group>
                 <Form.Label className="small fw-bold mb-1">Company</Form.Label>
                 <Form.Select
@@ -261,7 +264,7 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
                 </Form.Select>
               </Form.Group>
             </Col>
-            <Col md={6}>
+            <Col md={4}>
               <Form.Group>
                 <Form.Label className="small fw-bold mb-1">Location</Form.Label>
                 <Form.Select
@@ -274,6 +277,18 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
                     <option key={location} value={location}>{location}</option>
                   ))}
                 </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label className="small fw-bold mb-1">Address</Form.Label>
+                <Form.Control
+                  size="sm"
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) => handleChange('address', e.target.value)}
+                  placeholder="Street Address"
+                />
               </Form.Group>
             </Col>
 

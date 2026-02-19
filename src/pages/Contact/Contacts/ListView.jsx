@@ -19,6 +19,7 @@ export const ListView = ({ contacts, sortBy, sortOrder, onSort, onEdit, onDelete
     { id: 'phone', name: 'Phone' },
     { id: 'company', name: 'Company' },
     { id: 'location', name: 'Location' },
+    { id: 'address', name: 'Address' },
     { id: 'type', name: 'Entity Type' },
     { id: 'status', name: 'Status' }
   ]
@@ -268,6 +269,11 @@ export const ListView = ({ contacts, sortBy, sortOrder, onSort, onEdit, onDelete
                     {/* Location Column */}
                     <td className="text-secondary" style={{ width: getColumnWidth('location') || undefined, minWidth: getColumnWidth('location') || '100px' }}>
                       {contact.location || 'San Francisco, CA'}
+                    </td>
+
+                    {/* Address Column */}
+                    <td className="text-secondary" style={{ width: getColumnWidth('address') || undefined, minWidth: getColumnWidth('address') || '100px' }}>
+                      {contact.address || '-'}
                     </td>
 
                     {/* Entity Type Column */}

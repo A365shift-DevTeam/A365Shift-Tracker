@@ -86,7 +86,8 @@ const Contacts = () => {
     { id: 'status', name: 'Status' },
     { id: 'type', name: 'Type' },
     { id: 'company', name: 'Company' },
-    { id: 'location', name: 'Location' }
+    { id: 'location', name: 'Location' },
+    { id: 'address', name: 'Address' }
   ]
 
   const getFilterOptions = (columnId) => {

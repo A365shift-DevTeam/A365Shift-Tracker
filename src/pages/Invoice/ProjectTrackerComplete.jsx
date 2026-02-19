@@ -4,7 +4,7 @@ import { PiMicrosoftExcelLogoFill } from "react-icons/pi";
 import { useLocation } from 'react-router-dom';
 import {
     LayoutDashboard, FileDown, Briefcase, MapPin, Globe, CreditCard, Building, Users,
-    Plus, Trash2, ArrowLeft, DollarSign, FileText, ArrowRight, Filter, Wallet, CheckCircle, X
+    Plus, Trash2, ArrowLeft, DollarSign, FileText, ArrowRight, Filter, Wallet, CheckCircle, X, Save
 } from 'lucide-react';
 import ambotLogo from '../../assets/images/ambot logo.png';
 import jsPDF from 'jspdf';
@@ -13,6 +13,10 @@ import * as XLSX from 'xlsx';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
+import { db } from '../../services/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { projectService } from '../../services/api';
+import { contactService } from '../../services/contactService';
 
 // ==========================================
 // 1. STYLES (Injected CSS)
@@ -1326,7 +1330,9 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
     );
 };
 
-const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, removeStakeholder, updateStakeholder, milestones, addMilestone, removeMilestone, updateMilestone, charges, addCharge, removeCharge, updateCharge }) => {
+
+
+const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, removeStakeholder, updateStakeholder, milestones, addMilestone, removeMilestone, updateMilestone, charges, addCharge, removeCharge, updateCharge, onSave }) => {
     const dVal = parseFloat(details.dealValue) || 0;
     const totalChargePct = charges ? charges.reduce((sum, c) => sum + (parseFloat(c.percentage) || 0), 0) : 0;
     const totalChargeAmt = charges ? charges.reduce((sum, c) => sum + ((dVal * (parseFloat(c.percentage) || 0)) / 100), 0) : 0;
@@ -1339,6 +1345,9 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
                     <div><h4 className="m-0 fw-bold">Deal Finance Tracker</h4><span className="text-muted small">Professional Financial Management</span></div>
                 </div>
                 <div className="d-flex gap-2">
+                    <button className="btn btn-sm btn-primary d-flex align-items-center gap-2" onClick={onSave} title="Save Project">
+                        <Save size={18} /> Save
+                    </button>
                     <button className="btn btn-sm btn-outline-danger" onClick={() => generateProjectReportPDF(details, stakeholders, milestones, charges)} title="Download PDF Report"><FaFilePdf size={20} /></button>
                     <button className="btn btn-sm btn-outline-success" onClick={() => exportProjectReport(details, stakeholders, milestones, charges)} title="Export to Excel"><PiMicrosoftExcelLogoFill size={20} /></button>
                 </div>
@@ -1454,37 +1463,92 @@ const ProjectTrackerComplete = () => {
     ]);
 
     useEffect(() => {
-        if (location.state && location.state.project) {
-            const receivedProject = location.state.project;
-            // Check if already exists to avoid duplicates (though local state resets on mount, this is good practice)
-            setProjects(prevProjects => {
-                const exists = prevProjects.find(p => p.id === receivedProject.id);
-                if (exists) {
-                    setActiveProjectId(receivedProject.id);
-                    setView('invoice');
-                    return prevProjects;
+        const initProject = async () => {
+            if (location.state && location.state.project) {
+                const receivedProject = location.state.project;
+
+                // Fetch contacts to find address/country
+                let retrievedAddress = '';
+                let retrievedCountry = 'India'; // Default fallback
+
+                try {
+                    const contacts = await contactService.getContacts();
+                    const searchName = (receivedProject.clientName || '').toLowerCase().trim();
+
+                    console.log('Searching for contact:', searchName);
+
+                    // Try to match by Exact Name or Company
+                    const matchedContact = contacts.find(c => {
+                        const cName = (c.name || '').toLowerCase().trim();
+                        const cCompany = (c.company || '').toLowerCase().trim();
+                        return cName === searchName || cCompany === searchName;
+                    });
+
+                    if (matchedContact) {
+                        console.log('Matched Contact:', matchedContact);
+                        retrievedAddress = matchedContact.address || matchedContact.location || '';
+
+                        const lowerLoc = retrievedAddress.toLowerCase();
+
+                        if (lowerLoc.includes('india')) {
+                            retrievedCountry = 'India';
+                        } else if (lowerLoc.includes('uae') || lowerLoc.includes('united arab emirates') || lowerLoc.includes('dubai')) {
+                            retrievedCountry = 'UAE';
+                        } else if (retrievedAddress) {
+                            // If address is present but doesn't match India/UAE, try to extract the country
+                            const parts = retrievedAddress.split(',');
+                            const lastPart = parts[parts.length - 1].trim();
+                            // If we have a valid last part, use it. Otherwise use India (or maybe 'Other'?)
+                            // Let's use the last part if it looks like a word, effectively treating it as the country.
+                            if (lastPart.length > 2) {
+                                retrievedCountry = lastPart;
+                            }
+                        }
+                    } else {
+                        console.log('No contact matched for client:', receivedProject.clientName);
+                    }
+                } catch (err) {
+                    console.error("Error fetching contacts for invoice init:", err);
                 }
 
-                // Map Sales data to Invoice structure
-                const newProject = {
-                    id: receivedProject.id,
-                    projectId: receivedProject.customId || `PROJ-${receivedProject.id}`,
-                    dateCreated: new Date().toISOString(),
-                    clientName: receivedProject.clientName || 'Unknown Client',
-                    delivery: receivedProject.brandingName || '',
-                    dealValue: 0,
-                    currency: 'AED',
-                    location: 'Dubai',
-                    stakeholders: [],
-                    milestones: [],
-                    charges: [{ id: 1, name: 'GST', taxType: 'Inter-State (IGST)', country: 'India', state: '', percentage: 18 }]
-                };
+                setProjects(prevProjects => {
+                    const exists = prevProjects.find(p => p.id === receivedProject.id);
+                    if (exists) {
+                        setActiveProjectId(receivedProject.id);
+                        setView('invoice');
+                        return prevProjects;
+                    }
 
-                setActiveProjectId(newProject.id);
-                setView('invoice');
-                return [...prevProjects, newProject];
-            });
-        }
+                    // Map Sales data to Invoice structure with fetched Location
+                    const newProject = {
+                        id: receivedProject.id,
+                        projectId: receivedProject.customId || `PROJ-${receivedProject.id}`,
+                        dateCreated: new Date().toISOString(),
+                        clientName: receivedProject.clientName || 'Unknown Client',
+                        delivery: receivedProject.brandingName || '',
+                        dealValue: 0,
+                        currency: retrievedCountry === 'UAE' ? 'AED' : 'INR',
+                        location: retrievedAddress || 'India',
+                        stakeholders: [],
+                        milestones: [],
+                        charges: [{
+                            id: 1,
+                            name: retrievedCountry === 'India' ? 'IGST' : 'Tax',
+                            taxType: retrievedCountry === 'India' ? 'Inter-State (IGST)' : 'Export (Nil Rate)',
+                            country: retrievedCountry,
+                            state: '',
+                            percentage: retrievedCountry === 'India' ? 18 : 0
+                        }]
+                    };
+
+                    setActiveProjectId(newProject.id);
+                    setView('invoice');
+                    return [...prevProjects, newProject];
+                });
+            }
+        };
+
+        initProject();
     }, [location.state]);
 
     const activeProject = projects.find(p => p.id === activeProjectId);
@@ -1498,6 +1562,29 @@ const ProjectTrackerComplete = () => {
         setProjects([...projects, newProj]);
         setActiveProjectId(newProj.id);
         setView('invoice');
+    };
+
+    const handleSaveProject = async () => {
+        if (!activeProject) return;
+        try {
+            // We can resolve the ID to a string if it's not already
+            const docId = String(activeProject.id);
+            // Save to 'invoices' or update the 'projects' collection? 
+            // The user request is "Sales to Invoice". Usually invoices are separate. 
+            // But here the "ProjectTracker" seems to be the Invoice manager. 
+            // Let's assume we update the project with finance details OR save to a separate collection.
+            // Given the existing code uses `projectService`, let's try to update the project with these details
+            // OR create a new "invoice_tracker" document.
+            // For now, I will save it to a collection named 'invoice_projects' to avoid overwriting the Sales Project data structure entirely if they are different,
+            // OR if `projectService` is the same, I should merge.
+            // Let's use setDoc to a specific collection for these trackers.
+
+            await setDoc(doc(db, 'project_finances', docId), activeProject);
+            alert('Project finance details saved successfully!');
+        } catch (error) {
+            console.error("Error saving project:", error);
+            alert('Failed to save project.');
+        }
     };
 
     const updateProject = (fn) => setProjects(projects.map(p => p.id === activeProjectId ? fn(p) : p));
@@ -1540,6 +1627,7 @@ const ProjectTrackerComplete = () => {
                     stakeholders={activeProject.stakeholders} addStakeholder={addStakeholder} removeStakeholder={removeStakeholder} updateStakeholder={updateStakeholder}
                     milestones={activeProject.milestones} addMilestone={addMilestone} removeMilestone={removeMilestone} updateMilestone={updateMilestone}
                     charges={activeProject.charges} addCharge={addCharge} removeCharge={removeCharge} updateCharge={updateCharge}
+                    onSave={handleSaveProject}
                 />
             ) : (
                 <div className="text-white text-center">Project not found.</div>
