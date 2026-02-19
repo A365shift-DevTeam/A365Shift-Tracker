@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
     LayoutDashboard, FileDown, Briefcase, MapPin, Globe, CreditCard, Building, Users,
-    Plus, Trash2, ArrowLeft, DollarSign, FileText, ArrowRight, Filter, Wallet, CheckCircle
+    Plus, Trash2, ArrowLeft, DollarSign, FileText, ArrowRight, Filter, Wallet, CheckCircle, X
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -221,62 +221,6 @@ const TrackerStyles = () => (
 // 2. UTILITY SERVICES (PDF & Excel)
 // ==========================================
 
-const generateInvoicePDF = (milestone, details, taxes) => {
-    const doc = new jsPDF();
-    const currency = details.currency || 'AED';
-    const baseAmount = (details.dealValue * milestone.percentage) / 100;
-    const chargesList = Array.isArray(taxes) ? taxes : (taxes.gst ? [{ name: 'GST', percentage: taxes.gst }] : []);
-    const totalTaxAmount = chargesList.reduce((sum, charge) => sum + ((baseAmount * (parseFloat(charge.percentage) || 0)) / 100), 0);
-    const totalAmount = baseAmount + totalTaxAmount;
-
-    doc.setFontSize(22); doc.setTextColor(40); doc.text("INVOICE", 14, 22);
-    doc.setFontSize(10); doc.setTextColor(100);
-    doc.text(`Invoice #: INV-${milestone.id}-${Date.now().toString().slice(-4)}`, 14, 30);
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 35);
-    doc.text(`Status: ${milestone.status}`, 14, 40);
-
-    doc.setFontSize(12); doc.setTextColor(0);
-    doc.text(details.delivery || "Your Company Name", 200, 22, { align: 'right' });
-    doc.setFontSize(10);
-    doc.text("Business Address Line 1", 200, 28, { align: 'right' });
-    doc.text("City, Country, Zip", 200, 33, { align: 'right' });
-
-    doc.text("Bill To:", 14, 55);
-    doc.setFontSize(12); doc.text(details.clientName || "Client Name", 14, 62);
-    doc.setFontSize(10);
-    doc.text(details.location || "Client Location", 14, 68);
-    doc.text(`Project ID: ${details.projectId}`, 14, 74);
-
-    autoTable(doc, {
-        startY: 85,
-        head: [['Description', 'Percentage', `Amount (${currency})`]],
-        body: [[milestone.name, `${milestone.percentage}%`, baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })]],
-        theme: 'striped', headStyles: { fillColor: [66, 66, 66] }
-    });
-
-    let finalY = doc.lastAutoTable.finalY + 10;
-    doc.text(`Subtotal:`, 140, finalY);
-    doc.text(`${currency} ${baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
-
-    chargesList.forEach(charge => {
-        finalY += 6;
-        const amt = (baseAmount * (parseFloat(charge.percentage) || 0)) / 100;
-        doc.text(`${charge.name} (${charge.percentage}%):`, 140, finalY);
-        doc.text(`${currency} ${amt.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
-    });
-
-    doc.setDrawColor(200); doc.line(140, finalY + 4, 200, finalY + 4);
-    doc.setFontSize(12); doc.setFont(undefined, 'bold');
-    doc.text(`Total:`, 140, finalY + 10);
-    doc.text(`${currency} ${totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY + 10, { align: 'right' });
-
-    doc.setFontSize(10); doc.setFont(undefined, 'normal');
-    doc.text("Payment Terms: Due within 30 days.", 14, finalY + 30);
-    doc.text("Bank Details: Bank Name, Account: XXXXXX, Swift: XXXXX", 14, finalY + 35);
-
-    doc.save(`Invoice_${milestone.name.replace(/[^a-z0-9]/gi, '_')}.pdf`);
-};
-
 const generatePaymentInvoicePDF = (stakeholder, details, dealValue) => {
     const doc = new jsPDF();
     const currency = details.currency || 'AED';
@@ -335,13 +279,104 @@ const generatePaymentInvoicePDF = (stakeholder, details, dealValue) => {
     doc.save(`Payment_Invoice_${(stakeholder.name || 'stakeholder').replace(/[^a-z0-9]/gi, '_')}.pdf`);
 };
 
+const generateInvoicePDF = (milestone, details, taxes) => {
+    const doc = new jsPDF();
+    const currency = details.currency || 'AED';
+    const baseAmount = (details.dealValue * (parseFloat(milestone.percentage) || 0)) / 100;
+
+    // Tax Calculation Logic
+    const chargesList = Array.isArray(taxes) ? taxes : (taxes.gst ? [{ name: 'GST', percentage: taxes.gst, taxType: 'Standard' }] : []);
+    const totalTaxRate = chargesList.reduce((sum, c) => sum + (parseFloat(c.percentage) || 0), 0);
+    const totalTaxAmount = (baseAmount * totalTaxRate) / 100;
+    const finalAmount = baseAmount + totalTaxAmount;
+
+    // Header
+    doc.setFontSize(22); doc.setTextColor(40); doc.text("TAX INVOICE", 14, 22);
+    doc.setFontSize(10); doc.setTextColor(100);
+    doc.text(`Invoice No: INV-${milestone.id}-${Date.now().toString().slice(-4)}`, 14, 30);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 35);
+    doc.text(`Status: ${milestone.status || 'Pending'}`, 14, 40);
+
+    // Client Details
+    doc.setFontSize(12); doc.setTextColor(0);
+    doc.text(details.clientName || "Client Name", 14, 55);
+    doc.setFontSize(10);
+    doc.text(`Project Ref: ${details.projectId}`, 14, 60);
+    doc.text(`Location: ${details.location || 'N/A'}`, 14, 65);
+
+    // Item Table
+    const tableBody = [
+        [milestone.name, `${milestone.percentage}%`, `${currency} ${baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`]
+    ];
+
+    autoTable(doc, {
+        startY: 75,
+        head: [['Milestone Description', 'Milestone %', `Amount (${currency})`]],
+        body: tableBody,
+        theme: 'striped',
+        headStyles: { fillColor: [41, 128, 185] }
+    });
+
+    // Tax Breakdown & Totals
+    let finalY = doc.lastAutoTable.finalY + 10;
+
+    doc.setFontSize(10);
+    doc.text(`Subtotal:`, 140, finalY);
+    doc.text(`${currency} ${baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
+
+    chargesList.forEach(charge => {
+        finalY += 6;
+        let label = charge.name || charge.taxType || 'Tax';
+        let rate = parseFloat(charge.percentage) || 0;
+        let amount = (baseAmount * rate) / 100;
+
+        if (charge.taxType === 'Intra-State (CGST + SGST)') {
+            // Split Logic
+            const halfRate = rate / 2;
+            const halfAmount = amount / 2;
+
+            doc.text(`CGST (${halfRate}%):`, 140, finalY);
+            doc.text(`${currency} ${halfAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
+
+            finalY += 6;
+            doc.text(`SGST (${halfRate}%):`, 140, finalY);
+            doc.text(`${currency} ${halfAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
+        } else {
+            // Default Logic (IGST, Export, Other)
+            if (amount > 0 || rate > 0) {
+                doc.text(`${label} (${rate}%):`, 140, finalY);
+                doc.text(`${currency} ${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
+            }
+        }
+    });
+
+    finalY += 6;
+    doc.setDrawColor(200); doc.line(140, finalY, 195, finalY);
+    finalY += 5;
+
+    doc.setFontSize(12); doc.setFont(undefined, 'bold');
+    doc.text(`Total Amount:`, 140, finalY + 5);
+    doc.text(`${currency} ${finalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY + 5, { align: 'right' });
+
+    // Footer
+    doc.setFontSize(10); doc.setFont(undefined, 'normal');
+    doc.text("Thank you for your business.", 14, finalY + 20);
+    doc.text("Payment Terms: Due within 30 days.", 14, finalY + 25);
+
+    doc.save(`Invoice_${milestone.id}_${(milestone.name || 'milestone').replace(/[^a-z0-9]/gi, '_')}.pdf`);
+};
+
 const generateProjectReportPDF = (details, stakeholders, milestones, taxes) => {
     const doc = new jsPDF();
     const currency = details.currency || 'AED';
     const totalDistributed = stakeholders.reduce((sum, s) => sum + (details.dealValue * s.percentage) / 100, 0);
     const netProfit = details.dealValue - totalDistributed;
     const chargesList = Array.isArray(taxes) ? taxes : (taxes.gst ? [{ name: 'GST', percentage: taxes.gst }] : []);
-    const totalChargesString = chargesList.map(c => `${c.name}: ${c.percentage}%`).join(', ');
+
+    const totalChargesString = chargesList.map(c => {
+        if (c.taxType === 'Intra-State (CGST + SGST)') return `CGST ${(c.percentage / 2)}% + SGST ${(c.percentage / 2)}%`;
+        return `${c.name || c.taxType}: ${c.percentage}%`;
+    }).join(', ');
 
     doc.setFontSize(24); doc.setTextColor(40); doc.text("PROJECT FINANCIAL REPORT", 14, 22);
     doc.setFontSize(10); doc.setTextColor(100);
@@ -716,12 +751,102 @@ const BusinessDetails = ({ details, updateDetails }) => (
     </div>
 );
 
+const STAKEHOLDERS_CONSTANTS = {
+    COUNTRIES: ['India', 'International'],
+    INDIAN_STATES: [
+        'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana',
+        'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
+        'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+        'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Andaman and Nicobar Islands',
+        'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Jammu and Kashmir', 'Ladakh',
+        'Lakshadweep', 'Puducherry'
+    ]
+};
+
 const StageTwoCombined = ({ stakeholders, addStakeholder, removeStakeholder, updateStakeholder, charges, addCharge, removeCharge, updateCharge, dealValue, currency }) => {
     const totalPct = stakeholders.reduce((sum, s) => sum + (parseFloat(s.percentage) || 0), 0);
     const totalAmt = stakeholders.reduce((sum, s) => sum + ((dealValue * (parseFloat(s.percentage) || 0)) / 100), 0);
 
     const totalChargePct = charges ? charges.reduce((sum, c) => sum + (parseFloat(c.percentage) || 0), 0) : 0;
     const totalChargeAmt = charges ? charges.reduce((sum, c) => sum + ((dealValue * (parseFloat(c.percentage) || 0)) / 100), 0) : 0;
+
+    // Tax Calculation Logic
+    const handleTaxChange = (id, field, value, currentCharge) => {
+        let updates = { [field]: value };
+
+        let currentCountry = field === 'country' ? value : (currentCharge.country || 'India');
+        let currentState = field === 'state' ? value : (currentCharge.state || '');
+
+        // 1. Handle Country Change
+        if (field === 'country') {
+            if (value === 'International') {
+                updates.state = '';
+                updates.taxType = 'Export (Nil Rate)';
+                updates.percentage = 0;
+                updates.name = 'Export (Nil)';
+            } else {
+                updates.country = 'India';
+            }
+        }
+
+        // 2. Handle State Change (Only if Country is India)
+        if (field === 'state' && currentCountry === 'India') {
+            if (value === 'Tamil Nadu') {
+                updates.taxType = 'Intra-State (CGST + SGST)';
+                updates.percentage = 18;
+                updates.name = 'GST (Intra)';
+            } else if (value) {
+                updates.taxType = 'Inter-State (IGST)';
+                updates.percentage = 18;
+                updates.name = 'IGST';
+            }
+        }
+
+        // 3. Handle Tax Type Change (Manual Override or Reset)
+        if (field === 'taxType') {
+            if (value === '') {
+                // Reset logic: Recalculate based on existing Country/State
+                if (currentCountry === 'International') {
+                    updates.taxType = 'Export (Nil Rate)';
+                    updates.percentage = 0;
+                    updates.name = 'Export (Nil)';
+                } else if (currentCountry === 'India') {
+                    if (currentState === 'Tamil Nadu') { // Use currentState which is grounded in currentCharge
+                        updates.taxType = 'Intra-State (CGST + SGST)';
+                        updates.percentage = 18;
+                        updates.name = 'GST (Intra)';
+                    } else if (currentState) {
+                        updates.taxType = 'Inter-State (IGST)';
+                        updates.percentage = 18;
+                        updates.name = 'IGST';
+                    } else {
+                        updates.taxType = ''; // No state selected? Reset.
+                        updates.percentage = 0;
+                        updates.name = 'Tax';
+                    }
+                }
+            } else if (value === 'Export (Nil Rate)') {
+                updates.percentage = 0;
+                updates.country = 'International';
+                updates.state = '';
+                updates.name = 'Export (Nil)';
+            } else if (value === 'Intra-State (CGST + SGST)') {
+                updates.percentage = 18;
+                updates.country = 'India';
+                updates.state = 'Tamil Nadu';
+                updates.name = 'GST (Intra)';
+            } else if (value === 'Inter-State (IGST)') {
+                updates.percentage = 18;
+                updates.country = 'India';
+                updates.name = 'IGST';
+            } else if (value === 'Other') {
+                updates.name = 'Tax';
+            }
+        }
+
+        // Apply all updates
+        updateCharge(id, updates);
+    };
 
     return (
         <div className="stage">
@@ -773,14 +898,88 @@ const StageTwoCombined = ({ stakeholders, addStakeholder, removeStakeholder, upd
                 </table>
 
                 {/* Finance Charges Section */}
-                <h6 className="fw-bold mb-3 text-muted border-top pt-4">Finance Charges</h6>
+                <h6 className="fw-bold mb-3 text-muted border-top pt-4">Finance Charges (GST / Tax)</h6>
                 <table className="stage-table">
-                    <thead><tr><th>Charge Name</th><th style={{ width: '150px' }}>%</th><th>Amount ({currency})</th><th style={{ width: '50px' }}></th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th style={{ width: '200px' }}>Tax Type</th>
+                            <th>Country</th>
+                            <th>State</th>
+                            <th style={{ width: '100px' }}>%</th>
+                            <th>Amount ({currency})</th>
+                            <th style={{ width: '50px' }}></th>
+                        </tr>
+                    </thead>
                     <tbody>
                         {charges && charges.map(c => (
                             <tr key={c.id}>
-                                <td><input className="stage-input" value={c.name} onChange={(e) => updateCharge(c.id, 'name', e.target.value)} /></td>
-                                <td><input type="number" className="stage-input" value={c.percentage} onChange={(e) => updateCharge(c.id, 'percentage', e.target.value)} /></td>
+                                <td>
+                                    {c.taxType === 'Other' ? (
+                                        <div className="d-flex gap-1 align-items-center">
+                                            <input
+                                                className="stage-input"
+                                                value={c.name}
+                                                onChange={(e) => updateCharge(c.id, 'name', e.target.value)}
+                                                placeholder="Tax Name"
+                                                autoFocus
+                                            />
+                                            <button
+                                                className="btn btn-sm btn-light border d-flex align-items-center justify-content-center"
+                                                onClick={() => handleTaxChange(c.id, 'taxType', '', c)}
+                                                title="Reset"
+                                                style={{ width: '30px', height: '30px', padding: 0 }}
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <select
+                                            className="stage-select"
+                                            value={c.taxType || ''}
+                                            onChange={(e) => handleTaxChange(c.id, 'taxType', e.target.value, c)}
+                                        >
+                                            <option value="">Select Type</option>
+                                            <option value="Intra-State (CGST + SGST)">Intra-State (CGST + SGST)</option>
+                                            <option value="Inter-State (IGST)">Inter-State (IGST)</option>
+                                            <option value="Export (Nil Rate)">Export (Nil Rate)</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    )}
+                                </td>
+                                <td>
+                                    <select
+                                        className="stage-select"
+                                        value={c.country || 'India'}
+                                        onChange={(e) => handleTaxChange(c.id, 'country', e.target.value, c)}
+                                        disabled={c.taxType === 'Other'}
+                                    >
+                                        {STAKEHOLDERS_CONSTANTS.COUNTRIES.map(country => (
+                                            <option key={country} value={country}>{country}</option>
+                                        ))}
+                                    </select>
+                                </td>
+                                <td>
+                                    <select
+                                        className="stage-select"
+                                        value={c.state || ''}
+                                        onChange={(e) => handleTaxChange(c.id, 'state', e.target.value, c)}
+                                        disabled={c.country === 'International' || c.taxType === 'Other'}
+                                    >
+                                        <option value="">Select State</option>
+                                        {STAKEHOLDERS_CONSTANTS.INDIAN_STATES.map(state => (
+                                            <option key={state} value={state}>{state}</option>
+                                        ))}
+                                    </select>
+                                </td>
+                                <td>
+                                    <input
+                                        type="number"
+                                        className="stage-input"
+                                        value={c.percentage}
+                                        onChange={(e) => handleTaxChange(c.id, 'percentage', e.target.value, c)}
+                                        disabled={c.taxType !== 'Other'}
+                                    />
+                                </td>
                                 <td className="font-monospace">{currency} {(dealValue * c.percentage / 100).toLocaleString()}</td>
                                 <td><button className="btn-link text-danger" onClick={() => removeCharge(c.id)}><Trash2 size={16} /></button></td>
                             </tr>
@@ -788,7 +987,7 @@ const StageTwoCombined = ({ stakeholders, addStakeholder, removeStakeholder, upd
                     </tbody>
                     <tfoot>
                         <tr>
-                            <th>Total Expense</th>
+                            <th colSpan="3">Total Tax Liability</th>
                             <th>{totalChargePct.toFixed(2)}%</th>
                             <th>{currency} {totalChargeAmt.toLocaleString()}</th>
                             <th></th>
@@ -888,18 +1087,7 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
                                         </select>
                                     </td>
                                     <td className="text-center">
-                                        <div className="d-flex bg-white rounded border p-1 gap-1" style={{ height: '38px', alignItems: 'center' }}>
-                                            {projectTypes.map((label, index) => (
-                                                <button
-                                                    key={index}
-                                                    className={`btn btn-sm ${activeTypeIndex === index ? 'btn-success' : 'btn-white text-muted'} border-0 rounded`}
-                                                    onClick={() => setActiveTypeIndex(index)}
-                                                    style={{ fontWeight: activeTypeIndex === index ? 'bold' : 'normal' }}
-                                                >
-                                                    {label}
-                                                </button>
-                                            ))}
-                                        </div>
+
                                         <div className="d-flex justify-content-center gap-2">
                                             <button className="btn-icon text-success" onClick={() => generateInvoicePDF(milestone, details, taxes)} title="Download Invoice">
                                                 <FileDown size={18} />
@@ -1043,7 +1231,7 @@ const ProjectTrackerComplete = () => {
             dealValue: 100000, currency: 'AED', location: 'Dubai',
             stakeholders: [{ id: 1, name: 'Lead', percentage: 2, payoutTax: 10, payoutStatus: 'Pending', paidDate: '' }],
             milestones: [{ id: 1, name: 'Initiate Invoice', percentage: 20, status: 'Completed', invoiceDate: new Date().toISOString().split('T')[0], paidDate: '' }],
-            charges: [{ id: 1, name: 'GST', percentage: 18 }]
+            charges: [{ id: 1, name: 'IGST', taxType: 'Inter-State (IGST)', country: 'India', state: '', percentage: 18 }]
         }
     ]);
 
@@ -1071,7 +1259,7 @@ const ProjectTrackerComplete = () => {
                     location: 'Dubai',
                     stakeholders: [],
                     milestones: [],
-                    charges: [{ id: 1, name: 'GST', percentage: 0 }]
+                    charges: [{ id: 1, name: 'GST', taxType: 'Inter-State (IGST)', country: 'India', state: '', percentage: 18 }]
                 };
 
                 setActiveProjectId(newProject.id);
@@ -1087,7 +1275,7 @@ const ProjectTrackerComplete = () => {
         const newProj = {
             id: Date.now(), projectId: `PROJ-${Math.floor(Math.random() * 999)}`, dateCreated: new Date().toISOString(),
             clientName: 'New Client', delivery: '', dealValue: 0, currency: 'AED', location: '',
-            stakeholders: [], milestones: [], charges: [{ id: 1, name: 'GST', percentage: 0 }]
+            stakeholders: [], milestones: [], charges: [{ id: 1, name: 'GST', taxType: 'Inter-State (IGST)', country: 'India', state: '', percentage: 18 }]
         };
         setProjects([...projects, newProj]);
         setActiveProjectId(newProj.id);
@@ -1108,9 +1296,12 @@ const ProjectTrackerComplete = () => {
     const updateMilestone = (id, f, v) => updateProject(p => ({ ...p, milestones: p.milestones.map(m => m.id === id ? { ...m, [f]: v } : m) }));
 
     // Charges logic
-    const addCharge = () => updateProject(p => ({ ...p, charges: [...p.charges, { id: Date.now(), name: 'New', percentage: 0 }] }));
+    const addCharge = () => updateProject(p => ({ ...p, charges: [...p.charges, { id: Date.now(), name: 'Tax', taxType: 'Other', country: 'India', state: '', percentage: 0 }] }));
     const removeCharge = (id) => updateProject(p => ({ ...p, charges: p.charges.filter(c => c.id !== id) }));
-    const updateCharge = (id, f, v) => updateProject(p => ({ ...p, charges: p.charges.map(c => c.id === id ? { ...c, [f]: v } : c) }));
+    const updateCharge = (id, field, value) => updateProject(p => ({
+        ...p,
+        charges: p.charges.map(c => c.id === id ? { ...c, ...(typeof field === 'object' ? field : { [field]: value }) } : c)
+    }));
 
     return (
         <div className="tracker-wrapper">
