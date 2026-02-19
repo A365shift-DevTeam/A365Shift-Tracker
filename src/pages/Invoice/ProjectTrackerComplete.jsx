@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { FaFilePdf } from "react-icons/fa6";
+import { PiMicrosoftExcelLogoFill } from "react-icons/pi";
 import { useLocation } from 'react-router-dom';
 import {
     LayoutDashboard, FileDown, Briefcase, MapPin, Globe, CreditCard, Building, Users,
@@ -1138,8 +1140,8 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
                     <div><h4 className="m-0 fw-bold">Deal Finance Tracker</h4><span className="text-muted small">Professional Financial Management</span></div>
                 </div>
                 <div className="d-flex gap-2">
-                    <button className="btn btn-sm btn-outline-danger" onClick={() => generateProjectReportPDF(details, stakeholders, milestones, charges)}>PDF Report</button>
-                    <button className="btn btn-sm btn-outline-success" onClick={() => exportProjectReport(details, stakeholders, milestones, charges)}>Excel Export</button>
+                    <button className="btn btn-sm btn-outline-danger" onClick={() => generateProjectReportPDF(details, stakeholders, milestones, charges)} title="Download PDF Report"><FaFilePdf size={20} /></button>
+                    <button className="btn btn-sm btn-outline-success" onClick={() => exportProjectReport(details, stakeholders, milestones, charges)} title="Export to Excel"><PiMicrosoftExcelLogoFill size={20} /></button>
                 </div>
             </div>
 
