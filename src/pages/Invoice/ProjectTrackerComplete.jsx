@@ -85,7 +85,7 @@ const TrackerStyles = () => (
 
         /* --- Invoice Stage Cards --- */
         .invoice-view {
-            max-width: 1200px;
+            max-width: 100%;
             margin: 0 auto;
         }
 
@@ -435,8 +435,25 @@ const generateInvoicePDF = (milestone, details, taxes) => {
         let amount = (baseAmount * rate) / 100;
         let label = charge.name || charge.taxType || 'GST';
 
-        doc.text(`${label} @ ${rate}%`, rightX, finalY);
-        doc.text(`${currency} ${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, pageWidth - 14, finalY, { align: 'right' });
+        // Check if Intra-State to split
+        if (charge.taxType === 'Intra-State (CGST + SGST)' || label.includes('Intra')) {
+            let halfRate = rate / 2;
+            let halfAmount = amount / 2;
+
+            // CGST
+            doc.text(`CGST @ ${halfRate}%`, rightX, finalY);
+            doc.text(`${currency} ${halfAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, pageWidth - 14, finalY, { align: 'right' });
+
+            finalY += 6; // Move down for SGST
+
+            // SGST
+            doc.text(`SGST @ ${halfRate}%`, rightX, finalY);
+            doc.text(`${currency} ${halfAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, pageWidth - 14, finalY, { align: 'right' });
+        } else {
+            // Standard display for IGST or others
+            doc.text(`${label} @ ${rate}%`, rightX, finalY);
+            doc.text(`${currency} ${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, pageWidth - 14, finalY, { align: 'right' });
+        }
     });
 
     finalY += 10;
@@ -1234,6 +1251,10 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
         return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     };
 
+    // Determine Tax Type (Intra vs Inter)
+    const isIntraState = taxes && taxes.some(t => t.taxType === 'Intra-State (CGST + SGST)');
+    const totalTaxRate = taxes ? taxes.reduce((sum, t) => sum + (parseFloat(t.percentage) || 0), 0) : 0;
+
     return (
         <div className="stage">
             <div className="bar">
@@ -1254,77 +1275,104 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
                     </div>
                 </div>
 
-                <table className="stage-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Payment</th>
-                            <th style={{ width: '80px' }}>%</th>
-                            <th>Invoice Date</th>
-                            <th>Raised ({details.currency})</th>
-                            <th>Paid Date</th>
-                            <th>Paid ({details.currency})</th>
-                            <th>Ageing (days)</th>
-                            <th>Status</th>
-                            <th className="text-center">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {milestones.map((milestone, index) => {
-                            const raisedAmount = (dealValue * milestone.percentage) / 100;
-                            return (
-                                <tr key={milestone.id}>
-                                    <td>{index + 1}</td>
-                                    <td>
-                                        <input className="stage-input" value={milestone.name} onChange={(e) => updateMilestone(milestone.id, 'name', e.target.value)} placeholder="Description" />
-                                    </td>
-                                    <td>
-                                        <input type="number" className="stage-input text-end" value={milestone.percentage} onChange={(e) => updateMilestone(milestone.id, 'percentage', e.target.value)} />
-                                    </td>
-                                    <td>
-                                        <input type="date" className="stage-input" value={milestone.invoiceDate || ''} onChange={(e) => updateMilestone(milestone.id, 'invoiceDate', e.target.value)} />
-                                    </td>
-                                    <td className="font-monospace" style={{ whiteSpace: 'nowrap' }}>{details.currency} {raisedAmount.toLocaleString()}</td>
-                                    <td>
-                                        <input type="date" className="stage-input" value={milestone.paidDate || ''} onChange={(e) => updateMilestone(milestone.id, 'paidDate', e.target.value)} />
-                                    </td>
-                                    <td className="font-monospace text-success fw-bold" style={{ whiteSpace: 'nowrap' }}>{details.currency} {raisedAmount.toLocaleString()}</td>
-                                    <td className="text-center font-monospace">
-                                        {calculateAgeing(milestone.invoiceDate, milestone.paidDate)}
-                                    </td>
-                                    <td>
-                                        <select
-                                            className="stage-select"
-                                            value={milestone.status || 'Pending'}
-                                            onChange={(e) => updateMilestone(milestone.id, 'status', e.target.value)}
-                                            style={{
-                                                borderColor: milestone.status === 'Paid' ? '#198754' : '#ccc',
-                                                color: milestone.status === 'Paid' ? '#198754' : '#000'
-                                            }}
-                                        >
-                                            <option value="Pending">Pending</option>
-                                            <option value="Raised">Raised</option>
-                                            <option value="Paid">Paid</option>
-                                            <option value="Overdue">Overdue</option>
-                                        </select>
-                                    </td>
-                                    <td className="text-center">
+                <div className="table-responsive">
+                    <table className="stage-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Payment</th>
+                                <th style={{ width: '80px' }}>%</th>
+                                <th>Inv Date</th>
+                                <th className="text-end">Base ({details.currency})</th>
 
-                                        <div className="d-flex justify-content-center gap-2">
-                                            <button className="btn-icon text-success" onClick={() => generateInvoicePDF(milestone, details, taxes)} title="Download Invoice">
-                                                <FileDown size={18} />
-                                            </button>
-                                            <button className="btn-icon text-danger" onClick={() => removeMilestone(milestone.id)} title="Delete Item">
-                                                <Trash2 size={18} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                        {milestones.length === 0 && <tr><td colSpan="10" className="text-center text-muted p-3">No payments added.</td></tr>}
-                    </tbody>
-                </table>
+                                {isIntraState ? (
+                                    <>
+                                        <th className="text-end">CGST</th>
+                                        <th className="text-end">SGST</th>
+                                    </>
+                                ) : (
+                                    <th className="text-end">Tax</th>
+                                )}
+
+                                <th className="text-end">Total ({details.currency})</th>
+                                <th>Paid Date</th>
+                                <th className="text-end">Paid ({details.currency})</th>
+                                <th className="text-center">Ageing</th>
+                                <th>Status</th>
+                                <th className="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {milestones.map((milestone, index) => {
+                                const raisedAmount = (dealValue * milestone.percentage) / 100;
+                                const taxAmount = (raisedAmount * totalTaxRate) / 100;
+                                const totalAmount = raisedAmount + taxAmount;
+
+                                return (
+                                    <tr key={milestone.id}>
+                                        <td>{index + 1}</td>
+                                        <td>
+                                            <input className="stage-input" value={milestone.name} onChange={(e) => updateMilestone(milestone.id, 'name', e.target.value)} placeholder="Description" />
+                                        </td>
+                                        <td>
+                                            <input type="number" className="stage-input text-end" value={milestone.percentage} onChange={(e) => updateMilestone(milestone.id, 'percentage', e.target.value)} />
+                                        </td>
+                                        <td>
+                                            <input type="date" className="stage-input p-1" value={milestone.invoiceDate || ''} onChange={(e) => updateMilestone(milestone.id, 'invoiceDate', e.target.value)} />
+                                        </td>
+                                        <td className="font-monospace text-end">{raisedAmount.toLocaleString()}</td>
+
+                                        {isIntraState ? (
+                                            <>
+                                                <td className="font-monospace text-end text-muted small">{(taxAmount / 2).toLocaleString()}</td>
+                                                <td className="font-monospace text-end text-muted small">{(taxAmount / 2).toLocaleString()}</td>
+                                            </>
+                                        ) : (
+                                            <td className="font-monospace text-end text-muted small">{taxAmount.toLocaleString()}</td>
+                                        )}
+
+                                        <td className="font-monospace text-end fw-bold">{totalAmount.toLocaleString()}</td>
+
+                                        <td>
+                                            <input type="date" className="stage-input p-1" value={milestone.paidDate || ''} onChange={(e) => updateMilestone(milestone.id, 'paidDate', e.target.value)} />
+                                        </td>
+                                        <td className="font-monospace text-end text-success">{raisedAmount.toLocaleString()}</td>
+                                        <td className="text-center font-monospace small">
+                                            {calculateAgeing(milestone.invoiceDate, milestone.paidDate)}
+                                        </td>
+                                        <td>
+                                            <select
+                                                className="stage-select p-1"
+                                                value={milestone.status || 'Pending'}
+                                                onChange={(e) => updateMilestone(milestone.id, 'status', e.target.value)}
+                                                style={{
+                                                    borderColor: milestone.status === 'Paid' ? '#198754' : '#ccc',
+                                                    color: milestone.status === 'Paid' ? '#198754' : '#000'
+                                                }}
+                                            >
+                                                <option value="Pending">Pending</option>
+                                                <option value="Raised">Raised</option>
+                                                <option value="Paid">Paid</option>
+                                                <option value="Overdue">Overdue</option>
+                                            </select>
+                                        </td>
+                                        <td className="text-center">
+                                            <div className="d-flex justify-content-center gap-1">
+                                                <button className="btn-icon text-success" onClick={() => generateInvoicePDF(milestone, details, taxes)} title="Download Invoice">
+                                                    <FileDown size={16} />
+                                                </button>
+                                                <button className="btn-icon text-danger" onClick={() => removeMilestone(milestone.id)} title="Delete Item">
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                            {milestones.length === 0 && <tr><td colSpan={isIntraState ? "13" : "12"} className="text-center text-muted p-3">No payments added.</td></tr>}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
@@ -1377,66 +1425,69 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
             <div className="stage">
                 <div className="bar">Stage 4 — Payment Process</div>
                 <div className="stage-p">
-                    <table className="stage-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Party</th>
-                                <th>Value %</th>
-                                <th>Pay ({details.currency})</th>
-                                <th>Tax %</th>
-                                <th>Tax Amt</th>
-                                <th>Paid Date</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {stakeholders && stakeholders.map((s, idx) => {
-                                const payAmt = (dVal * s.percentage) / 100;
-                                const taxRate = parseFloat(s.payoutTax) || 0;
-                                const taxAmt = (payAmt * taxRate) / 100;
+                    <div className="table-responsive">
+                        <table className="stage-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Party</th>
+                                    <th>Value %</th>
+                                    <th>Pay ({details.currency})</th>
+                                    <th>Tax %</th>
+                                    <th>Tax Amt</th>
+                                    <th>Paid Date</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {stakeholders && stakeholders.map((s, idx) => {
+                                    const payAmt = (dVal * s.percentage) / 100;
+                                    const taxRate = parseFloat(s.payoutTax) || 0;
+                                    const taxAmt = (payAmt * taxRate) / 100;
 
-                                return (
-                                    <tr key={s.id}>
-                                        <td>{idx + 1}</td>
-                                        <td><span className="fw-bold">{s.name}</span></td>
-                                        <td>
-                                            <input type="number" className="stage-input text-center p-1" style={{ width: '80px' }} value={s.percentage} onChange={(e) => updateStakeholder(s.id, 'percentage', e.target.value)} />
-                                        </td>
-                                        <td className="font-monospace fw-bold">{details.currency} {payAmt.toLocaleString()}</td>
-                                        <td>
-                                            <input type="number" className="stage-input p-1 text-center" style={{ width: '60px' }} value={s.payoutTax || 0} onChange={(e) => updateStakeholder(s.id, 'payoutTax', e.target.value)} />
-                                        </td>
-                                        <td className="font-monospace text-danger">{details.currency} {taxAmt.toLocaleString()}</td>
-                                        <td>
-                                            <input type="date" className="stage-input p-1" value={s.paidDate || ''} onChange={(e) => updateStakeholder(s.id, 'paidDate', e.target.value)} />
-                                        </td>
-                                        <td>
-                                            <select
-                                                className="stage-select p-1"
-                                                value={s.payoutStatus || 'Pending'}
-                                                onChange={(e) => updateStakeholder(s.id, 'payoutStatus', e.target.value)}
-                                                style={{
-                                                    borderColor: s.payoutStatus === 'Paid Successfully' ? '#198754' : '#ccc',
-                                                    color: s.payoutStatus === 'Paid Successfully' ? '#198754' : '#000'
-                                                }}
-                                            >
-                                                <option value="Pending">Pending</option>
-                                                <option value="Processing">Processing</option>
-                                                <option value="Paid Successfully">Paid Successfully</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <button className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" title="Download Invoice" onClick={() => generatePaymentInvoicePDF(s, details, dVal)}>
-                                                <FileDown size={16} />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                                    return (
+                                        <tr key={s.id}>
+                                            <td>{idx + 1}</td>
+                                            <td><span className="fw-bold">{s.name}</span></td>
+                                            <td>
+                                                <input type="number" className="stage-input text-center p-1" style={{ width: '80px' }} value={s.percentage} onChange={(e) => updateStakeholder(s.id, 'percentage', e.target.value)} />
+                                            </td>
+                                            <td className="font-monospace fw-bold">{details.currency} {payAmt.toLocaleString()}</td>
+                                            <td>
+                                                <input type="number" className="stage-input p-1 text-center" style={{ width: '60px' }} value={s.payoutTax || 0} onChange={(e) => updateStakeholder(s.id, 'payoutTax', e.target.value)} />
+                                            </td>
+                                            <td className="font-monospace text-muted">{details.currency} {taxAmt.toLocaleString()}</td>
+                                            <td>
+                                                <input type="date" className="stage-input p-1" value={s.paidDate || ''} onChange={(e) => updateStakeholder(s.id, 'paidDate', e.target.value)} />
+                                            </td>
+                                            <td>
+                                                <select
+                                                    className="stage-select p-1"
+                                                    value={s.status || 'Pending'}
+                                                    onChange={(e) => updateStakeholder(s.id, 'status', e.target.value)}
+                                                    style={{
+                                                        borderColor: s.status === 'Paid' ? '#198754' : '#ccc',
+                                                        color: s.status === 'Paid' ? '#198754' : '#000'
+                                                    }}
+                                                >
+                                                    <option value="Pending">Pending</option>
+                                                    <option value="Processed">Processed</option>
+                                                    <option value="Paid">Paid</option>
+                                                </select>
+                                            </td>
+                                            <td className="text-center">
+                                                <button className="btn-icon text-success" onClick={() => generatePaymentInvoicePDF(s, details)} title="Download Voucher">
+                                                    <FileDown size={18} />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                                {(!stakeholders || stakeholders.length === 0) && <tr><td colSpan="9" className="text-center text-muted p-3">No stakeholders added.</td></tr>}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
