@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { User, Mail, Contact, Settings, Plus, CheckCircle, Trash2, Briefcase, DollarSign, Timer, Flag, AlertTriangle, ArrowUpRight, Search, Monitor, Phone, FileText, MessageSquare, Edit } from 'lucide-react'
 import { Button, Modal, Form } from 'react-bootstrap'
 import './Sales.css'
-import StageConfigModal from './StageConfigModal'
+import StageSettingsModal from './StageSettingsModal'
 import BusinessProcessModal from './BusinessProcessModal'
 import { projectService } from '../../services/api'
 
@@ -344,6 +344,10 @@ function Sales() {
     const [productStages, setProductStages] = useState(() => getStoredStages('Product'))
     const [serviceStages, setServiceStages] = useState(() => getStoredStages('Service'))
 
+    // Global Labels
+    const [productLabel, setProductLabel] = useState(() => localStorage.getItem('app_product_label') || 'Products')
+    const [serviceLabel, setServiceLabel] = useState(() => localStorage.getItem('app_service_label') || 'Services')
+
     // Projects state
     const [projects, setProjects] = useState([])
     const [, setLoading] = useState(true)
@@ -496,9 +500,21 @@ function Sales() {
         setShowSettings(true)
     }
 
-    const handleSaveSettings = (newStages) => {
+    const handleSaveSettings = (newStages, labels) => {
         setStagesByType(activeTab, newStages)
         localStorage.setItem(STAGE_STORAGE_KEYS[activeTab], JSON.stringify(newStages))
+
+        // Save Labels if provided
+        if (labels) {
+            setProductLabel(labels.productLabel)
+            setServiceLabel(labels.serviceLabel)
+            localStorage.setItem('app_product_label', labels.productLabel)
+            localStorage.setItem('app_service_label', labels.serviceLabel)
+
+            // Dispatch storage event to sync other tabs/components
+            window.dispatchEvent(new Event('storage'))
+        }
+
         setShowSettings(false)
     }
 
@@ -752,14 +768,14 @@ function Sales() {
                                 size="sm"
                                 onClick={() => setActiveTab('Product')}
                             >
-                                Products
+                                {productLabel}
                             </Button>
                             <Button
                                 variant={activeTab === 'Service' ? 'primary' : 'outline-secondary'}
                                 size="sm"
                                 onClick={() => setActiveTab('Service')}
                             >
-                                Services
+                                {serviceLabel}
                             </Button>
                         </div>
 
@@ -907,12 +923,17 @@ function Sales() {
                 </Modal.Footer>
             </Modal>
 
-            <StageConfigModal
-                show={showSettings}
-                onHide={() => setShowSettings(false)}
-                currentStages={activeStages}
-                onSave={handleSaveSettings}
-            />
+            {/* Stage Settings Modal - Pass dynamic labels */}
+            {showSettings && (
+                <StageSettingsModal
+                    show={showSettings}
+                    handleClose={() => setShowSettings(false)}
+                    currentStages={getStagesByType(activeTab)}
+                    onSave={handleSaveSettings}
+                    productLabel={productLabel}
+                    serviceLabel={serviceLabel}
+                />
+            )}
         </div>
     )
 }

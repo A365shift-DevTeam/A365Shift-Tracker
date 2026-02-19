@@ -408,6 +408,7 @@ const generateDashboardPDF = (projects, filter) => {
     const totalRevenue = projects.reduce((sum, p) => sum + (parseFloat(p.dealValue) || 0), 0);
     const activeProjects = projects.filter(p => !p.isArchived).length;
     const totalCollected = projects.reduce((sum, p) => sum + p.milestones.reduce((mSum, m) => m.status === 'Paid' ? mSum + ((p.dealValue * m.percentage) / 100) : mSum, 0), 0);
+    const currency = projects.length > 0 ? projects[0].currency : 'AED';
 
     doc.setFontSize(24); doc.setTextColor(40); doc.text("EXECUTIVE DASHBOARD", 14, 22);
     doc.setFontSize(10); doc.setTextColor(100);
@@ -418,7 +419,7 @@ const generateDashboardPDF = (projects, filter) => {
     doc.setFontSize(12); doc.setTextColor(0);
     doc.text("Total Revenue", 30, 55); doc.text("Active Projects", 90, 55); doc.text("Total Collected", 150, 55);
     doc.setFontSize(16); doc.setFont(undefined, 'bold');
-    doc.text(`$${totalRevenue.toLocaleString()}`, 30, 65); doc.text(`${activeProjects}`, 90, 65); doc.text(`$${totalCollected.toLocaleString()}`, 150, 65);
+    doc.text(`${currency} ${totalRevenue.toLocaleString()}`, 30, 65); doc.text(`${activeProjects}`, 90, 65); doc.text(`${currency} ${totalCollected.toLocaleString()}`, 150, 65);
 
     doc.setFontSize(14); doc.setFont(undefined, 'normal'); doc.text("Project Performance Details", 14, 90);
 
@@ -514,6 +515,27 @@ const exportDashboardExcel = (projects, filter) => {
 const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
     const [filter, setFilter] = useState('All');
     const [chartMetric, setChartMetric] = useState('Revenue');
+    const [displayCurrency, setDisplayCurrency] = useState('AED');
+
+    // Global Labels (Sync with Sales Settings)
+    const [projectTypes, setProjectTypes] = useState([
+        localStorage.getItem('app_product_label') || 'Products',
+        localStorage.getItem('app_service_label') || 'Services'
+    ]);
+    const [activeTypeIndex, setActiveTypeIndex] = useState(0);
+
+    // Listen for storage changes to update labels dynamically
+    useEffect(() => {
+        const handleStorageChange = () => {
+            setProjectTypes([
+                localStorage.getItem('app_product_label') || 'Products',
+                localStorage.getItem('app_service_label') || 'Services'
+            ]);
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
 
     // Filter Logic
     const filteredProjects = projects.filter(p => {
@@ -530,6 +552,14 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
     const activeProjects = filteredProjects.filter(p => !p.isArchived).length;
     const totalSplits = filteredProjects.reduce((sum, p) => sum + p.stakeholders.reduce((sSum, s) => sSum + ((parseFloat(p.dealValue) || 0) * s.percentage) / 100, 0), 0);
     const totalCollected = filteredProjects.reduce((sum, p) => sum + p.milestones.reduce((mSum, m) => m.status === 'Paid' ? mSum + ((p.dealValue * m.percentage) / 100) : mSum, 0), 0);
+
+    useEffect(() => {
+        if (filteredProjects.length > 0) {
+            setDisplayCurrency(filteredProjects[0].currency);
+        } else {
+            setDisplayCurrency('AED');
+        }
+    }, [filteredProjects]);
 
     const chartData = filteredProjects.map(p => ({
         name: p.projectId,
@@ -560,7 +590,7 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
                 <div className="dashboard-card col-md-3">
                     <div className="dashboard-card-body">
                         <div className="d-flex justify-content-between mb-3">
-                            <div><p className="text-muted small mb-1">Total Revenue</p><h3 className="text-dark fw-bold m-0">${totalRevenue.toLocaleString()}</h3></div>
+                            <div><p className="text-muted small mb-1">Total Revenue</p><h3 className="text-dark fw-bold m-0">{displayCurrency} {totalRevenue.toLocaleString()}</h3></div>
                             <div className="p-2 bg-success bg-opacity-10 rounded"><DollarSign className="text-success" size={24} /></div>
                         </div>
                     </div>
@@ -576,7 +606,7 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
                 <div className="dashboard-card col-md-3">
                     <div className="dashboard-card-body">
                         <div className="d-flex justify-content-between mb-3">
-                            <div><p className="text-muted small mb-1">Total Splits</p><h3 className="text-dark fw-bold m-0">${totalSplits.toLocaleString()}</h3></div>
+                            <div><p className="text-muted small mb-1">Total Splits</p><h3 className="text-dark fw-bold m-0">{displayCurrency} {totalSplits.toLocaleString()}</h3></div>
                             <div className="p-2 bg-danger bg-opacity-10 rounded"><Users className="text-danger" size={24} /></div>
                         </div>
                     </div>
@@ -584,7 +614,7 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
                 <div className="dashboard-card col-md-3">
                     <div className="dashboard-card-body">
                         <div className="d-flex justify-content-between mb-3">
-                            <div><p className="text-muted small mb-1">Total Collected</p><h3 className="text-dark fw-bold m-0">${totalCollected.toLocaleString()}</h3></div>
+                            <div><p className="text-muted small mb-1">Total Collected</p><h3 className="text-dark fw-bold m-0">{displayCurrency} {totalCollected.toLocaleString()}</h3></div>
                             <div className="p-2 bg-warning bg-opacity-10 rounded"><Wallet className="text-warning" size={24} /></div>
                         </div>
                     </div>
@@ -665,21 +695,23 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
 const BusinessDetails = ({ details, updateDetails }) => (
     <div className="stage">
         <div className="bar">Stage 1 — Business Details</div>
-        <div className="grid-stage">
-            <label className="stage-label">Project ID</label>
-            <input className="stage-input" value={details.projectId} onChange={(e) => updateDetails('projectId', e.target.value)} />
-            <label className="stage-label">Client Name</label>
-            <input className="stage-input" value={details.clientName} onChange={(e) => updateDetails('clientName', e.target.value)} />
-            <label className="stage-label">Delivery</label>
-            <input className="stage-input" value={details.delivery || ''} onChange={(e) => updateDetails('delivery', e.target.value)} placeholder="Ambot365" />
-            <label className="stage-label">Billing Location</label>
-            <input className="stage-input" value={details.location} onChange={(e) => updateDetails('location', e.target.value)} />
-            <label className="stage-label">Deal Value</label>
-            <input type="number" className="stage-input" value={details.dealValue} onChange={(e) => updateDetails('dealValue', e.target.value)} />
-            <label className="stage-label">Currency</label>
-            <select className="stage-select" value={details.currency} onChange={(e) => updateDetails('currency', e.target.value)}>
-                <option value="AED">AED</option><option value="USD">USD</option><option value="INR">INR</option>
-            </select>
+        <div className="stage-p">
+            <div className="grid-stage">
+                <label className="stage-label">Project ID</label>
+                <input className="stage-input" value={details.projectId} onChange={(e) => updateDetails('projectId', e.target.value)} />
+                <label className="stage-label">Client Name</label>
+                <input className="stage-input" value={details.clientName} onChange={(e) => updateDetails('clientName', e.target.value)} />
+                <label className="stage-label">Delivery</label>
+                <input className="stage-input" value={details.delivery || ''} onChange={(e) => updateDetails('delivery', e.target.value)} placeholder="Ambot365" />
+                <label className="stage-label">Billing Location</label>
+                <input className="stage-input" value={details.location} onChange={(e) => updateDetails('location', e.target.value)} />
+                <label className="stage-label">Deal Value</label>
+                <input type="number" className="stage-input" value={details.dealValue} onChange={(e) => updateDetails('dealValue', e.target.value)} />
+                <label className="stage-label">Currency</label>
+                <select className="stage-select" value={details.currency} onChange={(e) => updateDetails('currency', e.target.value)}>
+                    <option value="AED">AED</option><option value="USD">USD</option><option value="INR">INR</option>
+                </select>
+            </div>
         </div>
     </div>
 );
@@ -856,6 +888,18 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
                                         </select>
                                     </td>
                                     <td className="text-center">
+                                        <div className="d-flex bg-white rounded border p-1 gap-1" style={{ height: '38px', alignItems: 'center' }}>
+                                            {projectTypes.map((label, index) => (
+                                                <button
+                                                    key={index}
+                                                    className={`btn btn-sm ${activeTypeIndex === index ? 'btn-success' : 'btn-white text-muted'} border-0 rounded`}
+                                                    onClick={() => setActiveTypeIndex(index)}
+                                                    style={{ fontWeight: activeTypeIndex === index ? 'bold' : 'normal' }}
+                                                >
+                                                    {label}
+                                                </button>
+                                            ))}
+                                        </div>
                                         <div className="d-flex justify-content-center gap-2">
                                             <button className="btn-icon text-success" onClick={() => generateInvoicePDF(milestone, details, taxes)} title="Download Invoice">
                                                 <FileDown size={18} />

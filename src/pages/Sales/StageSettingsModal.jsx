@@ -3,16 +3,20 @@ import { createPortal } from 'react-dom'
 import { Modal, Button, Form, Table } from 'react-bootstrap'
 import { Trash, Plus, ArrowUp, ArrowDown } from 'lucide-react'
 
-const StageSettingsModal = ({ show, handleClose, currentStages, onSave }) => {
+const StageSettingsModal = ({ show, handleClose, currentStages, onSave, productLabel, serviceLabel }) => {
     const [stages, setStages] = useState([])
+    const [localProductLabel, setLocalProductLabel] = useState(productLabel || 'Product')
+    const [localServiceLabel, setLocalServiceLabel] = useState(serviceLabel || 'Service')
 
     // Load stages when modal opens
     useEffect(() => {
         if (show) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setStages(currentStages.map(s => ({ ...s, ageing: s.ageing || 30 }))) // Deep copy with default ageing
+            setLocalProductLabel(productLabel || 'Product')
+            setLocalServiceLabel(serviceLabel || 'Service')
         }
-    }, [show, currentStages])
+    }, [show, currentStages, productLabel, serviceLabel])
 
     const handleLabelChange = (index, value) => {
         const newStages = [...stages]
@@ -90,7 +94,30 @@ const StageSettingsModal = ({ show, handleClose, currentStages, onSave }) => {
                 }}
             >
                 <div>
+                    <div className="row mb-4">
+                        <div className="col-md-6">
+                            <Form.Group>
+                                <Form.Label className="fw-bold text-muted small">Product Label</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    value={localProductLabel}
+                                    onChange={(e) => setLocalProductLabel(e.target.value)}
+                                />
+                            </Form.Group>
+                        </div>
+                        <div className="col-md-6">
+                            <Form.Group>
+                                <Form.Label className="fw-bold text-muted small">Service Label</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    value={localServiceLabel}
+                                    onChange={(e) => setLocalServiceLabel(e.target.value)}
+                                />
+                            </Form.Group>
+                        </div>
+                    </div>
                     <Table hover size="sm" style={{ marginBottom: '20px', minWidth: '700px' }}>
+
                         <thead>
                             <tr>
                                 <th style={{ width: '8%' }}>Sort</th>
@@ -185,7 +212,7 @@ const StageSettingsModal = ({ show, handleClose, currentStages, onSave }) => {
             </Modal.Body>
             <Modal.Footer style={{ borderTop: '1px solid #e2e8f0', padding: '12px 20px' }}>
                 <Button variant="secondary" onClick={handleClose}>Cancel</Button>
-                <Button variant="primary" onClick={() => onSave(stages)}>Save Changes</Button>
+                <Button variant="primary" onClick={() => onSave(stages, { productLabel: localProductLabel, serviceLabel: localServiceLabel })}>Save Changes</Button>
             </Modal.Footer>
         </Modal>,
         document.body
