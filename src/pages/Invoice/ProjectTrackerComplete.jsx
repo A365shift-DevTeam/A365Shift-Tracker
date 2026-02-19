@@ -230,7 +230,7 @@ const addPDFHeader = (doc, title, details) => {
 
     // 1. Add Logo (Top Left)
     try {
-        doc.addImage(ambotLogo, 'PNG', 14, 10, 50, 15); // Adjusted aspect ratio (wider) to fix stretching
+        doc.addImage(ambotLogo, 'PNG', 14, 10, 50, 12); // Adjusted aspect ratio (approx 4:1)
     } catch (e) {
         doc.setFontSize(20); doc.setTextColor(0, 84, 166); doc.text("AmBot 365", 14, 25);
     }
