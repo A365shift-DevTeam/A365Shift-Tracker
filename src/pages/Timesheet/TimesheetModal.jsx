@@ -533,7 +533,7 @@ const renderField = (column, value, onChange, errors) => {
   }
 }
 
-export const TimesheetModal = ({ show, onHide, entry, columns, onSave, onDelete }) => {
+export const TimesheetModal = ({ show, onHide, entry, columns, onSave, onDelete, initialValues = {} }) => {
   const [formData, setFormData] = useState({})
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
@@ -543,16 +543,18 @@ export const TimesheetModal = ({ show, onHide, entry, columns, onSave, onDelete 
       if (entry) {
         setFormData(entry.values || {})
       } else {
-        const initialData = {}
+        const initialData = { ...initialValues } // Merge initial values
         columns.forEach(col => {
-          initialData[col.id] = col.config?.readOnly ? `TS-${Date.now()}` : ''
+          if (!initialData[col.id]) {
+            initialData[col.id] = col.config?.readOnly ? `TS-${Date.now()}` : ''
+          }
         })
         setFormData(initialData)
       }
       setErrors({})
       setSaving(false)
     }
-  }, [entry, columns, show])
+  }, [entry, columns, show, initialValues])
 
   const handleChange = (columnId, value) => {
     setFormData(prev => ({

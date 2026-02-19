@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Button, Dropdown, Form, Badge, Modal } from 'react-bootstrap'
 import { Plus, Search, Settings, Calendar, Clock, FileText, User, Building2, CheckCircle, Paperclip, ListChecks, Info, MapPin } from 'lucide-react'
 import { timesheetService } from '../../services/timesheetService'
@@ -29,10 +30,33 @@ const Timesheet = () => {
   const [sortBy, setSortBy] = useState('col-start-datetime')
   const [sortOrder, setSortOrder] = useState('desc')
   const [groupBy, setGroupBy] = useState('none')
+  const [initialEntryValues, setInitialEntryValues] = useState({})
+
+  const location = useLocation()
+  const navigate = useNavigate()
 
   useEffect(() => {
     loadData()
   }, [])
+
+  // Handle navigation from Sales
+  useEffect(() => {
+    if (location.state?.createNewEntry && location.state?.project) {
+      const project = location.state.project;
+      const newValues = {
+        'col-customer': project.clientName,
+        'col-task': project.title || project.name, // Use project title as task
+        'col-notes': `Project: ${project.title} (${project.customId})`,
+        'col-start-datetime': new Date().toISOString()
+      };
+      setInitialEntryValues(newValues);
+      setEditingEntry(null);
+      setShowEntryModal(true);
+
+      // Clear state to prevent reopening on reload
+      window.history.replaceState({}, document.title)
+    }
+  }, [location])
 
   const loadData = async () => {
     try {
@@ -563,6 +587,7 @@ const Timesheet = () => {
         columns={columns}
         onSave={handleSaveEntry}
         onDelete={handleDeleteEntry}
+        initialValues={initialEntryValues}
       />
 
       <ColumnManager

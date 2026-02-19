@@ -629,7 +629,7 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
                             <h5 className="text-dark m-0">{chartMetric} by Project</h5>
                             <button className="btn btn-sm btn-outline-secondary" onClick={() => setChartMetric(chartMetric === 'Revenue' ? 'Splits' : 'Revenue')}>Toggle Metric</button>
                         </div>
-                        <div className="dashboard-card-body" style={{ height: 300 }}>
+                        <div className="dashboard-card-body" style={{ height: 300, position: 'relative' }}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={chartData}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
@@ -645,7 +645,7 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
                 <div className="col-md-4 mb-4">
                     <div className="dashboard-card">
                         <div className="dashboard-card-header"><h5 className="text-dark m-0">Status Distribution</h5></div>
-                        <div className="dashboard-card-body" style={{ height: 300 }}>
+                        <div className="dashboard-card-body" style={{ height: 300, position: 'relative' }}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie data={statusData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
@@ -804,6 +804,23 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
     const paidMilestones = milestones.filter(m => m.status === 'Paid');
     const totalPaid = paidMilestones.reduce((sum, m) => sum + ((dealValue * m.percentage) / 100), 0);
     const paidPct = dealValue ? ((totalPaid / dealValue) * 100) : 0;
+
+    const [projectTypes, setProjectTypes] = useState([
+        localStorage.getItem('app_product_label') || 'Products',
+        localStorage.getItem('app_service_label') || 'Services'
+    ]);
+    const [activeTypeIndex, setActiveTypeIndex] = useState(0);
+
+    useEffect(() => {
+        const handleStorageChange = () => {
+            setProjectTypes([
+                localStorage.getItem('app_product_label') || 'Products',
+                localStorage.getItem('app_service_label') || 'Services'
+            ]);
+        };
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
 
     const calculateAgeing = (invoiceDate, paidDate) => {
         if (!invoiceDate) return '-';

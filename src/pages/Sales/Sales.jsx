@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { User, Mail, Contact, Settings, Plus, CheckCircle, Trash2, Briefcase, DollarSign, Timer, Flag, AlertTriangle, ArrowUpRight, Search, Monitor, Phone, FileText, MessageSquare, Edit } from 'lucide-react'
+import { User, Mail, Contact, Settings, Plus, CheckCircle, Trash2, Briefcase, DollarSign, Timer, Flag, AlertTriangle, ArrowUpRight, Search, Monitor, Phone, FileText, MessageSquare, Edit, Clock } from 'lucide-react'
 import { Button, Modal, Form } from 'react-bootstrap'
 import './Sales.css'
 import StageSettingsModal from './StageSettingsModal'
@@ -41,7 +41,7 @@ const GenerateCustomId = (brandingName, clientName) => {
     return `${date}${brandCode}${clientCode}${year}`;
 }
 
-const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onDelete, onEdit, onInvoice, delay, clientName, brandingName, title, history = [] }) => {
+const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onDelete, onEdit, onInvoice, onTimesheet, delay, clientName, brandingName, title, history = [] }) => {
     const [showNotification, setShowNotification] = useState(false)
     const [stageTransition, setStageTransition] = useState({ from: '', to: '' })
 
@@ -141,6 +141,17 @@ const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onD
                             onEdit();
                         }}
                         title="Edit Project"
+                    />
+                    <Clock
+                        size={16}
+                        className="icon-outline icon-edit"
+                        strokeWidth={1.5}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onTimesheet();
+                        }}
+                        title="Add Timesheet Entry"
+                        style={{ cursor: 'pointer' }}
                     />
                     <FileText
                         size={18}
@@ -452,6 +463,22 @@ function Sales() {
         } catch (error) {
             console.error("Failed to create project", error)
         }
+    }
+
+
+
+    const handleTimesheet = (project) => {
+        navigate('/timesheet', {
+            state: {
+                createNewEntry: true,
+                project: {
+                    clientName: project.clientName,
+                    title: project.title,
+                    name: project.brandingName, // Fallback or additional info
+                    customId: project.customId
+                }
+            }
+        })
     }
 
     const handleDeleteProject = async (projectId) => {
@@ -816,6 +843,7 @@ function Sales() {
                         onDelete={() => handleDeleteProject(project.id)}
                         onEdit={() => handleEditProject(project)}
                         onInvoice={() => handleInvoice(project)}
+                        onTimesheet={() => handleTimesheet(project)}
                     />
                 ))}
             </div>
