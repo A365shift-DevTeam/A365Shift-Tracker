@@ -854,10 +854,10 @@ const StageTwoCombined = ({ stakeholders, addStakeholder, removeStakeholder, upd
                 <span>Stage 2 — Project Splits & Finance Charges</span>
                 <div className="d-flex gap-2">
                     <button className="btn btn-sm btn-white d-flex align-items-center gap-1" onClick={addStakeholder}>
-                        <Plus size={14} /> Add Party
+                        <Plus size={14} /> Add Splits
                     </button>
                     <button className="btn btn-sm btn-white d-flex align-items-center gap-1" onClick={addCharge}>
-                        <Plus size={14} /> Add Charge
+                        <Plus size={14} /> Add Tax
                     </button>
                 </div>
             </div>
