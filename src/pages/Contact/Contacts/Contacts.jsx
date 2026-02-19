@@ -50,6 +50,10 @@ const Contacts = () => {
   const [convertingContact, setConvertingContact] = useState(null)
   const [convertType, setConvertType] = useState('Product')
 
+  // Global Labels
+  const productLabel = localStorage.getItem('app_product_label') || 'Product'
+  const serviceLabel = localStorage.getItem('app_service_label') || 'Service'
+
   useEffect(() => {
     loadContacts()
   }, [])
@@ -291,7 +295,8 @@ const Contacts = () => {
 
     try {
       await projectService.create(newProject)
-      alert(`✅ Contact "${c.name}" converted to a ${convertType} sales project!`)
+      const typeLabel = convertType === 'Product' ? productLabel : serviceLabel
+      alert(`✅ Contact "${c.name}" converted to a ${typeLabel} sales project!`)
       setShowConvertModal(false)
       setConvertingContact(null)
     } catch (error) {
@@ -611,8 +616,8 @@ const Contacts = () => {
                   value={convertType}
                   onChange={(e) => setConvertType(e.target.value)}
                 >
-                  <option value="Product">Product</option>
-                  <option value="Service">Service</option>
+                  <option value="Product">{productLabel}</option>
+                  <option value="Service">{serviceLabel}</option>
                 </Form.Select>
               </Form.Group>
             </div>
