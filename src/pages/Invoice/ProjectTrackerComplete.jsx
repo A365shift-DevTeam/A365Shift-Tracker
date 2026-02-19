@@ -6,6 +6,7 @@ import {
     LayoutDashboard, FileDown, Briefcase, MapPin, Globe, CreditCard, Building, Users,
     Plus, Trash2, ArrowLeft, DollarSign, FileText, ArrowRight, Filter, Wallet, CheckCircle, X
 } from 'lucide-react';
+import ambotLogo from '../../assets/images/ambot logo.png';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -223,6 +224,40 @@ const TrackerStyles = () => (
 // 2. UTILITY SERVICES (PDF & Excel)
 // ==========================================
 
+// Helper to add the standard AmBot 365 Header
+const addPDFHeader = (doc, title, details) => {
+    // 1. Add Logo (Top Left)
+    try {
+        doc.addImage(ambotLogo, 'PNG', 14, 15, 50, 20); // Adjusted for landscape aspect ratio
+    } catch (e) {
+        console.warn("Logo not found, skipping image.");
+        doc.setFontSize(16); doc.setTextColor(0); doc.text("AmBot 365", 14, 30);
+    }
+
+    // 2. Add Company Details (Top Right)
+    doc.setFontSize(10); doc.setTextColor(0); doc.setFont(undefined, 'bold');
+    doc.text("AMBOT365 RPA & IT SOLUTIONS (OPC) PVT.LTD", 200, 20, { align: 'right' });
+
+    doc.setFontSize(9); doc.setFont(undefined, 'normal'); doc.setTextColor(80);
+    doc.text("BLOCK A, DOOR NO 105, MOTHERS VILLAGE,", 200, 26, { align: 'right' });
+    doc.text("NESAVALAR COLONY ROAD, ONDIPUDUR,", 200, 31, { align: 'right' });
+    doc.text("Coimbatore-641016, Tamil Nadu", 200, 36, { align: 'right' });
+    doc.text("GSTIN: 33AAYCA8731D1ZH", 200, 41, { align: 'right' });
+    doc.text("Email: finance@ambot365.in", 200, 46, { align: 'right' });
+
+    // 3. Title (Centered)
+    doc.setFontSize(22); doc.setTextColor(17, 72, 137); // Dark Blue
+    doc.setFont(undefined, 'bold');
+    doc.text(title, 105, 65, { align: 'center' });
+
+    // 4. Decorative Line
+    // Create a gradient-like effect with lines
+    doc.setDrawColor(41, 128, 185); doc.setLineWidth(1.5);
+    doc.line(14, 70, 196, 70);
+    doc.setDrawColor(39, 174, 96); doc.setLineWidth(1.5);
+    doc.line(14, 72, 196, 72);
+};
+
 const generatePaymentInvoicePDF = (stakeholder, details, dealValue) => {
     const doc = new jsPDF();
     const currency = details.currency || 'AED';
@@ -231,54 +266,64 @@ const generatePaymentInvoicePDF = (stakeholder, details, dealValue) => {
     const taxAmt = (payAmt * taxRate) / 100;
     const netPay = payAmt - taxAmt;
 
-    doc.setFontSize(22); doc.setTextColor(40); doc.text("PAYMENT INVOICE", 14, 22);
-    doc.setFontSize(10); doc.setTextColor(100);
-    doc.text(`Invoice #: PAY-${stakeholder.id}-${Date.now().toString().slice(-4)}`, 14, 30);
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 35);
-    doc.text(`Status: ${stakeholder.payoutStatus || 'Pending'}`, 14, 40);
+    // Use Helper
+    addPDFHeader(doc, "PAYMENT VOUCHER", details);
 
-    doc.setFontSize(12); doc.setTextColor(0);
-    doc.text(details.delivery || "Your Company Name", 200, 22, { align: 'right' });
-    doc.setFontSize(10);
-    doc.text("Business Address Line 1", 200, 28, { align: 'right' });
-    doc.text("City, Country, Zip", 200, 33, { align: 'right' });
-
-    doc.text("Pay To:", 14, 55);
-    doc.setFontSize(14); doc.setFont(undefined, 'bold');
-    doc.text(stakeholder.name || "Stakeholder", 14, 63);
+    // Invoice Details
+    doc.setFontSize(10); doc.setTextColor(0); doc.setFont(undefined, 'bold');
+    doc.text("To:", 14, 85);
     doc.setFont(undefined, 'normal');
-    doc.setFontSize(10);
-    doc.text(`Project: ${details.projectId}`, 14, 70);
-    doc.text(`Client: ${details.clientName || 'N/A'}`, 14, 76);
-    if (stakeholder.paidDate) doc.text(`Paid Date: ${stakeholder.paidDate}`, 14, 82);
+    doc.text(stakeholder.name || "Stakeholder", 14, 90);
+    doc.text(`Project: ${details.projectId}`, 14, 95);
+
+    doc.setFont(undefined, 'bold');
+    doc.text("Voucher No:", 140, 85);
+    doc.text("Date:", 140, 90);
+
+    doc.setFont(undefined, 'normal');
+    doc.text(`PAY-${stakeholder.id}-${Date.now().toString().slice(-4)}`, 170, 85);
+    doc.text(new Date().toLocaleDateString(), 170, 90);
 
     autoTable(doc, {
-        startY: 92,
-        head: [['Description', 'Share %', `Amount (${currency})`]],
-        body: [[`Payment to ${stakeholder.name}`, `${stakeholder.percentage}%`, `${currency} ${payAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}`]],
-        theme: 'striped', headStyles: { fillColor: [66, 66, 66] }
+        startY: 105,
+        head: [['#', 'Item & Description', 'Share %', `Amount (${currency})`]],
+        body: [[1, `Payment Disbursement - ${stakeholder.name}`, `${stakeholder.percentage}%`, `${currency} ${payAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}`]],
+        theme: 'striped',
+        headStyles: { fillColor: [41, 128, 185] }, // Blue Header
+        styles: { halign: 'left' },
+        columnStyles: { 0: { halign: 'center', width: 10 }, 3: { halign: 'right' } }
     });
 
     let finalY = doc.lastAutoTable.finalY + 10;
+
+    // Summary
+    doc.setFontSize(10);
     doc.text(`Subtotal:`, 140, finalY);
     doc.text(`${currency} ${payAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
 
     if (taxRate > 0) {
         finalY += 6;
-        doc.text(`Tax (${taxRate}%):`, 140, finalY);
+        doc.text(`Less Tax (${taxRate}%):`, 140, finalY);
         doc.text(`- ${currency} ${taxAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
     }
 
     doc.setDrawColor(200); doc.line(140, finalY + 4, 200, finalY + 4);
-    doc.setFontSize(12); doc.setFont(undefined, 'bold');
-    doc.text(`Net Pay:`, 140, finalY + 10);
-    doc.text(`${currency} ${netPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY + 10, { align: 'right' });
+    finalY += 10;
 
-    doc.setFontSize(10); doc.setFont(undefined, 'normal');
-    doc.text("Payment Terms: Due within 30 days.", 14, finalY + 30);
-    doc.text("Bank Details: Bank Name, Account: XXXXXX, Swift: XXXXX", 14, finalY + 35);
+    // Green Background for Net Amount (mimicking the Excel/Image style)
+    doc.setFillColor(39, 174, 96);
+    doc.rect(135, finalY - 6, 65, 10, 'F');
+    doc.setTextColor(255); doc.setFont(undefined, 'bold');
+    doc.text(`Net Pay:`, 140, finalY);
+    doc.text(`${currency} ${netPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
 
-    doc.save(`Payment_Invoice_${(stakeholder.name || 'stakeholder').replace(/[^a-z0-9]/gi, '_')}.pdf`);
+    // Footer Signatures
+    doc.setTextColor(0); doc.setFont(undefined, 'normal');
+    finalY += 30;
+    doc.text("For AMBOT365 RPA & IT SOLUTIONS", 195, finalY, { align: 'right' });
+    doc.text("(Authorized Signatory)", 195, finalY + 15, { align: 'right' });
+
+    doc.save(`Payment_Voucher_${(stakeholder.name || 'stakeholder').replace(/[^a-z0-9]/gi, '_')}.pdf`);
 };
 
 const generateInvoicePDF = (milestone, details, taxes) => {
@@ -292,38 +337,64 @@ const generateInvoicePDF = (milestone, details, taxes) => {
     const totalTaxAmount = (baseAmount * totalTaxRate) / 100;
     const finalAmount = baseAmount + totalTaxAmount;
 
-    // Header
-    doc.setFontSize(22); doc.setTextColor(40); doc.text("TAX INVOICE", 14, 22);
-    doc.setFontSize(10); doc.setTextColor(100);
-    doc.text(`Invoice No: INV-${milestone.id}-${Date.now().toString().slice(-4)}`, 14, 30);
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 35);
-    doc.text(`Status: ${milestone.status || 'Pending'}`, 14, 40);
+    // Use Helper
+    addPDFHeader(doc, "TAX INVOICE", details);
 
-    // Client Details
-    doc.setFontSize(12); doc.setTextColor(0);
-    doc.text(details.clientName || "Client Name", 14, 55);
-    doc.setFontSize(10);
-    doc.text(`Project Ref: ${details.projectId}`, 14, 60);
-    doc.text(`Location: ${details.location || 'N/A'}`, 14, 65);
+    // Client/Invoice Details
+    doc.setFontSize(10); doc.setTextColor(0); doc.setFont(undefined, 'bold');
+    doc.text("To:", 14, 85);
+    doc.setFont(undefined, 'normal');
+    doc.text(details.clientName || "Client Name", 14, 90);
+    doc.text(`Project Ref: ${details.projectId}`, 14, 95);
+    doc.text(`Location: ${details.location || 'N/A'}`, 14, 100);
+
+    doc.setFont(undefined, 'bold');
+    doc.text("Invoice No:", 140, 85);
+    doc.text("Invoice Date:", 140, 90);
+    doc.text("Status:", 140, 95);
+
+    doc.setFont(undefined, 'normal');
+    doc.text(`INV-${milestone.id}-${Date.now().toString().slice(-4)}`, 170, 85);
+    doc.text(new Date().toLocaleDateString(), 170, 90);
+    doc.text(milestone.status || 'Pending', 170, 95);
 
     // Item Table
+    // Columns: #, Item & Description, Qty Users, Validity, Actual Cost, Discount, Net Amount
     const tableBody = [
-        [milestone.name, `${milestone.percentage}%`, `${currency} ${baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`]
+        [
+            1,
+            milestone.name,
+            "-",
+            "-",
+            `${currency} ${baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+            "0",
+            `${currency} ${baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+        ]
     ];
 
     autoTable(doc, {
-        startY: 75,
-        head: [['Milestone Description', 'Milestone %', `Amount (${currency})`]],
+        startY: 110,
+        head: [['#', 'Item & Description', 'Qty Users', 'Validity', 'Actual Cost', 'Discount', 'Net Amount']],
         body: tableBody,
         theme: 'striped',
-        headStyles: { fillColor: [41, 128, 185] }
+        // Branding Colors: Blue Header, last column Greenish if possible, but autoTable is limited. 
+        // We will just use the Blue header as base.
+        headStyles: { fillColor: [41, 128, 185], halign: 'center' },
+        styles: { halign: 'center' },
+        columnStyles: {
+            1: { halign: 'left', width: 60 }, // Description wider and left aligned
+            4: { halign: 'right' },
+            6: { halign: 'right', fontStyle: 'bold' }
+        }
     });
 
     // Tax Breakdown & Totals
     let finalY = doc.lastAutoTable.finalY + 10;
 
+    // We need to match the footer style: "Net Amount", "GST @ 18%", "Total Amount"
+    // Subtotal (Net Amount before Tax)
     doc.setFontSize(10);
-    doc.text(`Subtotal:`, 140, finalY);
+    doc.text(`Net Amount:`, 140, finalY);
     doc.text(`${currency} ${baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
 
     chargesList.forEach(charge => {
@@ -333,37 +404,46 @@ const generateInvoicePDF = (milestone, details, taxes) => {
         let amount = (baseAmount * rate) / 100;
 
         if (charge.taxType === 'Intra-State (CGST + SGST)') {
-            // Split Logic
             const halfRate = rate / 2;
             const halfAmount = amount / 2;
-
-            doc.text(`CGST (${halfRate}%):`, 140, finalY);
+            doc.text(`CGST @ ${halfRate}%:`, 140, finalY);
             doc.text(`${currency} ${halfAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
-
             finalY += 6;
-            doc.text(`SGST (${halfRate}%):`, 140, finalY);
+            doc.text(`SGST @ ${halfRate}%:`, 140, finalY);
             doc.text(`${currency} ${halfAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
         } else {
-            // Default Logic (IGST, Export, Other)
             if (amount > 0 || rate > 0) {
-                doc.text(`${label} (${rate}%):`, 140, finalY);
+                doc.text(`${label} @ ${rate}%:`, 140, finalY);
                 doc.text(`${currency} ${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
             }
         }
     });
 
     finalY += 6;
-    doc.setDrawColor(200); doc.line(140, finalY, 195, finalY);
-    finalY += 5;
+    doc.setDrawColor(41, 128, 185); doc.setLineWidth(0.5); // Blue line
+    doc.line(140, finalY, 195, finalY);
+    finalY += 8;
 
-    doc.setFontSize(12); doc.setFont(undefined, 'bold');
-    doc.text(`Total Amount:`, 140, finalY + 5);
-    doc.text(`${currency} ${finalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY + 5, { align: 'right' });
+    // Total Amount Box/Style
+    doc.setFontSize(12); doc.setFont(undefined, 'bold'); doc.setTextColor(17, 72, 137);
+    doc.text(`Total Amount:`, 140, finalY);
+    doc.text(`${currency} ${finalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
 
     // Footer
-    doc.setFontSize(10); doc.setFont(undefined, 'normal');
-    doc.text("Thank you for your business.", 14, finalY + 20);
-    doc.text("Payment Terms: Due within 30 days.", 14, finalY + 25);
+    doc.setTextColor(0); doc.setFont(undefined, 'normal'); doc.setFontSize(10);
+
+    // Bank Details Placeholder (Left side)
+    const footerY = doc.internal.pageSize.height - 40;
+    doc.text("Bank Details:", 14, footerY);
+    doc.setFontSize(9);
+    doc.text("Bank Name: HDFC Bank", 14, footerY + 5);
+    doc.text("Account No: XXXXXXXXXX", 14, footerY + 10);
+    doc.text("IFSC Code: HDFC000XXXX", 14, footerY + 15);
+
+    // Signature (Right side)
+    doc.setFontSize(10);
+    doc.text("For AMBOT365 RPA & IT SOLUTIONS", 195, footerY, { align: 'right' });
+    doc.text("(Authorized Signatory)", 195, footerY + 25, { align: 'right' });
 
     doc.save(`Invoice_${milestone.id}_${(milestone.name || 'milestone').replace(/[^a-z0-9]/gi, '_')}.pdf`);
 };
@@ -380,12 +460,15 @@ const generateProjectReportPDF = (details, stakeholders, milestones, taxes) => {
         return `${c.name || c.taxType}: ${c.percentage}%`;
     }).join(', ');
 
-    doc.setFontSize(24); doc.setTextColor(40); doc.text("PROJECT FINANCIAL REPORT", 14, 22);
-    doc.setFontSize(10); doc.setTextColor(100);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 30);
-    doc.text(`Project ID: ${details.projectId}`, 14, 35);
+    // Use Helper
+    addPDFHeader(doc, "PROJECT FINANCIAL REPORT", details);
 
-    doc.setFontSize(14); doc.setTextColor(0); doc.text("Executive Summary", 14, 50);
+    // Context Info
+    doc.setFontSize(10); doc.setTextColor(100);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 85);
+    doc.text(`Project ID: ${details.projectId}`, 14, 90);
+
+    doc.setFontSize(14); doc.setTextColor(0); doc.text("Executive Summary", 14, 105);
 
     const summaryData = [
         ["Deal Value", `${currency} ${details.dealValue.toLocaleString()}`],
@@ -395,7 +478,11 @@ const generateProjectReportPDF = (details, stakeholders, milestones, taxes) => {
     ];
 
     autoTable(doc, {
-        startY: 55, body: summaryData, theme: 'plain', styles: { fontSize: 11, cellPadding: 2 }, columnStyles: { 0: { fontStyle: 'bold', width: 80 } }
+        startY: 110,
+        body: summaryData,
+        theme: 'plain',
+        styles: { fontSize: 11, cellPadding: 2 },
+        columnStyles: { 0: { fontStyle: 'bold', width: 80 } }
     });
 
     let finalY = doc.lastAutoTable.finalY + 15;
@@ -406,7 +493,11 @@ const generateProjectReportPDF = (details, stakeholders, milestones, taxes) => {
     ]);
 
     autoTable(doc, {
-        startY: finalY + 5, head: [['Name / Role', 'Share %', 'Amount']], body: stakeholderBody, theme: 'striped', headStyles: { fillColor: [41, 128, 185] }
+        startY: finalY + 5,
+        head: [['Name / Role', 'Share %', 'Amount']],
+        body: stakeholderBody,
+        theme: 'striped',
+        headStyles: { fillColor: [41, 128, 185] }
     });
 
     finalY = doc.lastAutoTable.finalY + 15;
@@ -436,6 +527,12 @@ const generateProjectReportPDF = (details, stakeholders, milestones, taxes) => {
         headStyles: { fillColor: [39, 174, 96] },
         styles: { fontSize: 9 }
     });
+
+    // Footer Signatures
+    const footerY = doc.internal.pageSize.height - 30;
+    doc.setFontSize(10);
+    doc.text("For AMBOT365 RPA & IT SOLUTIONS", 195, footerY, { align: 'right' });
+    doc.text("(Authorized Signatory)", 195, footerY + 20, { align: 'right' });
 
     doc.save(`${details.projectId}_Full_Report.pdf`);
 };
