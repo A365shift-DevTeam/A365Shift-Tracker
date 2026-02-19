@@ -897,7 +897,7 @@ const BusinessDetails = ({ details, updateDetails }) => (
 );
 
 const STAKEHOLDERS_CONSTANTS = {
-    COUNTRIES: ['India', 'International'],
+    COUNTRIES: ['India', 'Other'],
     INDIAN_STATES: [
         'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana',
         'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
@@ -924,18 +924,42 @@ const StageTwoCombined = ({ stakeholders, addStakeholder, removeStakeholder, upd
 
         // 1. Handle Country Change
         if (field === 'country') {
-            if (value === 'International') {
+            if (value === 'Other') {
+                updates.country = ''; // Clear country to trigger input mode based on UI logic
                 updates.state = '';
-                updates.taxType = 'Export (Nil Rate)';
-                updates.percentage = 0;
-                updates.name = 'Export (Nil)';
-            } else {
+
+                // Export Nil Rate only if received in convertible foreign exchange (i.e., NOT INR)
+                if (currency !== 'INR') {
+                    updates.taxType = 'Export (Nil Rate)';
+                    updates.percentage = 0;
+                    updates.name = 'Export (Nil)';
+                } else {
+                    // Fallback for INR Export (likely treated as Inter-State/IGST or effective tax)
+                    updates.taxType = 'Inter-State (IGST)';
+                    updates.percentage = 18;
+                    updates.name = 'IGST';
+                }
+            } else if (value === 'India') {
                 updates.country = 'India';
+            } else {
+                // Manual input case
+                if (value !== 'India') {
+                    updates.state = '';
+                    if (currency !== 'INR') {
+                        updates.taxType = 'Export (Nil Rate)';
+                        updates.percentage = 0;
+                        updates.name = 'Export (Nil)';
+                    } else {
+                        updates.taxType = 'Inter-State (IGST)';
+                        updates.percentage = 18;
+                        updates.name = 'IGST';
+                    }
+                }
             }
         }
 
         // 2. Handle State Change (Only if Country is India)
-        if (field === 'state' && currentCountry === 'India') {
+        if (field === 'state' && (currentCountry === 'India' || !currentCountry)) { // Default to India logic if undefined
             if (value === 'Tamil Nadu') {
                 updates.taxType = 'Intra-State (CGST + SGST)';
                 updates.percentage = 18;
@@ -951,10 +975,16 @@ const StageTwoCombined = ({ stakeholders, addStakeholder, removeStakeholder, upd
         if (field === 'taxType') {
             if (value === '') {
                 // Reset logic: Recalculate based on existing Country/State
-                if (currentCountry === 'International') {
-                    updates.taxType = 'Export (Nil Rate)';
-                    updates.percentage = 0;
-                    updates.name = 'Export (Nil)';
+                if (currentCountry === 'Other' || (currentCountry && currentCountry !== 'India')) {
+                    if (currency !== 'INR') {
+                        updates.taxType = 'Export (Nil Rate)';
+                        updates.percentage = 0;
+                        updates.name = 'Export (Nil)';
+                    } else {
+                        updates.taxType = 'Inter-State (IGST)';
+                        updates.percentage = 18;
+                        updates.name = 'IGST';
+                    }
                 } else if (currentCountry === 'India') {
                     if (currentState === 'Tamil Nadu') { // Use currentState which is grounded in currentCharge
                         updates.taxType = 'Intra-State (CGST + SGST)';
@@ -1092,23 +1122,49 @@ const StageTwoCombined = ({ stakeholders, addStakeholder, removeStakeholder, upd
                                     )}
                                 </td>
                                 <td>
-                                    <select
-                                        className="stage-select"
-                                        value={c.country || 'India'}
-                                        onChange={(e) => handleTaxChange(c.id, 'country', e.target.value, c)}
-                                        disabled={c.taxType === 'Other'}
-                                    >
-                                        {STAKEHOLDERS_CONSTANTS.COUNTRIES.map(country => (
-                                            <option key={country} value={country}>{country}</option>
-                                        ))}
-                                    </select>
+                                    {c.country !== 'India' && c.country !== undefined ? (
+                                        <div className="d-flex gap-1 align-items-center">
+                                            <input
+                                                className="stage-input"
+                                                value={c.country}
+                                                onChange={(e) => handleTaxChange(c.id, 'country', e.target.value, c)}
+                                                placeholder="Country Name"
+                                                autoFocus
+                                            />
+                                            <button
+                                                className="btn btn-sm btn-light border d-flex align-items-center justify-content-center"
+                                                onClick={() => handleTaxChange(c.id, 'country', 'India', c)}
+                                                title="Reset to India"
+                                                style={{ width: '30px', height: '30px', padding: 0 }}
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <select
+                                            className="stage-select"
+                                            value={c.country || 'India'}
+                                            onChange={(e) => {
+                                                if (e.target.value === 'Other') {
+                                                    handleTaxChange(c.id, 'country', 'Other', c);
+                                                } else {
+                                                    handleTaxChange(c.id, 'country', e.target.value, c);
+                                                }
+                                            }}
+                                            disabled={c.taxType === 'Other'}
+                                        >
+                                            {STAKEHOLDERS_CONSTANTS.COUNTRIES.map(country => (
+                                                <option key={country} value={country}>{country}</option>
+                                            ))}
+                                        </select>
+                                    )}
                                 </td>
                                 <td>
                                     <select
                                         className="stage-select"
                                         value={c.state || ''}
                                         onChange={(e) => handleTaxChange(c.id, 'state', e.target.value, c)}
-                                        disabled={c.country === 'International' || c.taxType === 'Other'}
+                                        disabled={(c.country || 'India') !== 'India' || c.taxType === 'Other'}
                                     >
                                         <option value="">Select State</option>
                                         {STAKEHOLDERS_CONSTANTS.INDIAN_STATES.map(state => (
