@@ -49,6 +49,8 @@ const Contacts = () => {
   const [showConvertModal, setShowConvertModal] = useState(false)
   const [convertingContact, setConvertingContact] = useState(null)
   const [convertType, setConvertType] = useState('Product')
+  const [convertBranding, setConvertBranding] = useState('')
+  const [convertClient, setConvertClient] = useState('')
 
   // Global Labels
   const productLabel = localStorage.getItem('app_product_label') || 'Product'
@@ -268,6 +270,8 @@ const Contacts = () => {
   const handleConvertToSales = (contact) => {
     setConvertingContact(contact)
     setConvertType('Product')
+    setConvertBranding(contact.company || '')
+    setConvertClient(contact.name || '')
     setShowConvertModal(true)
   }
 
@@ -287,9 +291,9 @@ const Contacts = () => {
       type: convertType,
       rating: 4.0,
       delay: 0,
-      title: `${c.name} - ${c.company || 'Direct'}`,
-      clientName: c.name || 'New Client',
-      brandingName: c.company || 'A365Shift',
+      title: `${convertClient} - ${convertBranding || 'Direct'}`,
+      clientName: convertClient || 'New Client',
+      brandingName: convertBranding || 'A365Shift',
       customId
     }
 
@@ -610,9 +614,31 @@ const Contacts = () => {
                   <div className="text-muted" style={{ fontSize: 11 }}>{convertingContact.company || 'No Company'}</div>
                 </div>
               </div>
+
+              <Form.Group className="mb-2">
+                <Form.Label className="small text-muted fw-bold">Client Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  size="sm"
+                  value={convertClient}
+                  onChange={(e) => setConvertClient(e.target.value)}
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-2">
+                <Form.Label className="small text-muted fw-bold">Branding Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  size="sm"
+                  value={convertBranding}
+                  onChange={(e) => setConvertBranding(e.target.value)}
+                />
+              </Form.Group>
+
               <Form.Group>
                 <Form.Label className="small text-muted fw-bold">Project Type</Form.Label>
                 <Form.Select
+                  size="sm"
                   value={convertType}
                   onChange={(e) => setConvertType(e.target.value)}
                 >
