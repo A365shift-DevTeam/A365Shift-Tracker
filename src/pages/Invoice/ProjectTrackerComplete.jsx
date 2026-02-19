@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { FaFilePdf } from "react-icons/fa6";
+import { PiMicrosoftExcelLogoFill } from "react-icons/pi";
 import { useLocation } from 'react-router-dom';
 import {
     LayoutDashboard, FileDown, Briefcase, MapPin, Globe, CreditCard, Building, Users,
@@ -752,7 +754,7 @@ const BusinessDetails = ({ details, updateDetails }) => (
 );
 
 const STAKEHOLDERS_CONSTANTS = {
-    COUNTRIES: ['India', 'International'],
+    COUNTRIES: ['India', 'Other'],
     INDIAN_STATES: [
         'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana',
         'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
@@ -779,13 +781,22 @@ const StageTwoCombined = ({ stakeholders, addStakeholder, removeStakeholder, upd
 
         // 1. Handle Country Change
         if (field === 'country') {
-            if (value === 'International') {
+            if (value === 'Other') {
+                updates.country = ''; // Clear country to trigger input mode based on UI logic
                 updates.state = '';
                 updates.taxType = 'Export (Nil Rate)';
                 updates.percentage = 0;
                 updates.name = 'Export (Nil)';
-            } else {
+            } else if (value === 'India') {
                 updates.country = 'India';
+            } else {
+                // Manual input case
+                if (value !== 'India') {
+                    updates.state = '';
+                    updates.taxType = 'Export (Nil Rate)';
+                    updates.percentage = 0;
+                    updates.name = 'Export (Nil)';
+                }
             }
         }
 
@@ -806,7 +817,7 @@ const StageTwoCombined = ({ stakeholders, addStakeholder, removeStakeholder, upd
         if (field === 'taxType') {
             if (value === '') {
                 // Reset logic: Recalculate based on existing Country/State
-                if (currentCountry === 'International') {
+                if (currentCountry !== 'India') {
                     updates.taxType = 'Export (Nil Rate)';
                     updates.percentage = 0;
                     updates.name = 'Export (Nil)';
@@ -853,53 +864,18 @@ const StageTwoCombined = ({ stakeholders, addStakeholder, removeStakeholder, upd
             <div className="bar">
                 <span>Stage 2 — Project Splits & Finance Charges</span>
                 <div className="d-flex gap-2">
-                    <button className="btn btn-sm btn-white d-flex align-items-center gap-1" onClick={addStakeholder}>
-                        <Plus size={14} /> Add Party
-                    </button>
                     <button className="btn btn-sm btn-white d-flex align-items-center gap-1" onClick={addCharge}>
                         <Plus size={14} /> Add Charge
+                    </button>
+                    <button className="btn btn-sm btn-white d-flex align-items-center gap-1" onClick={addStakeholder}>
+                        <Plus size={14} /> Add Party
                     </button>
                 </div>
             </div>
             <div className="stage-p">
-                {/* Share Percentage Section */}
-                <h6 className="fw-bold mb-3 text-muted">Share Percentage</h6>
-                <table className="stage-table mb-4">
-                    <thead>
-                        <tr>
-                            <th>Party</th><th style={{ width: '150px' }}>%</th><th>Amount ({currency})</th><th style={{ width: '50px' }}></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {stakeholders.map((stakeholder) => {
-                            const value = (dealValue * stakeholder.percentage) / 100;
-                            return (
-                                <tr key={stakeholder.id}>
-                                    <td>
-                                        <input className="stage-input" value={stakeholder.name} onChange={(e) => updateStakeholder(stakeholder.id, 'name', e.target.value)} placeholder="e.g. Lead / Investor" />
-                                    </td>
-                                    <td>
-                                        <input type="number" className="stage-input" value={stakeholder.percentage} onChange={(e) => updateStakeholder(stakeholder.id, 'percentage', e.target.value)} />
-                                    </td>
-                                    <td className="font-monospace">{currency} {value.toLocaleString()}</td>
-                                    <td className="text-center">
-                                        <button className="btn-icon text-danger" onClick={() => removeStakeholder(stakeholder.id)}><Trash2 size={16} /></button>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                        {stakeholders.length === 0 && <tr><td colSpan="4" className="text-center text-muted p-3">No parties added.</td></tr>}
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <th>Total</th><th>{totalPct.toFixed(2)}%</th><th>{currency} {totalAmt.toLocaleString()}</th><th></th>
-                        </tr>
-                    </tfoot>
-                </table>
-
                 {/* Finance Charges Section */}
-                <h6 className="fw-bold mb-3 text-muted border-top pt-4">Finance Charges (GST / Tax)</h6>
-                <table className="stage-table">
+                <h6 className="fw-bold mb-3 text-muted">Finance Charges (GST / Tax)</h6>
+                <table className="stage-table mb-4">
                     <thead>
                         <tr>
                             <th style={{ width: '200px' }}>Tax Type</th>
@@ -947,23 +923,49 @@ const StageTwoCombined = ({ stakeholders, addStakeholder, removeStakeholder, upd
                                     )}
                                 </td>
                                 <td>
-                                    <select
-                                        className="stage-select"
-                                        value={c.country || 'India'}
-                                        onChange={(e) => handleTaxChange(c.id, 'country', e.target.value, c)}
-                                        disabled={c.taxType === 'Other'}
-                                    >
-                                        {STAKEHOLDERS_CONSTANTS.COUNTRIES.map(country => (
-                                            <option key={country} value={country}>{country}</option>
-                                        ))}
-                                    </select>
+                                    {c.country !== 'India' && c.country !== undefined ? (
+                                        <div className="d-flex gap-1 align-items-center">
+                                            <input
+                                                className="stage-input"
+                                                value={c.country}
+                                                onChange={(e) => handleTaxChange(c.id, 'country', e.target.value, c)}
+                                                placeholder="Country Name"
+                                                autoFocus
+                                            />
+                                            <button
+                                                className="btn btn-sm btn-light border d-flex align-items-center justify-content-center"
+                                                onClick={() => handleTaxChange(c.id, 'country', 'India', c)}
+                                                title="Reset to India"
+                                                style={{ width: '30px', height: '30px', padding: 0 }}
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <select
+                                            className="stage-select"
+                                            value={c.country || 'India'}
+                                            onChange={(e) => {
+                                                if (e.target.value === 'Other') {
+                                                    handleTaxChange(c.id, 'country', 'Other', c);
+                                                } else {
+                                                    handleTaxChange(c.id, 'country', e.target.value, c);
+                                                }
+                                            }}
+                                            disabled={c.taxType === 'Other'}
+                                        >
+                                            {STAKEHOLDERS_CONSTANTS.COUNTRIES.map(country => (
+                                                <option key={country} value={country}>{country}</option>
+                                            ))}
+                                        </select>
+                                    )}
                                 </td>
                                 <td>
                                     <select
                                         className="stage-select"
                                         value={c.state || ''}
                                         onChange={(e) => handleTaxChange(c.id, 'state', e.target.value, c)}
-                                        disabled={c.country === 'International' || c.taxType === 'Other'}
+                                        disabled={(c.country || 'India') !== 'India' || c.taxType === 'Other'}
                                     >
                                         <option value="">Select State</option>
                                         {STAKEHOLDERS_CONSTANTS.INDIAN_STATES.map(state => (
@@ -991,6 +993,41 @@ const StageTwoCombined = ({ stakeholders, addStakeholder, removeStakeholder, upd
                             <th>{totalChargePct.toFixed(2)}%</th>
                             <th>{currency} {totalChargeAmt.toLocaleString()}</th>
                             <th></th>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                {/* Share Percentage Section */}
+                <h6 className="fw-bold mb-3 text-muted border-top pt-4">Share Percentage</h6>
+                <table className="stage-table">
+                    <thead>
+                        <tr>
+                            <th>Party</th><th style={{ width: '150px' }}>%</th><th>Amount ({currency})</th><th style={{ width: '50px' }}></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {stakeholders.map((stakeholder) => {
+                            const value = (dealValue * stakeholder.percentage) / 100;
+                            return (
+                                <tr key={stakeholder.id}>
+                                    <td>
+                                        <input className="stage-input" value={stakeholder.name} onChange={(e) => updateStakeholder(stakeholder.id, 'name', e.target.value)} placeholder="e.g. Lead / Investor" />
+                                    </td>
+                                    <td>
+                                        <input type="number" className="stage-input" value={stakeholder.percentage} onChange={(e) => updateStakeholder(stakeholder.id, 'percentage', e.target.value)} />
+                                    </td>
+                                    <td className="font-monospace">{currency} {value.toLocaleString()}</td>
+                                    <td className="text-center">
+                                        <button className="btn-icon text-danger" onClick={() => removeStakeholder(stakeholder.id)}><Trash2 size={16} /></button>
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                        {stakeholders.length === 0 && <tr><td colSpan="4" className="text-center text-muted p-3">No parties added.</td></tr>}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>Total</th><th>{totalPct.toFixed(2)}%</th><th>{currency} {totalAmt.toLocaleString()}</th><th></th>
                         </tr>
                     </tfoot>
                 </table>
@@ -1138,8 +1175,8 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
                     <div><h4 className="m-0 fw-bold">Deal Finance Tracker</h4><span className="text-muted small">Professional Financial Management</span></div>
                 </div>
                 <div className="d-flex gap-2">
-                    <button className="btn btn-sm btn-outline-danger" onClick={() => generateProjectReportPDF(details, stakeholders, milestones, charges)}>PDF Report</button>
-                    <button className="btn btn-sm btn-outline-success" onClick={() => exportProjectReport(details, stakeholders, milestones, charges)}>Excel Export</button>
+                    <button className="btn btn-sm btn-outline-danger" onClick={() => generateProjectReportPDF(details, stakeholders, milestones, charges)} title="Download PDF Report"><FaFilePdf size={20} /></button>
+                    <button className="btn btn-sm btn-outline-success" onClick={() => exportProjectReport(details, stakeholders, milestones, charges)} title="Export to Excel"><PiMicrosoftExcelLogoFill size={20} /></button>
                 </div>
             </div>
 
