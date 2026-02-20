@@ -709,7 +709,7 @@ const exportDashboardExcel = (projects, filter) => {
 // 3. SUB COMPONENTS (Dashboard & Invoice)
 // ==========================================
 
-const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
+const Dashboard = ({ projects, onOpenProject, onCreateProject, onStatusChange }) => {
     const [filter, setFilter] = useState('All');
     const [chartMetric, setChartMetric] = useState('Revenue');
     const [displayCurrency, setDisplayCurrency] = useState('AED');
@@ -734,6 +734,30 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
         return () => window.removeEventListener('storage', handleStorageChange);
     }, []);
 
+    // Currency Conversion
+    const [dashboardCurrency, setDashboardCurrency] = useState('AED');
+    const RATES_TO_AED = {
+        'AED': 1,
+        'USD': 3.6725,
+        'INR': 0.044
+    };
+
+    const convertToAED = (amount, currency) => {
+        const rate = RATES_TO_AED[currency] || 1; // Default to 1 if unknown (assume AED)
+        return amount * rate;
+    };
+
+    const convertFromAED = (amountInAED, targetCurrency) => {
+        const rate = RATES_TO_AED[targetCurrency] || 1;
+        return amountInAED / rate;
+    };
+
+    const convertCurrency = (amount, fromCurrency, toCurrency) => {
+        if (fromCurrency === toCurrency) return amount;
+        const inAED = convertToAED(amount, fromCurrency);
+        return convertFromAED(inAED, toCurrency);
+    };
+
     // Filter Logic
     const filteredProjects = projects.filter(p => {
         if (filter === 'All') return true;
@@ -741,42 +765,97 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
         const now = new Date();
         if (filter === 'Yearly') return pDate.getFullYear() === now.getFullYear();
         if (filter === 'Monthly') return pDate.getMonth() === now.getMonth() && pDate.getFullYear() === now.getFullYear();
+        if (filter === 'Weekly') {
+            const sevenDaysAgo = new Date(now);
+            sevenDaysAgo.setDate(now.getDate() - 7);
+            return pDate >= sevenDaysAgo && pDate <= now;
+        }
         return true;
     });
 
-    // KPI Calcs
-    const totalRevenue = filteredProjects.reduce((sum, p) => sum + (parseFloat(p.dealValue) || 0), 0);
+    // KPI Calcs (Converted)
+    const totalRevenue = filteredProjects.reduce((sum, p) => sum + convertCurrency((parseFloat(p.dealValue) || 0), p.currency, dashboardCurrency), 0);
     const activeProjects = filteredProjects.filter(p => !p.isArchived).length;
-    const totalSplits = filteredProjects.reduce((sum, p) => sum + p.stakeholders.reduce((sSum, s) => sSum + ((parseFloat(p.dealValue) || 0) * s.percentage) / 100, 0), 0);
-    const totalCollected = filteredProjects.reduce((sum, p) => sum + p.milestones.reduce((mSum, m) => m.status === 'Paid' ? mSum + ((p.dealValue * m.percentage) / 100) : mSum, 0), 0);
 
-    useEffect(() => {
-        if (filteredProjects.length > 0) {
-            setDisplayCurrency(filteredProjects[0].currency);
-        } else {
-            setDisplayCurrency('AED');
-        }
-    }, [filteredProjects]);
+    // Splits (Calculated per stakeholder and converted)
+    const totalSplits = filteredProjects.reduce((sum, p) => {
+        const projectSplits = p.stakeholders.reduce((sSum, s) => sSum + ((parseFloat(p.dealValue) || 0) * s.percentage) / 100, 0);
+        return sum + convertCurrency(projectSplits, p.currency, dashboardCurrency);
+    }, 0);
 
-    const chartData = filteredProjects.map(p => ({
-        name: p.projectId,
-        value: chartMetric === 'Revenue' ? (parseFloat(p.dealValue) || 0) :
-            chartMetric === 'Splits' ? p.stakeholders.reduce((sSum, s) => sSum + ((parseFloat(p.dealValue) || 0) * s.percentage) / 100, 0) :
-                p.milestones.reduce((mSum, m) => m.status === 'Paid' ? mSum + ((p.dealValue * m.percentage) / 100) : mSum, 0)
-    }));
+    // Collected (Calculated per milestone and converted)
+    const totalCollected = filteredProjects.reduce((sum, p) => {
+        const projectCollected = p.milestones.reduce((mSum, m) => m.status === 'Paid' ? mSum + ((p.dealValue * m.percentage) / 100) : mSum, 0);
+        return sum + convertCurrency(projectCollected, p.currency, dashboardCurrency);
+    }, 0);
+
+    // Tax (Calculated per project and converted)
+    const totalTax = filteredProjects.reduce((sum, p) => {
+        const tRate = p.charges ? p.charges.reduce((cSum, c) => cSum + (parseFloat(c.percentage) || 0), 0) : 0;
+        const projectTax = (parseFloat(p.dealValue) || 0) * tRate / 100;
+        return sum + convertCurrency(projectTax, p.currency, dashboardCurrency);
+    }, 0);
+
+    const chartData = filteredProjects.map(p => {
+        // Safe helpers
+        const dVal = parseFloat(p.dealValue) || 0;
+        const convertedDVal = convertCurrency(dVal, p.currency, dashboardCurrency);
+        const totalTaxRate = p.charges ? p.charges.reduce((sum, c) => sum + (parseFloat(c.percentage) || 0), 0) : 0;
+
+        let val = 0;
+        if (chartMetric === 'Revenue') val = convertedDVal;
+        else if (chartMetric === 'Splits') val = p.stakeholders.reduce((sSum, s) => sSum + ((convertedDVal * s.percentage) / 100), 0);
+        else if (chartMetric === 'Collected') val = p.milestones.reduce((mSum, m) => m.status === 'Paid' ? mSum + ((convertedDVal * m.percentage) / 100) : mSum, 0);
+        else if (chartMetric === 'Tax') val = (convertedDVal * totalTaxRate) / 100;
+
+        return {
+            name: p.projectId,
+            value: val
+        };
+    });
 
     const statusData = [{ name: 'Active', value: activeProjects }, { name: 'Completed', value: filteredProjects.length - activeProjects }];
     const COLORS = ['#0d6efd', '#198754', '#ffc107', '#dc3545'];
 
     return (
-        <div className="container py-4">
+        <div className="container-fluid px-5 py-4">
             {/* Header */}
             <div className="d-flex justify-content-between align-items-center mb-5">
                 <div>
                     <h2 className="fw-bold text-dark mb-1">Project Dashboard</h2>
                     <p className="text-muted m-0">Overview of all financial projects</p>
                 </div>
-                <div className="d-flex gap-2">
+                <div className="d-flex gap-2 align-items-center">
+                    {/* Date Filter Dropdown (Button Styled) */}
+                    <div className="btn btn-white border d-flex align-items-center me-2 p-0 px-2" style={{ height: '38px' }}>
+                        <Filter size={16} className="text-secondary me-2" />
+                        <select
+                            className="form-select border-0 shadow-none bg-transparent p-0"
+                            style={{ width: 'auto', fontWeight: 500, cursor: 'pointer', outline: 'none' }}
+                            value={filter}
+                            onChange={(e) => setFilter(e.target.value)}
+                        >
+                            <option value="All">All Time</option>
+                            <option value="Yearly">This Year</option>
+                            <option value="Monthly">This Month</option>
+                            <option value="Weekly">This Week</option>
+                        </select>
+                    </div>
+
+                    {/* Currency Dropdown (Button Styled) */}
+                    <div className="btn btn-white border d-flex align-items-center me-2 p-0 px-2" style={{ height: '38px' }}>
+                        <select
+                            className="form-select border-0 shadow-none bg-transparent p-0"
+                            style={{ width: 'auto', fontWeight: 600, cursor: 'pointer', outline: 'none', paddingRight: '20px' }}
+                            value={dashboardCurrency}
+                            onChange={(e) => setDashboardCurrency(e.target.value)}
+                        >
+                            <option value="AED">AED</option>
+                            <option value="USD">USD</option>
+                            <option value="INR">INR</option>
+                        </select>
+                    </div>
+
                     <button className="btn btn-primary" onClick={onCreateProject}><Plus size={18} /> New Project</button>
                     <button className="btn btn-outline-success" onClick={() => exportDashboardExcel(filteredProjects, filter)}><FileDown size={16} /> Export</button>
                 </div>
@@ -787,23 +866,25 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
                 <div className="dashboard-card col-md-3">
                     <div className="dashboard-card-body">
                         <div className="d-flex justify-content-between mb-3">
-                            <div><p className="text-muted small mb-1">Total Revenue</p><h3 className="text-dark fw-bold m-0">{displayCurrency} {totalRevenue.toLocaleString()}</h3></div>
+                            <div><p className="text-muted small mb-1">Total Revenue</p><h3 className="text-dark fw-bold m-0">{dashboardCurrency} {totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</h3></div>
                             <div className="p-2 bg-success bg-opacity-10 rounded"><DollarSign className="text-success" size={24} /></div>
                         </div>
                     </div>
                 </div>
+                {/* Total Tax Card */}
                 <div className="dashboard-card col-md-3">
                     <div className="dashboard-card-body">
                         <div className="d-flex justify-content-between mb-3">
-                            <div><p className="text-muted small mb-1">Active Projects</p><h3 className="text-dark fw-bold m-0">{activeProjects}</h3></div>
-                            <div className="p-2 bg-primary bg-opacity-10 rounded"><Briefcase className="text-primary" size={24} /></div>
+                            <div><p className="text-muted small mb-1">Project Tax</p><h3 className="text-dark fw-bold m-0">{dashboardCurrency} {totalTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</h3></div>
+                            <div className="p-2 bg-warning bg-opacity-10 rounded"><Building className="text-warning" size={24} /></div>
                         </div>
                     </div>
                 </div>
+
                 <div className="dashboard-card col-md-3">
                     <div className="dashboard-card-body">
                         <div className="d-flex justify-content-between mb-3">
-                            <div><p className="text-muted small mb-1">Total Splits</p><h3 className="text-dark fw-bold m-0">{displayCurrency} {totalSplits.toLocaleString()}</h3></div>
+                            <div><p className="text-muted small mb-1">Total Splits</p><h3 className="text-dark fw-bold m-0">{dashboardCurrency} {totalSplits.toLocaleString(undefined, { maximumFractionDigits: 0 })}</h3></div>
                             <div className="p-2 bg-danger bg-opacity-10 rounded"><Users className="text-danger" size={24} /></div>
                         </div>
                     </div>
@@ -811,8 +892,8 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
                 <div className="dashboard-card col-md-3">
                     <div className="dashboard-card-body">
                         <div className="d-flex justify-content-between mb-3">
-                            <div><p className="text-muted small mb-1">Total Collected</p><h3 className="text-dark fw-bold m-0">{displayCurrency} {totalCollected.toLocaleString()}</h3></div>
-                            <div className="p-2 bg-warning bg-opacity-10 rounded"><Wallet className="text-warning" size={24} /></div>
+                            <div><p className="text-muted small mb-1">Total Collected</p><h3 className="text-dark fw-bold m-0">{dashboardCurrency} {totalCollected.toLocaleString(undefined, { maximumFractionDigits: 0 })}</h3></div>
+                            <div className="p-2 bg-primary bg-opacity-10 rounded"><Wallet className="text-primary" size={24} /></div>
                         </div>
                     </div>
                 </div>
@@ -822,9 +903,19 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
             <div className="row mb-5">
                 <div className="col-md-8 mb-4">
                     <div className="dashboard-card">
-                        <div className="dashboard-card-header">
+                        <div className="dashboard-card-header d-flex justify-content-between align-items-center">
                             <h5 className="text-dark m-0">{chartMetric} by Project</h5>
-                            <button className="btn btn-sm btn-outline-secondary" onClick={() => setChartMetric(chartMetric === 'Revenue' ? 'Splits' : 'Revenue')}>Toggle Metric</button>
+                            <select
+                                className="form-select form-select-sm"
+                                style={{ width: 'auto', border: '1px solid #ced4da' }}
+                                value={chartMetric}
+                                onChange={(e) => setChartMetric(e.target.value)}
+                            >
+                                <option value="Revenue">Deal Value</option>
+                                <option value="Tax">Tax</option>
+                                <option value="Splits">Split</option>
+                                <option value="Collected">Collected</option>
+                            </select>
                         </div>
                         <div className="dashboard-card-body" style={{ height: 300, position: 'relative' }}>
                             <ResponsiveContainer width="100%" height="100%">
@@ -863,24 +954,44 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject }) => {
                     <table className="table-custom">
                         <thead>
                             <tr>
-                                <th>Project Name</th><th>Client</th><th>Deal Value</th><th>Collected</th><th>Status</th><th>Action</th>
+                                <th>Project Name</th><th>Client</th><th>Deal Value</th><th>Tax Paid</th><th>Collected</th><th>Status</th><th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredProjects.map(project => {
                                 const collected = project.milestones.reduce((sum, m) => m.status === 'Paid' ? sum + ((project.dealValue * m.percentage) / 100) : sum, 0);
+                                const totalTaxRate = project.charges ? project.charges.reduce((cSum, c) => cSum + (parseFloat(c.percentage) || 0), 0) : 0;
+                                const taxPaid = project.milestones.reduce((sum, m) => m.status === 'Paid' ? sum + (((project.dealValue * m.percentage) / 100) * totalTaxRate / 100) : sum, 0);
+
                                 return (
                                     <tr key={project.id} onClick={() => onOpenProject(project.id)}>
                                         <td><div className="fw-bold text-dark">{project.projectId}</div></td>
                                         <td>{project.clientName}</td>
                                         <td className="font-monospace text-dark fw-bold">{project.currency} {parseFloat(project.dealValue).toLocaleString()}</td>
+                                        <td className="font-monospace text-muted">{project.currency} {taxPaid.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
                                         <td className="font-monospace text-warning">{project.currency} {collected.toLocaleString()}</td>
-                                        <td><span className="text-success">Active</span></td>
+                                        <td>
+                                            <select
+                                                className="form-select form-select-sm"
+                                                style={{ width: 'auto', minWidth: '110px', cursor: 'pointer', border: '1px solid #ced4da', borderRadius: '4px', fontSize: '0.85rem' }}
+                                                value={project.status || 'Active'}
+                                                onClick={(e) => e.stopPropagation()}
+                                                onChange={(e) => {
+                                                    e.stopPropagation();
+                                                    onStatusChange(project.id, e.target.value);
+                                                }}
+                                            >
+                                                <option value="Active">Active</option>
+                                                <option value="Completed">Completed</option>
+                                                <option value="On Hold">Hold</option>
+                                                <option value="Archived">Archived</option>
+                                            </select>
+                                        </td>
                                         <td><button className="btn btn-sm btn-outline-primary rounded-circle"><ArrowRight size={14} /></button></td>
                                     </tr>
                                 );
                             })}
-                            {filteredProjects.length === 0 && <tr><td colSpan="6" className="text-center py-4 text-muted">No projects found.</td></tr>}
+                            {filteredProjects.length === 0 && <tr><td colSpan="7" className="text-center py-4 text-muted">No projects found.</td></tr>}
                         </tbody>
                     </table>
                 </div>
@@ -1496,7 +1607,7 @@ const ProjectTrackerComplete = () => {
     const [activeProjectId, setActiveProjectId] = useState(null);
     const [projects, setProjects] = useState([
         {
-            id: 1, projectId: 'ABC123', dateCreated: new Date().toISOString(), clientName: 'ABC Company', delivery: 'Ambot365',
+            id: 1, projectId: 'ABC123', dateCreated: new Date().toISOString(), clientName: 'ABC Company', delivery: 'Ambot365', status: 'Active',
             dealValue: 100000, currency: 'AED', location: 'Dubai',
             stakeholders: [{ id: 1, name: 'Lead', percentage: 2, payoutTax: 10, payoutStatus: 'Pending', paidDate: '' }],
             milestones: [{ id: 1, name: 'Initiate Invoice', percentage: 20, status: 'Completed', invoiceDate: new Date().toISOString().split('T')[0], paidDate: '' }],
@@ -1543,7 +1654,7 @@ const ProjectTrackerComplete = () => {
     const handleCreateProject = () => {
         const newProj = {
             id: Date.now(), projectId: `PROJ-${Math.floor(Math.random() * 999)}`, dateCreated: new Date().toISOString(),
-            clientName: 'New Client', delivery: '', dealValue: 0, currency: 'AED', location: '',
+            clientName: 'New Client', delivery: '', dealValue: 0, currency: 'AED', location: '', status: 'Active',
             stakeholders: [], milestones: [], charges: [{ id: 1, name: 'GST', taxType: 'Inter-State (IGST)', country: 'India', state: '', percentage: 18 }]
         };
         setProjects([...projects, newProj]);
@@ -1584,7 +1695,14 @@ const ProjectTrackerComplete = () => {
             )}
 
             {view === 'dashboard' ? (
-                <Dashboard projects={projects} onOpenProject={(id) => { setActiveProjectId(id); setView('invoice'); }} onCreateProject={handleCreateProject} />
+                <Dashboard
+                    projects={projects}
+                    onOpenProject={(id) => { setActiveProjectId(id); setView('invoice'); }}
+                    onCreateProject={handleCreateProject}
+                    onStatusChange={(id, status) => {
+                        setProjects(prev => prev.map(p => p.id === id ? { ...p, status: status, isArchived: status === 'Archived' } : p));
+                    }}
+                />
             ) : activeProject ? (
                 <InvoiceMain
                     details={activeProject} updateDetails={updateDetails}
