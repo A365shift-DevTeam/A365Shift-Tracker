@@ -844,18 +844,17 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject, onStatusChange })
     return (
         <div className="container-fluid px-5 py-4">
             {/* Header */}
-            <div className="d-flex justify-content-between align-items-center mb-5">
+            <div className="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3">
                 <div>
                     <h2 className="fw-bold text-dark mb-1">Project Dashboard</h2>
                     <p className="text-muted m-0">Overview of all financial projects</p>
                 </div>
-                <div className="d-flex gap-2 align-items-center">
-                    {/* Date Filter Dropdown (Button Styled) */}
-                    <div className="btn btn-white border d-flex align-items-center me-2 p-0 px-2" style={{ height: '38px' }}>
-                        <Filter size={16} className="text-secondary me-2" />
+                <div className="d-flex flex-wrap gap-2 align-items-center">
+                    {/* Date Filter Dropdown */}
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#fff', border: '1px solid #dee2e6', borderRadius: '8px', padding: '6px 14px', height: '38px', whiteSpace: 'nowrap' }}>
+                        <Filter size={16} style={{ color: '#6c757d', flexShrink: 0 }} />
                         <select
-                            className="form-select border-0 shadow-none bg-transparent p-0"
-                            style={{ width: 'auto', fontWeight: 500, cursor: 'pointer', outline: 'none' }}
+                            style={{ border: 'none', background: 'transparent', fontWeight: 500, fontSize: '0.9rem', cursor: 'pointer', outline: 'none', appearance: 'auto', color: '#212529', paddingRight: '4px' }}
                             value={filter}
                             onChange={(e) => setFilter(e.target.value)}
                         >
@@ -866,11 +865,10 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject, onStatusChange })
                         </select>
                     </div>
 
-                    {/* Currency Dropdown (Button Styled) */}
-                    <div className="btn btn-white border d-flex align-items-center me-2 p-0 px-2" style={{ height: '38px' }}>
+                    {/* Currency Dropdown */}
+                    <div style={{ display: 'inline-flex', alignItems: 'center', background: '#fff', border: '1px solid #dee2e6', borderRadius: '8px', padding: '6px 14px', height: '38px', whiteSpace: 'nowrap' }}>
                         <select
-                            className="form-select border-0 shadow-none bg-transparent p-0"
-                            style={{ width: 'auto', fontWeight: 600, cursor: 'pointer', outline: 'none', paddingRight: '20px' }}
+                            style={{ border: 'none', background: 'transparent', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', outline: 'none', appearance: 'auto', color: '#212529', paddingRight: '4px' }}
                             value={dashboardCurrency}
                             onChange={(e) => setDashboardCurrency(e.target.value)}
                         >
@@ -880,8 +878,8 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject, onStatusChange })
                         </select>
                     </div>
 
-                    <button className="btn btn-primary" onClick={onCreateProject}><Plus size={18} /> New Project</button>
-                    <button className="btn btn-outline-success" onClick={() => exportDashboardExcel(filteredProjects, filter)}><FileDown size={16} /> Export</button>
+                    <button className="btn btn-primary" onClick={onCreateProject} style={{ whiteSpace: 'nowrap' }}><Plus size={18} /> New Project</button>
+                    <button className="btn btn-outline-success" onClick={() => exportDashboardExcel(filteredProjects, filter)} style={{ whiteSpace: 'nowrap' }}><FileDown size={16} /> Export</button>
                 </div>
             </div>
 
@@ -1794,7 +1792,7 @@ const ProjectTrackerComplete = () => {
         <div className="tracker-wrapper">
             <TrackerStyles />
             {view === 'invoice' && activeProject && (
-                <div className="mb-4 container">
+                <div className="mb-4" style={{ paddingLeft: '0.5rem' }}>
                     <button className="btn btn-outline-dark" onClick={() => { setView('dashboard'); setActiveProjectId(null); }}>
                         <ArrowLeft size={16} /> Back to Dashboard
                     </button>
