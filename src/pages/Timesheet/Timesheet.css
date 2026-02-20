@@ -781,35 +781,46 @@ body.resizing * {
 
 @media (max-width: 768px) {
   .timesheet-container {
-    padding: 16px;
+    padding: 12px;
+    overflow-x: hidden;
   }
 
   .timesheet-container .stats-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    gap: 10px;
   }
 
   .timesheet-content {
-    padding: 16px;
+    padding: 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .timesheet-table {
+    min-width: 600px;
   }
 
   .timesheet-table thead th,
   .timesheet-table tbody td {
-    padding: 12px 8px;
-    font-size: 0.8125rem;
+    padding: 10px 8px;
+    font-size: 0.8rem;
   }
 
   .timesheet-container .stat-value {
-    font-size: 24px;
+    font-size: 22px;
   }
 
   .timesheet-container .stat-icon-wrapper {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
   }
 
   .timesheet-container .view-toggle-group {
     flex-wrap: wrap;
+  }
+
+  .timesheet-container .view-toggle-btn {
+    padding: 6px 10px;
   }
 
   .timesheet-preview-modal .modal-dialog,
@@ -817,10 +828,11 @@ body.resizing * {
   .timesheet-column-manager-modal .modal-dialog,
   .timesheet-column-edit-modal .modal-dialog {
     max-width: 96vw;
+    margin: 8px;
   }
 
   .timesheet-group {
-    padding: 12px;
+    padding: 10px;
   }
 
   .timesheet-group-header {
@@ -828,32 +840,48 @@ body.resizing * {
     gap: 8px;
     align-items: flex-start;
   }
+
+  .timesheet-add-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn-icon-text {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+
+  .timesheet-pagination {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
 }
 
 @media (max-width: 480px) {
   .timesheet-container {
-    padding: 12px;
+    padding: 8px;
   }
 
   .timesheet-container .stats-grid {
     grid-template-columns: 1fr;
+    gap: 8px;
   }
 
   .timesheet-container .stat-card {
-    padding: 12px;
+    padding: 10px;
   }
 
   .timesheet-container .stat-value {
     font-size: 20px;
   }
 
-  .timesheet-content {
-    padding: 12px;
-    border-radius: 12px;
+  .timesheet-container .stat-icon-wrapper {
+    width: 36px;
+    height: 36px;
   }
 
-  .timesheet-add-btn {
-    width: 100%;
-    justify-content: center;
+  .timesheet-content {
+    padding: 10px;
+    border-radius: 12px;
   }
 }

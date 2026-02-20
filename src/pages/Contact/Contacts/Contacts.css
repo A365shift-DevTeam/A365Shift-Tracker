@@ -769,35 +769,36 @@
 }
 
 @media (max-width: 768px) {
+  .contacts-container {
+    padding: 12px;
+    overflow-x: hidden;
+  }
+
   .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
   }
 
   .filter-row {
     grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .contacts-container {
-    padding: 16px;
+    gap: 10px;
   }
 
   .contacts-toolbar-card {
-    padding: 16px;
+    padding: 12px;
   }
 
   .toolbar-header {
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     align-items: stretch;
   }
 
   .contacts-toolbar-wrapper {
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     align-items: stretch;
-    padding: 12px 16px;
+    padding: 10px 12px;
   }
 
   .search-pill-container {
@@ -821,21 +822,30 @@
     flex-shrink: 0;
   }
 
+  .contacts-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .contacts-table {
+    min-width: 600px;
+  }
+
   .contacts-table td,
   .contacts-table th {
-    padding: 12px 12px;
+    padding: 10px 10px;
     font-size: 12px;
   }
 
   .stat-card-new {
-    padding: 16px;
-    gap: 12px;
+    padding: 14px;
+    gap: 10px;
   }
 
   .stat-icon-box {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
   }
 
   .stat-number {
@@ -846,15 +856,26 @@
     height: 300px;
     padding: 16px;
   }
+
+  .add-contact-btn,
+  .ai-assist-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 @media (max-width: 480px) {
   .contacts-container {
-    padding: 12px;
+    padding: 8px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 
   .contacts-toolbar-card {
-    padding: 12px;
+    padding: 10px;
     border-radius: 12px;
   }
 
@@ -867,10 +888,14 @@
     font-size: 11px;
   }
 
-  .add-contact-btn,
-  .ai-assist-btn {
-    width: 100%;
-    justify-content: center;
+  .stat-icon-box {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+  }
+
+  .stat-number {
+    font-size: 18px;
   }
 
   .kanban-column {

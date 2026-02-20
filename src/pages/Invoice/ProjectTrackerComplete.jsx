@@ -1606,7 +1606,7 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
                                                 </select>
                                             </td>
                                             <td className="text-center">
-                                                <button className="btn-icon text-success" onClick={() => generatePaymentInvoicePDF(s, details)} title="Download Voucher">
+                                                <button className="btn-icon text-success" onClick={() => generatePaymentInvoicePDF(s, details, dVal)} title="Download Voucher">
                                                     <FileDown size={18} />
                                                 </button>
                                             </td>

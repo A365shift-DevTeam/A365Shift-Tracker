@@ -612,7 +612,7 @@
 @media (max-width: 1200px) {
   .stats-list-container {
     flex-wrap: wrap;
-    gap: 16px;
+    gap: 12px;
   }
 
   .stat-item {
@@ -627,19 +627,29 @@
 
 @media (max-width: 992px) {
   .finance-split-view .col-lg-6 {
-    margin-bottom: 30px;
+    margin-bottom: 24px;
+  }
+
+  .finance-table {
+    min-width: 500px;
+  }
+
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
 @media (max-width: 768px) {
   .finance-container {
-    padding: 16px;
+    padding: 12px;
+    overflow-x: hidden;
   }
 
   .stats-list-container {
     flex-direction: column;
-    gap: 12px;
-    padding: 12px;
+    gap: 8px;
+    padding: 10px;
   }
 
   .stat-item {
@@ -652,13 +662,13 @@
   }
 
   .finance-board {
-    padding: 16px;
+    padding: 12px;
     min-height: 300px;
   }
 
   .finance-kanban .col-md-3,
   .finance-kanban .col-md-6 {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
   }
 
   .finance-column {
@@ -672,64 +682,82 @@
   .finance-header .d-flex {
     flex-direction: column;
     align-items: flex-start !important;
+    gap: 10px;
   }
 
   .finance-header .d-flex.gap-3 {
     width: 100%;
-    gap: 16px !important;
+    gap: 12px !important;
+  }
+
+  .finance-toolbar .d-flex {
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .finance-period-filters {
     width: 100%;
     flex-wrap: wrap;
-    gap: 8px !important;
+    gap: 6px !important;
   }
 
   .period-filter-btn {
     flex: 1;
     min-width: calc(50% - 4px);
-    padding: 10px 16px;
-    font-size: 0.8125rem;
+    padding: 8px 12px;
+    font-size: 0.8rem;
   }
 
   .summary-card {
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
 
   .finance-title {
     font-size: 1.5rem;
   }
 
+  .finance-table {
+    min-width: 500px;
+  }
+
   .finance-table thead th {
-    padding: 12px 12px;
+    padding: 10px 10px;
     font-size: 10px;
   }
 
   .finance-table tbody td {
-    padding: 12px;
+    padding: 10px;
     font-size: 0.8rem;
   }
 
   .income-amount,
   .expense-amount {
-    font-size: 1.2rem;
+    font-size: 1.15rem;
+  }
+
+  .stat-value {
+    font-size: 1rem;
+  }
+
+  .stat-label {
+    font-size: 0.7rem;
   }
 }
 
 @media (max-width: 576px) {
   .period-filter-btn {
     min-width: 100%;
-    padding: 10px 16px;
+    padding: 8px 14px;
   }
 }
 
 @media (max-width: 480px) {
   .finance-container {
-    padding: 12px;
+    padding: 8px;
   }
 
   .finance-board {
-    padding: 12px;
+    padding: 10px;
     border-radius: 12px;
   }
 
@@ -738,20 +766,25 @@
   }
 
   .stat-icon-wrapper {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 8px;
   }
 
   .stat-value {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
   }
 
   .stat-label {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
   }
 
   .board-title {
+    font-size: 1rem;
+  }
+
+  .income-amount,
+  .expense-amount {
     font-size: 1rem;
   }
 }
