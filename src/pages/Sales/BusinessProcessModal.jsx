@@ -4,6 +4,18 @@ import { Modal, Button, Form, Row, Col } from 'react-bootstrap'
 import { X } from 'lucide-react'
 import './BusinessProcessModal.css'
 
+const CURRENCIES = [
+    { code: 'USD', symbol: '$' },
+    { code: 'EUR', symbol: '€' },
+    { code: 'GBP', symbol: '£' },
+    { code: 'INR', symbol: '₹' },
+    { code: 'AUD', symbol: 'A$' },
+    { code: 'CAD', symbol: 'C$' },
+    { code: 'SGD', symbol: 'S$' },
+    { code: 'JPY', symbol: '¥' },
+    { code: 'CNY', symbol: '¥' }
+]
+
 const BusinessProcessModal = ({
     show,
     handleClose,
@@ -25,6 +37,7 @@ const BusinessProcessModal = ({
         targetDate: '',
         revisedDate: '',
         amount: '',
+        currency: 'USD',
         description: '',
         attachment: ''
     })
@@ -49,6 +62,7 @@ const BusinessProcessModal = ({
             targetDate: '',
             revisedDate: '',
             amount: '',
+            currency: 'USD',
             description: '',
             attachment: ''
         })
@@ -112,12 +126,26 @@ const BusinessProcessModal = ({
 
                             <Form.Group className="mb-3">
                                 <Form.Label>Amount</Form.Label>
-                                <Form.Control
-                                    type="number"
-                                    placeholder="Enter amount"
-                                    value={formData.amount}
-                                    onChange={e => handleFormChange('amount', e.target.value)}
-                                />
+                                <div className="d-flex">
+                                    <Form.Select
+                                        style={{ maxWidth: '120px', borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
+                                        value={formData.currency}
+                                        onChange={e => handleFormChange('currency', e.target.value)}
+                                    >
+                                        {CURRENCIES.map(curr => (
+                                            <option key={curr.code} value={curr.code}>
+                                                {curr.code} ({curr.symbol})
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                    <Form.Control
+                                        type="number"
+                                        placeholder="Enter amount"
+                                        value={formData.amount}
+                                        onChange={e => handleFormChange('amount', e.target.value)}
+                                        style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}
+                                    />
+                                </div>
                             </Form.Group>
 
                             <Form.Group className="mb-3">
@@ -171,7 +199,7 @@ const BusinessProcessModal = ({
                                         </div>
                                         {item.amount && (
                                             <div className="text-success small fw-bold">
-                                                Amount: ${item.amount}
+                                                Amount: {item.currency || 'USD'} {item.amount}
                                             </div>
                                         )}
                                         {item.description && (
