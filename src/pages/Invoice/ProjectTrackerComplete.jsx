@@ -740,26 +740,46 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject, onStatusChange })
 
     // Currency Conversion
     const [dashboardCurrency, setDashboardCurrency] = useState('AED');
-    const RATES_TO_AED = {
+    const [exchangeRates, setExchangeRates] = useState({
         'AED': 1,
-        'USD': 3.6725,
-        'INR': 0.044
-    };
+        'USD': 0.2722, // Fallback
+        'INR': 22.6    // Fallback
+    });
+
+    useEffect(() => {
+        const fetchRates = async () => {
+            try {
+                const response = await fetch('https://api.exchangerate-api.com/v4/latest/AED');
+                if (!response.ok) throw new Error('Failed to fetch rates');
+                const data = await response.json();
+                setExchangeRates(prev => ({ ...prev, ...data.rates }));
+            } catch (error) {
+                console.error('Error fetching exchange rates:', error);
+            }
+        };
+        fetchRates();
+    }, []);
 
     const convertToAED = (amount, currency) => {
-        const rate = RATES_TO_AED[currency] || 1; // Default to 1 if unknown (assume AED)
-        return amount * rate;
+        const rate = exchangeRates[currency];
+        if (!rate) return amount;
+        return amount / rate;
     };
 
     const convertFromAED = (amountInAED, targetCurrency) => {
-        const rate = RATES_TO_AED[targetCurrency] || 1;
-        return amountInAED / rate;
+        const rate = exchangeRates[targetCurrency] || 1;
+        return amountInAED * rate;
     };
 
     const convertCurrency = (amount, fromCurrency, toCurrency) => {
+        if (!amount) return 0;
         if (fromCurrency === toCurrency) return amount;
-        const inAED = convertToAED(amount, fromCurrency);
-        return convertFromAED(inAED, toCurrency);
+
+        // 1. Normalize to Base (AED)
+        const inAED = fromCurrency === 'AED' ? amount : convertToAED(amount, fromCurrency);
+
+        // 2. Convert to Target
+        return toCurrency === 'AED' ? inAED : convertFromAED(inAED, toCurrency);
     };
 
     // Filter Logic
