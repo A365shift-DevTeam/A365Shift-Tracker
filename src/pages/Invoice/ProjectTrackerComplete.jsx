@@ -274,7 +274,7 @@ const generatePaymentInvoicePDF = (stakeholder, details, dealValue) => {
     const doc = new jsPDF();
     const currency = details.currency || 'AED';
     const payAmt = (dealValue * (parseFloat(stakeholder.percentage) || 0)) / 100;
-    const taxRate = parseFloat(stakeholder.payoutTax) || 0;
+    const taxRate = parseFloat(stakeholder.payoutTax) || 18;
     const taxAmt = (payAmt * taxRate) / 100;
     const netPay = payAmt - taxAmt;
 
@@ -315,7 +315,7 @@ const generatePaymentInvoicePDF = (stakeholder, details, dealValue) => {
 
     if (taxRate > 0) {
         finalY += 6;
-        doc.text(`Less Tax (${taxRate}%):`, 140, finalY);
+        doc.text(`Less GST (${taxRate}%):`, 140, finalY);
         doc.text(`- ${currency} ${taxAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
     }
 
@@ -1382,7 +1382,7 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
 
     // Determine Tax Type (Intra vs Inter)
     const isIntraState = taxes && taxes.some(t => t.taxType === 'Intra-State (CGST + SGST)');
-    const totalTaxRate = taxes ? taxes.reduce((sum, t) => sum + (parseFloat(t.percentage) || 0), 0) : 0;
+    const totalTaxRate = taxes && taxes.length > 0 ? taxes.reduce((sum, t) => sum + (parseFloat(t.percentage) || 0), 0) : 18;
 
     return (
         <div className="stage">
@@ -1420,7 +1420,7 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
                                         <th className="text-end">SGST</th>
                                     </>
                                 ) : (
-                                    <th className="text-end">Tax</th>
+                                    <th className="text-end">GST</th>
                                 )}
 
                                 <th className="text-end">Total ({details.currency})</th>
@@ -1449,23 +1449,23 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
                                         <td>
                                             <input type="date" className="stage-input p-1" value={milestone.invoiceDate || ''} onChange={(e) => updateMilestone(milestone.id, 'invoiceDate', e.target.value)} />
                                         </td>
-                                        <td className="font-monospace text-end">{raisedAmount.toLocaleString()}</td>
+                                        <td className="font-monospace text-end">{raisedAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
 
                                         {isIntraState ? (
                                             <>
-                                                <td className="font-monospace text-end text-muted small">{(taxAmount / 2).toLocaleString()}</td>
-                                                <td className="font-monospace text-end text-muted small">{(taxAmount / 2).toLocaleString()}</td>
+                                                <td className="font-monospace text-end text-muted small">{(taxAmount / 2).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                                <td className="font-monospace text-end text-muted small">{(taxAmount / 2).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                                             </>
                                         ) : (
-                                            <td className="font-monospace text-end text-muted small">{taxAmount.toLocaleString()}</td>
+                                            <td className="font-monospace text-end text-muted small">{taxAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                                         )}
 
-                                        <td className="font-monospace text-end fw-bold">{totalAmount.toLocaleString()}</td>
+                                        <td className="font-monospace text-end fw-bold">{totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
 
                                         <td>
                                             <input type="date" className="stage-input p-1" value={milestone.paidDate || ''} onChange={(e) => updateMilestone(milestone.id, 'paidDate', e.target.value)} />
                                         </td>
-                                        <td className="font-monospace text-end text-success">{raisedAmount.toLocaleString()}</td>
+                                        <td className="font-monospace text-end text-success">{raisedAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                                         <td className="text-center font-monospace small">
                                             {calculateAgeing(milestone.invoiceDate, milestone.paidDate)}
                                         </td>
@@ -1562,8 +1562,9 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
                                     <th>Party</th>
                                     <th>Value %</th>
                                     <th>Pay ({details.currency})</th>
-                                    <th>Tax %</th>
-                                    <th>Tax Amt</th>
+                                    <th>GST %</th>
+                                    <th>GST Amt</th>
+                                    <th>Net Pay</th>
                                     <th>Paid Date</th>
                                     <th>Status</th>
                                     <th>Action</th>
@@ -1572,8 +1573,9 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
                             <tbody>
                                 {stakeholders && stakeholders.map((s, idx) => {
                                     const payAmt = (dVal * s.percentage) / 100;
-                                    const taxRate = parseFloat(s.payoutTax) || 0;
+                                    const taxRate = parseFloat(s.payoutTax) || 18;
                                     const taxAmt = (payAmt * taxRate) / 100;
+                                    const netPay = payAmt - taxAmt;
 
                                     return (
                                         <tr key={s.id}>
@@ -1584,9 +1586,10 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
                                             </td>
                                             <td className="font-monospace fw-bold">{details.currency} {payAmt.toLocaleString()}</td>
                                             <td>
-                                                <input type="number" className="stage-input p-1 text-center" style={{ width: '60px' }} value={s.payoutTax || 0} onChange={(e) => updateStakeholder(s.id, 'payoutTax', e.target.value)} />
+                                                <input type="number" className="stage-input p-1 text-center" style={{ width: '60px' }} value={s.payoutTax ?? 18} onChange={(e) => updateStakeholder(s.id, 'payoutTax', e.target.value)} />
                                             </td>
-                                            <td className="font-monospace text-muted">{details.currency} {taxAmt.toLocaleString()}</td>
+                                            <td className="font-monospace text-muted">{details.currency} {taxAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                            <td className="font-monospace fw-bold text-success">{details.currency} {netPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                                             <td>
                                                 <input type="date" className="stage-input p-1" value={s.paidDate || ''} onChange={(e) => updateStakeholder(s.id, 'paidDate', e.target.value)} />
                                             </td>
@@ -1613,7 +1616,7 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
                                         </tr>
                                     );
                                 })}
-                                {(!stakeholders || stakeholders.length === 0) && <tr><td colSpan="9" className="text-center text-muted p-3">No stakeholders added.</td></tr>}
+                                {(!stakeholders || stakeholders.length === 0) && <tr><td colSpan="10" className="text-center text-muted p-3">No stakeholders added.</td></tr>}
                             </tbody>
                         </table>
                     </div>
@@ -1771,7 +1774,7 @@ const ProjectTrackerComplete = () => {
     const updateDetails = (f, v) => updateProject(p => ({ ...p, [f]: v }));
 
     // Stakeholders logic
-    const addStakeholder = () => updateProject(p => ({ ...p, stakeholders: [...p.stakeholders, { id: Date.now(), name: 'New', percentage: 0, payoutTax: 0, payoutStatus: 'Pending', paidDate: '' }] }));
+    const addStakeholder = () => updateProject(p => ({ ...p, stakeholders: [...p.stakeholders, { id: Date.now(), name: 'New', percentage: 0, payoutTax: 18, payoutStatus: 'Pending', paidDate: '' }] }));
     const removeStakeholder = (id) => updateProject(p => ({ ...p, stakeholders: p.stakeholders.filter(s => s.id !== id) }));
     const updateStakeholder = (id, f, v) => updateProject(p => ({ ...p, stakeholders: p.stakeholders.map(s => s.id === id ? { ...s, [f]: v } : s) }));
 
