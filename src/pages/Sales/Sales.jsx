@@ -403,6 +403,7 @@ function Sales() {
             timestamp: new Date().toISOString(),
             transition: transitionStr,
             amount: logData?.amount || 0,
+            currency: logData?.currency || 'USD',
             description: logData?.description || `Moved to ${newStageLabel}`,
             targetDate: logData?.targetDate,
             revisedDate: logData?.revisedDate
