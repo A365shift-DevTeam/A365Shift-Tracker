@@ -342,177 +342,656 @@ const generateInvoicePDF = (milestone, details, taxes) => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
-    const currency = details.currency || 'AED';
+    const currency = details.currency || 'INR';
     const baseAmount = (details.dealValue * (parseFloat(milestone.percentage) || 0)) / 100;
 
     // Tax Calculation
-    const chargesList = Array.isArray(taxes) ? taxes : (taxes.gst ? [{ name: 'GST', percentage: taxes.gst, taxType: 'Standard' }] : []);
+    const chargesList = Array.isArray(taxes) && taxes.length > 0 ? taxes : [{ name: 'GST', percentage: 18, taxType: 'Standard' }];
+    const isIntraState = chargesList.some(t => t.taxType === 'Intra-State (CGST + SGST)');
     const totalTaxRate = chargesList.reduce((sum, c) => sum + (parseFloat(c.percentage) || 0), 0);
     const totalTaxAmount = (baseAmount * totalTaxRate) / 100;
     const finalAmount = baseAmount + totalTaxAmount;
 
-    // Header
-    addPDFHeader(doc, "INVOICE", details);
+    // ═══ HEADER ═══
+    addPDFHeader(doc, "CLIENT INVOICE", details);
 
-    // Recipient & Invoice Info
-    let contentY = 80;
+    let y = 72;
 
-    // Left Side: To
-    doc.setFontSize(10); doc.setTextColor(60); doc.setFont(undefined, 'normal');
-    doc.text("To", 14, contentY);
+    // ═══ COMPANY INFO ═══
+    doc.setFontSize(9); doc.setTextColor(0); doc.setFont(undefined, 'bold');
+    doc.text("AMBOT365 RPA & IT SOLUTIONS (OPC) PVT.LTD", 14, y);
+    doc.setFont(undefined, 'normal'); doc.setFontSize(8); doc.setTextColor(60);
+    doc.text("BLOCK A, DOOR NO 105, MOTHERS VILLAGE, NESAVALAR COLONY ROAD, ONDIPUDUR, Coimbatore-641016, Tamil Nadu", 14, y + 4);
+    doc.text("GSTIN: 33AAYCA8731D1ZH  |  CIN: U72900TZ2021OPC038831", 14, y + 8);
 
-    doc.setFontSize(11); doc.setTextColor(0); doc.setFont(undefined, 'bold');
-    doc.text(details.clientName || "Client Name", 14, contentY + 6);
-    doc.setFontSize(10); doc.setFont(undefined, 'normal');
-    doc.text(`Project ID: ${details.projectId}`, 14, contentY + 11);
-    if (details.location) doc.text(details.location, 14, contentY + 16);
+    y += 14;
+    doc.setDrawColor(200); doc.setLineWidth(0.3);
+    doc.line(14, y, pageWidth - 14, y);
+    y += 5;
 
-    // Right Side: Invoice Details
+    // ═══ BILL TO & INVOICE INFO ═══
+    doc.setFontSize(9); doc.setTextColor(0); doc.setFont(undefined, 'bold');
+    doc.text("BILL TO:", 14, y);
+    doc.setFont(undefined, 'normal');
+    doc.text(details.clientName || "Client Name", 14, y + 5);
+    if (details.clientAddress) doc.text(details.clientAddress, 14, y + 9);
+    if (details.clientGstin) {
+        doc.setFont(undefined, 'bold');
+        doc.text(`GSTIN: ${details.clientGstin}`, 14, y + (details.clientAddress ? 13 : 9));
+        doc.setFont(undefined, 'normal');
+    }
+
+    const placeY = y + (details.clientAddress ? 17 : 13);
     doc.setFont(undefined, 'bold');
-    doc.text("Invoice NO.", pageWidth - 60, contentY);
-    doc.text("Invoice Date", pageWidth - 60, contentY + 5);
-
+    doc.text("Place of Supply:", 14, placeY);
     doc.setFont(undefined, 'normal');
-    doc.text(`: INV-${milestone.id}`, pageWidth - 30, contentY);
-    doc.text(`: ${new Date().toLocaleDateString()}`, pageWidth - 30, contentY + 5);
+    doc.text(details.location || 'Tamil Nadu', 50, placeY);
 
-    // Table
-    const tableBody = [
-        [
-            1,
-            milestone.name,
-            "-",
-            "-",
-            `${currency} ${baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
-            "0",
-            `${currency} ${baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
-        ]
-    ];
+    // Right Side
+    doc.setFont(undefined, 'bold');
+    doc.text("Invoice No:", 130, y);
+    doc.text("Invoice Date:", 130, y + 6);
+    doc.setFont(undefined, 'normal');
+    doc.text(`INV-${milestone.id}-${Date.now().toString().slice(-4)}`, 160, y);
+    doc.text(milestone.invoiceDate ? new Date(milestone.invoiceDate).toLocaleDateString() : new Date().toLocaleDateString(), 160, y + 6);
 
+    y = placeY + 5;
+    doc.setDrawColor(200); doc.line(14, y, pageWidth - 14, y);
+    y += 3;
+
+    // ═══ ITEMS TABLE ═══
     autoTable(doc, {
-        startY: contentY + 25,
-        head: [['#', 'Item & Description', 'Qty Users', 'Validity', 'Actual Cost', 'Discount', 'Net Amount']],
-        body: tableBody,
+        startY: y,
+        head: [['Sno', 'Item & Description', 'HSN/SAC', 'Qty', `Rate (${currency})`, `Amount (${currency})`]],
+        body: [[
+            1,
+            milestone.name || 'IT Consulting & Support Services',
+            '998313',
+            '1',
+            baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }),
+            baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })
+        ]],
         theme: 'grid',
-        headStyles: {
-            fillColor: [91, 190, 184], // Teal color matching template
-            textColor: 255,
-            halign: 'center',
-            fontStyle: 'bold'
-        },
-        styles: {
-            halign: 'center',
-            cellPadding: 3,
-            lineColor: [220, 220, 220],
-            lineWidth: 0.1
-        },
+        headStyles: { fillColor: [91, 190, 184], textColor: 255, fontStyle: 'bold', fontSize: 8, halign: 'center' },
+        styles: { halign: 'center', cellPadding: 3, fontSize: 8, lineColor: [200, 200, 200], lineWidth: 0.2 },
         columnStyles: {
-            1: { halign: 'left', width: 60 },
-            6: { halign: 'right' }
+            0: { halign: 'center', cellWidth: 12 },
+            1: { halign: 'left', cellWidth: 65 },
+            2: { halign: 'center', cellWidth: 22 },
+            3: { halign: 'center', cellWidth: 15 },
+            4: { halign: 'right', cellWidth: 35 },
+            5: { halign: 'right', cellWidth: 35 }
         }
     });
 
-    let finalY = doc.lastAutoTable.finalY + 10;
+    let finalY = doc.lastAutoTable.finalY + 5;
+    const fmt = (n) => n.toLocaleString(undefined, { minimumFractionDigits: 2 });
 
-    // Total Invoiced Value (Left Side)
-    doc.setFontSize(10); doc.setTextColor(0); doc.setFont(undefined, 'normal');
-    doc.text("Total Invoiced Value in INR Amount:", 20, finalY + 10);
-    // (Optional: Convert to words if library available, else static/placeholder)
-
-    // Footer Dividers (Green line above totals?)
-    doc.setDrawColor(140, 198, 63); doc.setLineWidth(0.5);
-    doc.line(14, finalY + 20, pageWidth - 14, finalY + 20);
-
-    // Right Side Totals
-    let rightX = pageWidth - 70;
+    // ═══ TOTALS ═══
+    let rightX = pageWidth - 75;
+    doc.setFontSize(9); doc.setTextColor(0);
     doc.setFont(undefined, 'normal');
-    doc.text("Net Amount", rightX, finalY);
-    doc.text(`${currency} ${baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, pageWidth - 14, finalY, { align: 'right' });
+    doc.text("SubTotal:", rightX, finalY);
+    doc.text(`${currency} ${fmt(baseAmount)}`, pageWidth - 14, finalY, { align: 'right' });
 
-    chargesList.forEach(charge => {
+    if (isIntraState) {
+        const halfRate = totalTaxRate / 2;
+        const halfTax = totalTaxAmount / 2;
         finalY += 6;
-        let rate = parseFloat(charge.percentage) || 0;
-        let amount = (baseAmount * rate) / 100;
-        let label = charge.name || charge.taxType || 'GST';
+        doc.text(`CGST @ ${halfRate}%:`, rightX, finalY);
+        doc.text(`${currency} ${fmt(halfTax)}`, pageWidth - 14, finalY, { align: 'right' });
+        finalY += 6;
+        doc.text(`SGST @ ${halfRate}%:`, rightX, finalY);
+        doc.text(`${currency} ${fmt(halfTax)}`, pageWidth - 14, finalY, { align: 'right' });
+    } else {
+        finalY += 6;
+        doc.text(`IGST @ ${totalTaxRate}%:`, rightX, finalY);
+        doc.text(`${currency} ${fmt(totalTaxAmount)}`, pageWidth - 14, finalY, { align: 'right' });
+    }
 
-        // Check if Intra-State to split
-        if (charge.taxType === 'Intra-State (CGST + SGST)' || label.includes('Intra')) {
-            let halfRate = rate / 2;
-            let halfAmount = amount / 2;
-
-            // CGST
-            doc.text(`CGST @ ${halfRate}%`, rightX, finalY);
-            doc.text(`${currency} ${halfAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, pageWidth - 14, finalY, { align: 'right' });
-
-            finalY += 6; // Move down for SGST
-
-            // SGST
-            doc.text(`SGST @ ${halfRate}%`, rightX, finalY);
-            doc.text(`${currency} ${halfAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, pageWidth - 14, finalY, { align: 'right' });
-        } else {
-            // Standard display for IGST or others
-            doc.text(`${label} @ ${rate}%`, rightX, finalY);
-            doc.text(`${currency} ${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, pageWidth - 14, finalY, { align: 'right' });
-        }
-    });
-
-    finalY += 10;
+    finalY += 4;
+    doc.setDrawColor(91, 190, 184); doc.setLineWidth(0.5);
+    doc.line(rightX - 2, finalY, pageWidth - 14, finalY);
+    finalY += 7;
 
     // Grand Total Box
-    doc.setFillColor(240, 240, 240); // Light gray box shadow/bg
-    doc.setDrawColor(200, 200, 200);
-    // Aligned to right margin (pageWidth - 14)
-    doc.rect(pageWidth - 84, finalY - 6, 70, 12, 'F');
+    doc.setFillColor(91, 190, 184);
+    doc.rect(rightX - 4, finalY - 5, pageWidth - rightX + 4 - 10, 11, 'F');
+    doc.setTextColor(255); doc.setFont(undefined, 'bold'); doc.setFontSize(10);
+    doc.text("TOTAL:", rightX, finalY + 2);
+    doc.text(`${currency} ${fmt(finalAmount)}`, pageWidth - 14, finalY + 2, { align: 'right' });
 
-    doc.setFont(undefined, 'bold'); doc.setTextColor(0, 50, 100);
-    doc.text("Grand Total", pageWidth - 80, finalY + 2); // Also align text
-    doc.text(`${currency} ${finalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, pageWidth - 14, finalY + 2, { align: 'right' });
+    // Total in Words
+    finalY += 12;
+    doc.setTextColor(0); doc.setFontSize(8); doc.setFont(undefined, 'bold');
+    doc.text("Total in Words:", 14, finalY);
+    doc.setFont(undefined, 'normal');
+    const currLabel = currency === 'INR' ? 'Rupees' : currency === 'AED' ? 'Dirhams' : currency === 'USD' ? 'Dollars' : currency;
+    doc.text(`${currLabel} ${numberToWords(finalAmount)}`, 14, finalY + 5);
 
+    // ═══ COMPANY DETAILS FOOTER ═══
+    finalY += 15;
+    doc.setDrawColor(0, 84, 166); doc.setLineWidth(0.5);
+    doc.line(14, finalY, pageWidth - 14, finalY);
 
-    // Footer Section (Bottom Page)
+    finalY += 6;
+    doc.setFontSize(8); doc.setTextColor(0); doc.setFont(undefined, 'bold');
+    doc.text("Ambot PAN:", 14, finalY);
+    doc.setFont(undefined, 'normal');
+    doc.text("AAYCA8731D", 42, finalY);
+
+    finalY += 5;
+    doc.setFont(undefined, 'bold');
+    doc.text("CIN:", 14, finalY);
+    doc.setFont(undefined, 'normal');
+    doc.text("U72900TZ2021OPC038831", 27, finalY);
+
     // Bank Details
-    let footerY = pageHeight - 65;
+    finalY += 7;
+    doc.setFont(undefined, 'bold'); doc.setFontSize(9);
+    doc.text("Bank Details:", 14, finalY);
+    doc.setFont(undefined, 'normal'); doc.setFontSize(8);
+    finalY += 5;
+    doc.text("Bank Name: HDFC BANK LTD", 14, finalY);
+    doc.text("IFSC Code: HDFC0000031", 120, finalY);
+    finalY += 4;
+    doc.text("Account Name: AMBOT365 RPA AND IT SOLUTIONS OPC P LTD", 14, finalY);
+    doc.text("Branch code: 000031", 120, finalY);
+    finalY += 4;
+    doc.text("Account Number: 50200084112410", 14, finalY);
+    doc.text("MICR: 641240002", 120, finalY);
 
-    doc.setDrawColor(0, 84, 166); // Blue Line Divider
-    doc.setLineWidth(0.5);
-    doc.line(14, footerY - 5, pageWidth - 14, footerY - 5);
+    // Authorized Signatory
+    doc.setFont(undefined, 'normal'); doc.setFontSize(8);
+    doc.text("For AMBOT365 RPA & IT SOLUTIONS", pageWidth - 14, finalY - 8, { align: 'right' });
+    doc.text("(Authorized Signatory)", pageWidth - 14, finalY + 2, { align: 'right' });
 
-    doc.setFontSize(10); doc.setTextColor(0); doc.setFont(undefined, 'bold');
-    doc.text("Ambot365 PAN Number: AAYCA8731D", 14, footerY + 5);
+    // ═══ NOTE & HSN/SAC ═══
+    finalY += 10;
+    doc.setDrawColor(200); doc.setLineWidth(0.3);
+    doc.line(14, finalY, pageWidth - 14, finalY);
+    finalY += 5;
+    doc.setFont(undefined, 'bold'); doc.setFontSize(8); doc.setTextColor(0);
+    doc.text("NOTE:", 14, finalY);
+    finalY += 5;
+    doc.text("HSN/SAC:", 14, finalY);
+    finalY += 5;
+    doc.setFillColor(91, 190, 184);
+    doc.rect(14, finalY - 3, pageWidth - 28, 7, 'F');
+    doc.setTextColor(255); doc.setFont(undefined, 'bold');
+    doc.text("998313  Information technology consulting and support services", pageWidth / 2, finalY + 1, { align: 'center' });
 
-    // Bank Columns
-    doc.setFont(undefined, 'normal'); doc.setFontSize(9);
-    let bankY = footerY + 15;
-
-    // Col 1
-    doc.text("Bank Name: HDFC BANK LTD", 14, bankY);
-    doc.text("Account Name: AMBOT365 RPA AND IT SOLUTIONS OPC P LTD", 14, bankY + 6);
-    doc.text("Account Number: 50200084112410", 14, bankY + 12);
-
-    // Col 2
-    let col2X = 140;
-    doc.text("IFSC Code: HDFC0000031", col2X, bankY);
-    doc.text("Branch code: 000031", col2X, bankY + 6);
-    doc.text("MICR: 641240002", col2X, bankY + 12);
-
-
-    // Bottom Center Footer
-    let bottomY = pageHeight - 10; // Adjusted slightly down
-
-    // Decorative Lines above address
-    doc.setDrawColor(0, 84, 166); // Blue
-    doc.setLineWidth(0.5);
+    // ═══ BOTTOM FOOTER ═══
+    let bottomY = pageHeight - 10;
+    doc.setDrawColor(0, 84, 166); doc.setLineWidth(0.5);
     doc.line(14, bottomY - 6, pageWidth - 14, bottomY - 6);
-
-    doc.setDrawColor(140, 198, 63); // Green
-    doc.setLineWidth(0.5);
+    doc.setDrawColor(140, 198, 63); doc.setLineWidth(0.5);
     doc.line(14, bottomY - 5, pageWidth - 14, bottomY - 5);
-
-    doc.setFontSize(8); doc.setTextColor(80);
+    doc.setFontSize(7); doc.setTextColor(80); doc.setFont(undefined, 'normal');
     doc.text("AMBOT365 RPA & IT SOLUTIONS (OPC) PVT.LTD", pageWidth / 2, bottomY, { align: 'center' });
     doc.text("BLOCK A , DOOR NO 105, MOTHERS VILLAGE , NESAVALAR COLONY ROAD, ONDIPUDUR , COIMBATORE 641016,TAMILNADU", pageWidth / 2, bottomY + 4, { align: 'center' });
 
     doc.save(`Invoice_${milestone.id}_${(milestone.name || 'milestone').replace(/[^a-z0-9]/gi, '_')}.pdf`);
+};
+
+// ── Invoice Format 2: Payment to Investor ──
+const generateInvestorPaymentPDF = (milestone, details, taxes) => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+    const currency = details.currency || 'INR';
+    const baseAmount = (details.dealValue * (parseFloat(milestone.percentage) || 0)) / 100;
+
+    // TDS Calculation (Section 194J — Professional/Technical Services @ 10%)
+    const tdsRate = 10;
+    const tdsAmount = (baseAmount * tdsRate) / 100;
+    const netPay = baseAmount - tdsAmount;
+
+    // ═══ HEADER ═══
+    addPDFHeader(doc, "PAYMENT TO INVESTOR", details);
+
+    let y = 72;
+
+    // ═══ COMPANY INFO ═══
+    doc.setFontSize(9); doc.setTextColor(0); doc.setFont(undefined, 'bold');
+    doc.text("AMBOT365 RPA & IT SOLUTIONS (OPC) PVT.LTD", 14, y);
+    doc.setFont(undefined, 'normal'); doc.setFontSize(8); doc.setTextColor(60);
+    doc.text("BLOCK A, DOOR NO 105, MOTHERS VILLAGE, NESAVALAR COLONY ROAD, ONDIPUDUR, Coimbatore-641016, Tamil Nadu", 14, y + 4);
+    doc.text("GSTIN: 33AAYCA8731D1ZH  |  CIN: U72900TZ2021OPC038831", 14, y + 8);
+
+    y += 14;
+    doc.setDrawColor(200); doc.setLineWidth(0.3);
+    doc.line(14, y, pageWidth - 14, y);
+    y += 5;
+
+    // ═══ PAY TO & VOUCHER INFO ═══
+    doc.setFontSize(9); doc.setTextColor(0); doc.setFont(undefined, 'bold');
+    doc.text("PAY TO:", 14, y);
+    doc.setFont(undefined, 'normal');
+    doc.text(details.clientName || "Investor / Lead", 14, y + 5);
+    if (details.clientAddress) doc.text(details.clientAddress, 14, y + 9);
+    if (details.clientGstin) {
+        doc.setFont(undefined, 'bold');
+        doc.text(`PAN/GSTIN: ${details.clientGstin}`, 14, y + (details.clientAddress ? 13 : 9));
+        doc.setFont(undefined, 'normal');
+    }
+
+    const placeY = y + (details.clientAddress ? 17 : 13);
+    doc.setFont(undefined, 'bold');
+    doc.text("Place of Supply:", 14, placeY);
+    doc.setFont(undefined, 'normal');
+    doc.text(details.location || 'Tamil Nadu', 50, placeY);
+
+    // Right Side: Voucher Info
+    doc.setFont(undefined, 'bold');
+    doc.text("Voucher No:", 130, y);
+    doc.text("Date:", 130, y + 6);
+    doc.text("Payment For:", 130, y + 12);
+    doc.setFont(undefined, 'normal');
+    doc.text(`PV-${milestone.id}-${Date.now().toString().slice(-4)}`, 160, y);
+    doc.text(milestone.invoiceDate ? new Date(milestone.invoiceDate).toLocaleDateString() : new Date().toLocaleDateString(), 160, y + 6);
+    doc.text(milestone.name || 'Milestone', 160, y + 12);
+
+    y = placeY + 5;
+    doc.setDrawColor(200); doc.line(14, y, pageWidth - 14, y);
+    y += 3;
+
+    // ═══ ITEMS TABLE ═══
+    autoTable(doc, {
+        startY: y,
+        head: [['Sno', 'Description', 'Share %', `Gross Amt (${currency})`, `TDS @ ${tdsRate}%`, `Net Pay (${currency})`]],
+        body: [[
+            1,
+            `${milestone.name || 'Investor Payout'} — Revenue Share Disbursement`,
+            `${milestone.percentage}%`,
+            baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }),
+            tdsAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }),
+            netPay.toLocaleString(undefined, { minimumFractionDigits: 2 })
+        ]],
+        theme: 'grid',
+        headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold', fontSize: 8, halign: 'center' },
+        styles: { halign: 'center', cellPadding: 3, fontSize: 8, lineColor: [200, 200, 200], lineWidth: 0.2 },
+        columnStyles: {
+            0: { halign: 'center', cellWidth: 12 },
+            1: { halign: 'left', cellWidth: 65 },
+            2: { halign: 'center', cellWidth: 18 },
+            3: { halign: 'right', cellWidth: 30 },
+            4: { halign: 'right', cellWidth: 28 },
+            5: { halign: 'right', cellWidth: 30 }
+        }
+    });
+
+    let finalY = doc.lastAutoTable.finalY + 5;
+    const fmt = (n) => n.toLocaleString(undefined, { minimumFractionDigits: 2 });
+
+    // ═══ TOTALS ═══
+    let rightX = pageWidth - 75;
+    doc.setFontSize(9); doc.setTextColor(0);
+    doc.setFont(undefined, 'normal');
+    doc.text("Gross Payout:", rightX, finalY);
+    doc.text(`${currency} ${fmt(baseAmount)}`, pageWidth - 14, finalY, { align: 'right' });
+
+    finalY += 6;
+    doc.text(`Less: TDS u/s 194J @ ${tdsRate}%:`, rightX, finalY);
+    doc.text(`- ${currency} ${fmt(tdsAmount)}`, pageWidth - 14, finalY, { align: 'right' });
+
+    finalY += 4;
+    doc.setDrawColor(41, 128, 185); doc.setLineWidth(0.5);
+    doc.line(rightX - 2, finalY, pageWidth - 14, finalY);
+    finalY += 7;
+
+    // Net Pay Box (Green)
+    doc.setFillColor(39, 174, 96);
+    doc.rect(rightX - 4, finalY - 5, pageWidth - rightX + 4 - 10, 11, 'F');
+    doc.setTextColor(255); doc.setFont(undefined, 'bold'); doc.setFontSize(10);
+    doc.text("NET PAY:", rightX, finalY + 2);
+    doc.text(`${currency} ${fmt(netPay)}`, pageWidth - 14, finalY + 2, { align: 'right' });
+
+    // Total in Words
+    finalY += 12;
+    doc.setTextColor(0); doc.setFontSize(8); doc.setFont(undefined, 'bold');
+    doc.text("Net Pay in Words:", 14, finalY);
+    doc.setFont(undefined, 'normal');
+    const currLabel = currency === 'INR' ? 'Rupees' : currency === 'AED' ? 'Dirhams' : currency === 'USD' ? 'Dollars' : currency;
+    doc.text(`${currLabel} ${numberToWords(netPay)}`, 14, finalY + 5);
+
+    // ═══ COMPANY DETAILS FOOTER ═══
+    finalY += 15;
+    doc.setDrawColor(0, 84, 166); doc.setLineWidth(0.5);
+    doc.line(14, finalY, pageWidth - 14, finalY);
+
+    finalY += 6;
+    doc.setFontSize(8); doc.setTextColor(0); doc.setFont(undefined, 'bold');
+    doc.text("Ambot PAN:", 14, finalY);
+    doc.setFont(undefined, 'normal');
+    doc.text("AAYCA8731D", 42, finalY);
+
+    finalY += 5;
+    doc.setFont(undefined, 'bold');
+    doc.text("CIN:", 14, finalY);
+    doc.setFont(undefined, 'normal');
+    doc.text("U72900TZ2021OPC038831", 27, finalY);
+
+    // Bank Details
+    finalY += 7;
+    doc.setFont(undefined, 'bold'); doc.setFontSize(9);
+    doc.text("Bank Details:", 14, finalY);
+    doc.setFont(undefined, 'normal'); doc.setFontSize(8);
+    finalY += 5;
+    doc.text("Bank Name: HDFC BANK LTD", 14, finalY);
+    doc.text("IFSC Code: HDFC0000031", 120, finalY);
+    finalY += 4;
+    doc.text("Account Name: AMBOT365 RPA AND IT SOLUTIONS OPC P LTD", 14, finalY);
+    doc.text("Branch code: 000031", 120, finalY);
+    finalY += 4;
+    doc.text("Account Number: 50200084112410", 14, finalY);
+    doc.text("MICR: 641240002", 120, finalY);
+
+    // Authorized Signatory
+    doc.setFont(undefined, 'normal'); doc.setFontSize(8);
+    doc.text("For AMBOT365 RPA & IT SOLUTIONS", pageWidth - 14, finalY - 8, { align: 'right' });
+    doc.text("(Authorized Signatory)", pageWidth - 14, finalY + 2, { align: 'right' });
+
+    // ═══ NOTE ═══
+    finalY += 10;
+    doc.setDrawColor(200); doc.setLineWidth(0.3);
+    doc.line(14, finalY, pageWidth - 14, finalY);
+    finalY += 5;
+    doc.setFont(undefined, 'bold'); doc.setFontSize(8); doc.setTextColor(0);
+    doc.text("NOTE:", 14, finalY);
+    doc.setFont(undefined, 'normal');
+    finalY += 5;
+    doc.text("TDS deducted under Section 194J of the Income Tax Act, 1961.", 14, finalY);
+    finalY += 5;
+    doc.text("This is a revenue share disbursement, not a supply of goods/services. GST is not applicable.", 14, finalY);
+
+    // ═══ BOTTOM FOOTER ═══
+    let bottomY = pageHeight - 10;
+    doc.setDrawColor(0, 84, 166); doc.setLineWidth(0.5);
+    doc.line(14, bottomY - 6, pageWidth - 14, bottomY - 6);
+    doc.setDrawColor(140, 198, 63); doc.setLineWidth(0.5);
+    doc.line(14, bottomY - 5, pageWidth - 14, bottomY - 5);
+    doc.setFontSize(7); doc.setTextColor(80); doc.setFont(undefined, 'normal');
+    doc.text("AMBOT365 RPA & IT SOLUTIONS (OPC) PVT.LTD", pageWidth / 2, bottomY, { align: 'center' });
+    doc.text("BLOCK A , DOOR NO 105, MOTHERS VILLAGE , NESAVALAR COLONY ROAD, ONDIPUDUR , COIMBATORE 641016,TAMILNADU", pageWidth / 2, bottomY + 4, { align: 'center' });
+
+    doc.save(`Investor_Payment_${milestone.id}_${(milestone.name || 'milestone').replace(/[^a-z0-9]/gi, '_')}.pdf`);
+};
+
+// ── Number to Words Helper ──
+const numberToWords = (num) => {
+    if (num === 0) return 'Zero';
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
+        'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+    const convertLessThanThousand = (n) => {
+        if (n === 0) return '';
+        if (n < 20) return ones[n];
+        if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+        return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' and ' + convertLessThanThousand(n % 100) : '');
+    };
+
+    const absNum = Math.abs(Math.round(num * 100) / 100);
+    const intPart = Math.floor(absNum);
+    const decPart = Math.round((absNum - intPart) * 100);
+
+    // Indian numbering: Crore, Lakh, Thousand, Hundred
+    let result = '';
+    if (intPart >= 10000000) {
+        result += convertLessThanThousand(Math.floor(intPart / 10000000)) + ' Crore ';
+        const rem = intPart % 10000000;
+        if (rem >= 100000) result += convertLessThanThousand(Math.floor(rem / 100000)) + ' Lakh ';
+        const rem2 = rem % 100000;
+        if (rem2 >= 1000) result += convertLessThanThousand(Math.floor(rem2 / 1000)) + ' Thousand ';
+        const rem3 = rem2 % 1000;
+        if (rem3 > 0) result += convertLessThanThousand(rem3);
+    } else if (intPart >= 100000) {
+        result += convertLessThanThousand(Math.floor(intPart / 100000)) + ' Lakh ';
+        const rem = intPart % 100000;
+        if (rem >= 1000) result += convertLessThanThousand(Math.floor(rem / 1000)) + ' Thousand ';
+        const rem2 = rem % 1000;
+        if (rem2 > 0) result += convertLessThanThousand(rem2);
+    } else if (intPart >= 1000) {
+        result += convertLessThanThousand(Math.floor(intPart / 1000)) + ' Thousand ';
+        const rem = intPart % 1000;
+        if (rem > 0) result += convertLessThanThousand(rem);
+    } else {
+        result = convertLessThanThousand(intPart);
+    }
+
+    result = result.trim();
+    if (decPart > 0) {
+        result += ' and ' + convertLessThanThousand(decPart) + ' Paise';
+    }
+    return result + ' Only';
+};
+
+// ── Invoice Format 3: Tax Invoice (with all mandatory fields) ──
+const generateTaxInvoicePDF = (milestone, details, taxes) => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+    const currency = details.currency || 'INR';
+    const baseAmount = (details.dealValue * (parseFloat(milestone.percentage) || 0)) / 100;
+
+    const chargesList = Array.isArray(taxes) && taxes.length > 0 ? taxes : [{ name: 'GST', percentage: 18, taxType: 'Standard' }];
+    const isIntraState = chargesList.some(t => t.taxType === 'Intra-State (CGST + SGST)');
+    const totalTaxRate = chargesList.reduce((sum, c) => sum + (parseFloat(c.percentage) || 0), 0);
+    const totalTaxAmount = (baseAmount * totalTaxRate) / 100;
+    const finalAmount = baseAmount + totalTaxAmount;
+
+    // ═══ HEADER: Company Details ═══
+    addPDFHeader(doc, "TAX INVOICE", details);
+
+    let y = 72;
+
+    // ═══ COMPANY INFO (Top Left) ═══
+    doc.setFontSize(9); doc.setTextColor(0); doc.setFont(undefined, 'bold');
+    doc.text("AMBOT365 RPA & IT SOLUTIONS (OPC) PVT.LTD", 14, y);
+    doc.setFont(undefined, 'normal'); doc.setFontSize(8); doc.setTextColor(60);
+    doc.text("BLOCK A, DOOR NO 105, MOTHERS VILLAGE,", 14, y + 4);
+    doc.text("NESAVALAR COLONY ROAD, ONDIPUDUR, Coimbatore-641016, Tamil Nadu", 14, y + 8);
+    doc.text("GSTIN: 33AAYCA8731D1ZH", 14, y + 12);
+    doc.text("CIN: U72900TZ2021OPC038831", 14, y + 16);
+
+    y += 22;
+
+    // ═══ BILL TO (Left) & INVOICE INFO (Right) ═══
+    doc.setDrawColor(200); doc.setLineWidth(0.3);
+    doc.line(14, y, pageWidth - 14, y);
+    y += 5;
+
+    // Bill To
+    doc.setFontSize(9); doc.setTextColor(0); doc.setFont(undefined, 'bold');
+    doc.text("BILL TO:", 14, y);
+    doc.setFont(undefined, 'normal'); doc.setFontSize(9);
+    doc.text(details.clientName || "Client Name", 14, y + 5);
+    if (details.clientAddress) doc.text(details.clientAddress, 14, y + 9);
+    if (details.clientGstin) {
+        doc.setFont(undefined, 'bold');
+        doc.text(`GSTIN: ${details.clientGstin}`, 14, y + (details.clientAddress ? 13 : 9));
+        doc.setFont(undefined, 'normal');
+    }
+
+    // Place of Supply
+    const placeY = y + (details.clientAddress ? 17 : 13);
+    doc.setFont(undefined, 'bold');
+    doc.text("Place of Supply:", 14, placeY);
+    doc.setFont(undefined, 'normal');
+    doc.text(details.location || 'Tamil Nadu', 50, placeY);
+
+    // Right Side: Invoice Details
+    doc.setFont(undefined, 'bold');
+    doc.text("Invoice No:", 130, y);
+    doc.text("Invoice Date:", 130, y + 6);
+    doc.setFont(undefined, 'normal');
+    doc.text(`TAX-INV-${milestone.id}-${Date.now().toString().slice(-4)}`, 160, y);
+    doc.text(milestone.invoiceDate ? new Date(milestone.invoiceDate).toLocaleDateString() : new Date().toLocaleDateString(), 160, y + 6);
+
+    y = placeY + 5;
+    doc.setDrawColor(200); doc.line(14, y, pageWidth - 14, y);
+    y += 3;
+
+    // ═══ ITEMS TABLE (Sno, Item & Description, HSN/SAC, Qty, Rate, Amount) ═══
+    autoTable(doc, {
+        startY: y,
+        head: [['Sno', 'Item & Description', 'HSN/SAC', 'Qty', `Rate (${currency})`, `Amount (${currency})`]],
+        body: [[
+            1,
+            milestone.name || 'IT Consulting & Support Services',
+            '998313',
+            '1',
+            baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }),
+            baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })
+        ]],
+        theme: 'grid',
+        headStyles: {
+            fillColor: [0, 84, 166],
+            textColor: 255,
+            fontStyle: 'bold',
+            fontSize: 8,
+            halign: 'center'
+        },
+        styles: {
+            halign: 'center',
+            cellPadding: 3,
+            fontSize: 8,
+            lineColor: [200, 200, 200],
+            lineWidth: 0.2
+        },
+        columnStyles: {
+            0: { halign: 'center', cellWidth: 12 },
+            1: { halign: 'left', cellWidth: 65 },
+            2: { halign: 'center', cellWidth: 22 },
+            3: { halign: 'center', cellWidth: 15 },
+            4: { halign: 'right', cellWidth: 35 },
+            5: { halign: 'right', cellWidth: 35 }
+        }
+    });
+
+    let finalY = doc.lastAutoTable.finalY + 5;
+
+    // ═══ TOTALS SECTION (Right Side) ═══
+    let rightX = pageWidth - 75;
+    const fmt = (n) => n.toLocaleString(undefined, { minimumFractionDigits: 2 });
+
+    doc.setFontSize(9); doc.setTextColor(0);
+
+    // SubTotal
+    doc.setFont(undefined, 'normal');
+    doc.text("SubTotal:", rightX, finalY);
+    doc.text(`${currency} ${fmt(baseAmount)}`, pageWidth - 14, finalY, { align: 'right' });
+
+    // Tax breakdown
+    if (isIntraState) {
+        const halfRate = totalTaxRate / 2;
+        const halfTax = totalTaxAmount / 2;
+
+        finalY += 6;
+        doc.text(`CGST @ ${halfRate}%:`, rightX, finalY);
+        doc.text(`${currency} ${fmt(halfTax)}`, pageWidth - 14, finalY, { align: 'right' });
+
+        finalY += 6;
+        doc.text(`SGST @ ${halfRate}%:`, rightX, finalY);
+        doc.text(`${currency} ${fmt(halfTax)}`, pageWidth - 14, finalY, { align: 'right' });
+    } else {
+        finalY += 6;
+        doc.text(`IGST @ ${totalTaxRate}%:`, rightX, finalY);
+        doc.text(`${currency} ${fmt(totalTaxAmount)}`, pageWidth - 14, finalY, { align: 'right' });
+    }
+
+    // Divider
+    finalY += 4;
+    doc.setDrawColor(0, 84, 166); doc.setLineWidth(0.5);
+    doc.line(rightX - 2, finalY, pageWidth - 14, finalY);
+    finalY += 7;
+
+    // TOTAL RS (Grand Total Box)
+    doc.setFillColor(0, 84, 166);
+    doc.rect(rightX - 4, finalY - 5, pageWidth - rightX + 4 - 10, 11, 'F');
+    doc.setTextColor(255); doc.setFont(undefined, 'bold'); doc.setFontSize(10);
+    doc.text("TOTAL:", rightX, finalY + 2);
+    doc.text(`${currency} ${fmt(finalAmount)}`, pageWidth - 14, finalY + 2, { align: 'right' });
+
+    // TOTAL IN WORDS
+    finalY += 12;
+    doc.setTextColor(0); doc.setFontSize(8); doc.setFont(undefined, 'bold');
+    doc.text("Total in Words:", 14, finalY);
+    doc.setFont(undefined, 'normal');
+    const currLabel = currency === 'INR' ? 'Rupees' : currency === 'AED' ? 'Dirhams' : currency === 'USD' ? 'Dollars' : currency;
+    doc.text(`${currLabel} ${numberToWords(finalAmount)}`, 14, finalY + 5);
+
+    // ═══ COMPANY DETAILS FOOTER ═══
+    finalY += 15;
+    doc.setDrawColor(0, 84, 166); doc.setLineWidth(0.5);
+    doc.line(14, finalY, pageWidth - 14, finalY);
+
+    finalY += 6;
+    doc.setFontSize(8); doc.setTextColor(0); doc.setFont(undefined, 'bold');
+    doc.text("Ambot PAN:", 14, finalY);
+    doc.setFont(undefined, 'normal');
+    doc.text("AAYCA8731D", 42, finalY);
+
+    finalY += 5;
+    doc.setFont(undefined, 'bold');
+    doc.text("CIN:", 14, finalY);
+    doc.setFont(undefined, 'normal');
+    doc.text("U72900TZ2021OPC038831", 27, finalY);
+
+    // Bank Details
+    finalY += 7;
+    doc.setFont(undefined, 'bold'); doc.setFontSize(9);
+    doc.text("Bank Details:", 14, finalY);
+    doc.setFont(undefined, 'normal'); doc.setFontSize(8);
+
+    finalY += 5;
+    doc.text("Bank Name: HDFC BANK LTD", 14, finalY);
+    doc.text("IFSC Code: HDFC0000031", 120, finalY);
+    finalY += 4;
+    doc.text("Account Name: AMBOT365 RPA AND IT SOLUTIONS OPC P LTD", 14, finalY);
+    doc.text("Branch code: 000031", 120, finalY);
+    finalY += 4;
+    doc.text("Account Number: 50200084112410", 14, finalY);
+    doc.text("MICR: 641240002", 120, finalY);
+
+    // Authorized Signatory (Right Side)
+    doc.setFont(undefined, 'normal'); doc.setFontSize(8);
+    doc.text("For AMBOT365 RPA & IT SOLUTIONS", pageWidth - 14, finalY - 8, { align: 'right' });
+    doc.text("(Authorized Signatory)", pageWidth - 14, finalY + 2, { align: 'right' });
+
+    // ═══ NOTE & HSN/SAC SECTION ═══
+    finalY += 10;
+    doc.setDrawColor(200); doc.setLineWidth(0.3);
+    doc.line(14, finalY, pageWidth - 14, finalY);
+
+    finalY += 5;
+    doc.setFont(undefined, 'bold'); doc.setFontSize(8); doc.setTextColor(0);
+    doc.text("NOTE:", 14, finalY);
+    doc.setFont(undefined, 'normal');
+
+    finalY += 5;
+    doc.setFont(undefined, 'bold');
+    doc.text("HSN/SAC:", 14, finalY);
+    doc.setFont(undefined, 'normal');
+
+    finalY += 5;
+    doc.setFillColor(0, 84, 166);
+    doc.rect(14, finalY - 3, pageWidth - 28, 7, 'F');
+    doc.setTextColor(255); doc.setFontSize(8); doc.setFont(undefined, 'bold');
+    doc.text("998313  Information technology consulting and support services", pageWidth / 2, finalY + 1, { align: 'center' });
+
+    // ═══ BOTTOM FOOTER ═══
+    let bottomY = pageHeight - 10;
+    doc.setDrawColor(0, 84, 166); doc.setLineWidth(0.5);
+    doc.line(14, bottomY - 6, pageWidth - 14, bottomY - 6);
+    doc.setDrawColor(140, 198, 63); doc.setLineWidth(0.5);
+    doc.line(14, bottomY - 5, pageWidth - 14, bottomY - 5);
+    doc.setFontSize(7); doc.setTextColor(80); doc.setFont(undefined, 'normal');
+    doc.text("AMBOT365 RPA & IT SOLUTIONS (OPC) PVT.LTD", pageWidth / 2, bottomY, { align: 'center' });
+    doc.text("BLOCK A , DOOR NO 105, MOTHERS VILLAGE , NESAVALAR COLONY ROAD, ONDIPUDUR , COIMBATORE 641016,TAMILNADU", pageWidth / 2, bottomY + 4, { align: 'center' });
+
+    doc.save(`Tax_Invoice_${milestone.id}_${(milestone.name || 'milestone').replace(/[^a-z0-9]/gi, '_')}.pdf`);
 };
 
 const generateProjectReportPDF = (details, stakeholders, milestones, taxes) => {
@@ -1031,6 +1510,10 @@ const BusinessDetails = ({ details, updateDetails }) => (
                 <input className="stage-input" value={details.projectId} onChange={(e) => updateDetails('projectId', e.target.value)} />
                 <label className="stage-label">Client Name</label>
                 <input className="stage-input" value={details.clientName} onChange={(e) => updateDetails('clientName', e.target.value)} />
+                <label className="stage-label">Client Address</label>
+                <input className="stage-input" value={details.clientAddress || ''} onChange={(e) => updateDetails('clientAddress', e.target.value)} placeholder="Client billing address" />
+                <label className="stage-label">Client GSTIN</label>
+                <input className="stage-input" value={details.clientGstin || ''} onChange={(e) => updateDetails('clientGstin', e.target.value)} placeholder="e.g. 29ABCDE1234F1Z5" />
                 <label className="stage-label">Delivery</label>
                 <input className="stage-input" value={details.delivery || ''} onChange={(e) => updateDetails('delivery', e.target.value)} placeholder="Ambot365" />
                 <label className="stage-label">Billing Location</label>
@@ -1360,6 +1843,7 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
         localStorage.getItem('app_service_label') || 'Services'
     ]);
     const [activeTypeIndex, setActiveTypeIndex] = useState(0);
+    const [openInvoiceMenu, setOpenInvoiceMenu] = useState(null);
 
     useEffect(() => {
         const handleStorageChange = () => {
@@ -1487,9 +1971,23 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
                                         </td>
                                         <td className="text-center">
                                             <div className="d-flex justify-content-center gap-1">
-                                                <button className="btn-icon text-success" onClick={() => generateInvoicePDF(milestone, details, taxes)} title="Download Invoice">
-                                                    <FileDown size={16} />
-                                                </button>
+                                                <select
+                                                    className="stage-select p-1"
+                                                    style={{ fontSize: '12px', width: 'auto', minWidth: '130px', cursor: 'pointer' }}
+                                                    value=""
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        if (val === 'investor') generateInvestorPaymentPDF(milestone, details, taxes);
+                                                        else if (val === 'client') generateInvoicePDF(milestone, details, taxes);
+                                                        else if (val === 'tax') generateTaxInvoicePDF(milestone, details, taxes);
+                                                        e.target.value = '';
+                                                    }}
+                                                >
+                                                    <option value="">📥 Download</option>
+                                                    <option value="investor">📤 Payment to Investor</option>
+                                                    <option value="client">📥 Client Invoice</option>
+                                                    <option value="tax">🧾 Tax Invoice</option>
+                                                </select>
                                                 <button className="btn-icon text-danger" onClick={() => removeMilestone(milestone.id)} title="Delete Item">
                                                     <Trash2 size={16} />
                                                 </button>
@@ -1637,7 +2135,7 @@ const ProjectTrackerComplete = () => {
     const [activeProjectId, setActiveProjectId] = useState(null);
     const [projects, setProjects] = useState([
         {
-            id: 1, projectId: 'ABC123', dateCreated: new Date().toISOString(), clientName: 'ABC Company', delivery: 'Ambot365', status: 'Active',
+            id: 1, projectId: 'ABC123', dateCreated: new Date().toISOString(), clientName: 'ABC Company', clientAddress: '', clientGstin: '', delivery: 'Ambot365', status: 'Active',
             dealValue: 100000, currency: 'AED', location: 'Dubai',
             stakeholders: [{ id: 1, name: 'Lead', percentage: 2, payoutTax: 10, payoutStatus: 'Pending', paidDate: '' }],
             milestones: [{ id: 1, name: 'Initiate Invoice', percentage: 20, status: 'Completed', invoiceDate: new Date().toISOString().split('T')[0], paidDate: '' }],
@@ -1739,7 +2237,7 @@ const ProjectTrackerComplete = () => {
     const handleCreateProject = () => {
         const newProj = {
             id: Date.now(), projectId: `PROJ-${Math.floor(Math.random() * 999)}`, dateCreated: new Date().toISOString(),
-            clientName: 'New Client', delivery: '', dealValue: 0, currency: 'AED', location: '', status: 'Active',
+            clientName: 'New Client', clientAddress: '', clientGstin: '', delivery: '', dealValue: 0, currency: 'AED', location: '', status: 'Active',
             stakeholders: [], milestones: [], charges: [{ id: 1, name: 'GST', taxType: 'Inter-State (IGST)', country: 'India', state: '', percentage: 18 }]
         };
         setProjects([...projects, newProj]);
