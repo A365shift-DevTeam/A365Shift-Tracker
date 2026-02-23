@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Container, Row, Col, Card, Button, InputGroup, Form } from 'react-bootstrap'
-import { Plus, LayoutGrid, List as ListIcon, Search, SlidersHorizontal, Settings, Calendar, ClipboardList, AlertCircle, Clock, ChevronDown, Filter, BarChart2 } from 'lucide-react'
+import { Container, Row, Col, Card, Button, InputGroup, Form, Dropdown } from 'react-bootstrap'
+import { Plus, LayoutGrid, List as ListIcon, Search, SlidersHorizontal, Settings, Calendar, ClipboardList, AlertCircle, Clock, ChevronDown, Filter, BarChart2, ArrowUpDown } from 'lucide-react'
 import { ListView } from './ListView'
 import { KanbanView } from './KanbanView'
 import { TaskModal } from './TaskModal'
@@ -67,6 +67,12 @@ const TodoList = () => {
     const [editingTask, setEditingTask] = useState(null)
     const [showColumnManager, setShowColumnManager] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
+
+    // Filtering and Sorting
+    const [filterBy, setFilterBy] = useState('all')
+    const [filterValue, setFilterValue] = useState('')
+    const [sortBy, setSortBy] = useState('id')
+    const [sortOrder, setSortOrder] = useState('desc')
 
     // Computed Stats
     const totalTasks = tasks.length
@@ -155,12 +161,43 @@ const TodoList = () => {
     }
 
     // Filtered Tasks
-    const filteredTasks = tasks.filter(task => {
-        if (!searchQuery) return true
-        return Object.values(task.values).some(val =>
+    const filteredTasks = tasks.map(t => t).filter(task => {
+        // 1. Search Query
+        if (searchQuery && !Object.values(task.values || {}).some(val =>
             String(val).toLowerCase().includes(searchQuery.toLowerCase())
-        )
+        )) {
+            return false
+        }
+
+        // 2. Specific Column Filter
+        if (filterBy !== 'all' && filterValue) {
+            const value = task.values?.[filterBy]
+            if (String(value || '').toLowerCase() !== filterValue.toLowerCase()) {
+                return false
+            }
+        }
+        return true
+    }).sort((a, b) => {
+        let aVal = a.values?.[sortBy] || a[sortBy]
+        let bVal = b.values?.[sortBy] || b[sortBy]
+
+        if (typeof aVal === 'string') aVal = aVal.toLowerCase()
+        if (typeof bVal === 'string') bVal = bVal.toLowerCase()
+
+        if (sortOrder === 'asc') {
+            return aVal > bVal ? 1 : aVal < bVal ? -1 : 0
+        } else {
+            return aVal < bVal ? 1 : aVal > bVal ? -1 : 0
+        }
     })
+
+    const getFilterOptions = (colId) => {
+        const vals = new Set()
+        tasks.forEach(t => {
+            if (t.values?.[colId]) vals.add(t.values[colId])
+        })
+        return Array.from(vals).sort()
+    }
 
     return (
         <div className="todo-list-container">
@@ -206,9 +243,64 @@ const TodoList = () => {
                 </div>
 
                 <div className="toolbar-actions">
-                    <button className="btn-toolbar">
-                        <Filter size={16} /> Filters <ChevronDown size={12} className="ms-1" />
-                    </button>
+                    <Dropdown align="end">
+                        <Dropdown.Toggle as="button" bsPrefix="custom-toggle" className="btn-toolbar" style={filterBy !== 'all' ? { background: '#e0e7ff', color: '#4f46e5', borderColor: '#c7d2fe' } : {}}>
+                            <Filter size={16} /> Filters <ChevronDown size={12} className="ms-1" />
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu className="p-3 shadow-sm border-0" style={{ minWidth: '240px', borderRadius: '12px' }}>
+                            <div className="mb-3">
+                                <label className="small text-muted fw-bold mb-2">FILTER BY</label>
+                                <Form.Select size="sm" value={filterBy} onChange={(e) => { setFilterBy(e.target.value); setFilterValue(''); }}>
+                                    <option value="all">None</option>
+                                    {columns.filter(c => c.type === 'choice' || c.type === 'text').map(col => (
+                                        <option key={col.id} value={col.id}>{col.name}</option>
+                                    ))}
+                                </Form.Select>
+                            </div>
+                            {filterBy !== 'all' && (
+                                <div>
+                                    <label className="small text-muted fw-bold mb-2">SELECT VALUE</label>
+                                    <Form.Select size="sm" value={filterValue} onChange={(e) => setFilterValue(e.target.value)}>
+                                        <option value="">Select...</option>
+                                        {getFilterOptions(filterBy).map(opt => (
+                                            <option key={opt} value={opt}>{opt}</option>
+                                        ))}
+                                    </Form.Select>
+                                </div>
+                            )}
+                            {filterBy !== 'all' && (
+                                <div className="mt-3 pt-2 border-top text-end">
+                                    <Button variant="link" size="sm" className="text-danger text-decoration-none p-0" onClick={() => { setFilterBy('all'); setFilterValue(''); }}>
+                                        Clear Filters
+                                    </Button>
+                                </div>
+                            )}
+                        </Dropdown.Menu>
+                    </Dropdown>
+
+                    <Dropdown align="end">
+                        <Dropdown.Toggle as="button" bsPrefix="custom-toggle" className="btn-toolbar">
+                            <ArrowUpDown size={16} /> Sort <ChevronDown size={12} className="ms-1" />
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu className="p-3 shadow-sm border-0" style={{ minWidth: '220px', borderRadius: '12px' }}>
+                            <div className="mb-3">
+                                <label className="small text-muted fw-bold mb-2">SORT BY</label>
+                                <Form.Select size="sm" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                                    <option value="id">Task ID</option>
+                                    {columns.map(col => (
+                                        <option key={col.id} value={col.id}>{col.name}</option>
+                                    ))}
+                                </Form.Select>
+                            </div>
+                            <div>
+                                <label className="small text-muted fw-bold mb-2">ORDER</label>
+                                <div className="d-flex gap-2">
+                                    <Button variant={sortOrder === 'asc' ? 'primary' : 'light'} size="sm" className="flex-grow-1" onClick={() => setSortOrder('asc')}>Asc</Button>
+                                    <Button variant={sortOrder === 'desc' ? 'primary' : 'light'} size="sm" className="flex-grow-1" onClick={() => setSortOrder('desc')}>Desc</Button>
+                                </div>
+                            </div>
+                        </Dropdown.Menu>
+                    </Dropdown>
 
                     <button className="btn-toolbar" onClick={() => setShowColumnManager(true)}>
                         <Settings size={16} /> View Settings
@@ -255,9 +347,12 @@ const TodoList = () => {
                         <ListView
                             tasks={filteredTasks}
                             columns={columns}
-                            sortBy="id"
-                            sortOrder="desc"
-                            onSort={() => { }}
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                            onSort={(col) => {
+                                if (sortBy === col) { setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc') }
+                                else { setSortBy(col); setSortOrder('asc'); }
+                            }}
                             onEdit={(task) => {
                                 setEditingTask(task)
                                 setShowTaskModal(true)

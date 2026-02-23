@@ -53,8 +53,8 @@ const Contacts = () => {
   const [convertClient, setConvertClient] = useState('')
 
   // Global Labels
-  const productLabel = localStorage.getItem('app_product_label') || 'Product'
-  const serviceLabel = localStorage.getItem('app_service_label') || 'Service'
+  const productLabel = localStorage.getItem('app_product_label') || 'Products'
+  const serviceLabel = localStorage.getItem('app_service_label') || 'Services'
 
   useEffect(() => {
     loadContacts()
@@ -388,17 +388,87 @@ const Contacts = () => {
         </div>
 
         <div className="d-flex align-items-center gap-2 ms-auto">
-          {/* Filter Icons */}
-          <div className="icon-group me-3">
-            <button title="Filter" className={`icon-btn-clean ${filterBy !== 'all' ? 'active' : ''}`}>
-              <Filter size={18} />
-            </button>
-            <button title="Group By" className={`icon-btn-clean ${groupBy !== 'status' ? 'active' : ''}`}>
-              <Layers size={18} />
-            </button>
-            <button title="Sort" className="icon-btn-clean">
-              <ArrowUpDown size={18} />
-            </button>
+          {/* Filter, Group By, Sort Icons with Dropdowns */}
+          <div className="icon-group me-3 d-flex gap-2">
+
+            {/* Filter Dropdown */}
+            <Dropdown align="end">
+              <Dropdown.Toggle as="button" bsPrefix="p-0 border-0 bg-transparent" className={`icon-btn-clean ${filterBy !== 'all' ? 'active' : ''}`} title="Filter">
+                <Filter size={18} />
+              </Dropdown.Toggle>
+              <Dropdown.Menu className="p-3 shadow-lg border-0" style={{ minWidth: '260px', borderRadius: '12px' }}>
+                <div className="mb-3">
+                  <label className="small text-muted fw-bold mb-2">FILTER BY</label>
+                  <Form.Select size="sm" value={filterBy} onChange={(e) => { setFilterBy(e.target.value); setFilterValue(''); }}>
+                    <option value="all">None</option>
+                    {filterableColumns.map(col => (
+                      <option key={col.id} value={col.id}>{col.name}</option>
+                    ))}
+                  </Form.Select>
+                </div>
+                {filterBy !== 'all' && (
+                  <div>
+                    <label className="small text-muted fw-bold mb-2">SELECT VALUE</label>
+                    <Form.Select size="sm" value={filterValue} onChange={(e) => setFilterValue(e.target.value)}>
+                      <option value="">Select...</option>
+                      {getFilterOptions(filterBy).map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </Form.Select>
+                  </div>
+                )}
+                {filterBy !== 'all' && (
+                  <div className="mt-3 pt-2 border-top text-end">
+                    <Button variant="link" size="sm" className="text-danger text-decoration-none p-0" onClick={() => { setFilterBy('all'); setFilterValue(''); }}>
+                      Clear Filters
+                    </Button>
+                  </div>
+                )}
+              </Dropdown.Menu>
+            </Dropdown>
+
+            {/* Group By Dropdown (used in Kanban) */}
+            <Dropdown align="end">
+              <Dropdown.Toggle as="button" bsPrefix="p-0 border-0 bg-transparent" className={`icon-btn-clean ${groupBy !== 'status' ? 'active' : ''}`} title="Group By" disabled={viewMode !== 'kanban'}>
+                <Layers size={18} />
+              </Dropdown.Toggle>
+              <Dropdown.Menu className="p-3 shadow-lg border-0" style={{ minWidth: '240px', borderRadius: '12px' }}>
+                <div className="mb-2">
+                  <label className="small text-muted fw-bold mb-2">GROUP BY (KANBAN)</label>
+                  <Form.Select size="sm" value={groupBy} onChange={(e) => setGroupBy(e.target.value)}>
+                    <option value="status">Status</option>
+                    <option value="type">Type</option>
+                    <option value="company">Company</option>
+                  </Form.Select>
+                </div>
+              </Dropdown.Menu>
+            </Dropdown>
+
+            {/* Sort Dropdown  */}
+            <Dropdown align="end">
+              <Dropdown.Toggle as="button" bsPrefix="p-0 border-0 bg-transparent" className="icon-btn-clean" title="Sort">
+                <ArrowUpDown size={18} />
+              </Dropdown.Toggle>
+              <Dropdown.Menu className="p-3 shadow-lg border-0" style={{ minWidth: '240px', borderRadius: '12px' }}>
+                <div className="mb-3">
+                  <label className="small text-muted fw-bold mb-2">SORT BY</label>
+                  <Form.Select size="sm" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                    <option value="name">Name</option>
+                    <option value="company">Company</option>
+                    <option value="status">Status</option>
+                    <option value="type">Type</option>
+                  </Form.Select>
+                </div>
+                <div>
+                  <label className="small text-muted fw-bold mb-2">ORDER</label>
+                  <div className="d-flex gap-2">
+                    <Button variant={sortOrder === 'asc' ? 'primary' : 'light'} size="sm" className="flex-grow-1" onClick={() => setSortOrder('asc')}>Asc</Button>
+                    <Button variant={sortOrder === 'desc' ? 'primary' : 'light'} size="sm" className="flex-grow-1" onClick={() => setSortOrder('desc')}>Desc</Button>
+                  </div>
+                </div>
+              </Dropdown.Menu>
+            </Dropdown>
+
             <button title="Settings" className="icon-btn-clean">
               <Settings size={18} />
             </button>

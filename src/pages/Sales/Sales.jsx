@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { User, Mail, Contact, Settings, Plus, CheckCircle, Trash2, Briefcase, DollarSign, Timer, Flag, AlertTriangle, ArrowUpRight, Search, Monitor, Phone, FileText, MessageSquare, Edit, Clock } from 'lucide-react'
-import { Button, Modal, Form } from 'react-bootstrap'
+import { Button, Modal, Form, Dropdown } from 'react-bootstrap'
 import './Sales.css'
 import StageSettingsModal from './StageSettingsModal'
 import BusinessProcessModal from './BusinessProcessModal'
@@ -686,19 +686,19 @@ function Sales() {
                     <div className="d-flex align-items-center gap-2">
 
                         {/* Filter Button */}
-                        <div className="dropdown">
-                            <button className="icon-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <Dropdown>
+                            <Dropdown.Toggle as="button" className="icon-btn" bsPrefix="p-0 border-0 bg-transparent">
                                 <div className={`icon-wrapper ${filterBy !== 'all' ? 'active' : ''}`}>
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                                     </svg>
                                 </div>
-                            </button>
-                            <div className="dropdown-menu timesheet-dropdown-menu p-3" style={{ minWidth: '260px' }}>
+                            </Dropdown.Toggle>
+                            <Dropdown.Menu className="timesheet-dropdown-menu p-3 shadow-sm border-0" style={{ minWidth: '260px', borderRadius: '12px' }}>
                                 <div className="mb-3">
                                     <label className="small text-muted fw-bold mb-2">FILTER BY</label>
-                                    <select
-                                        className="form-select form-select-sm"
+                                    <Form.Select
+                                        size="sm"
                                         value={filterBy}
                                         onChange={(e) => {
                                             setFilterBy(e.target.value);
@@ -707,13 +707,13 @@ function Sales() {
                                     >
                                         <option value="all">None</option>
                                         <option value="stage">Stage</option>
-                                    </select>
+                                    </Form.Select>
                                 </div>
                                 {filterBy === 'stage' && (
                                     <div>
                                         <label className="small text-muted fw-bold mb-2">SELECT STAGE</label>
-                                        <select
-                                            className="form-select form-select-sm"
+                                        <Form.Select
+                                            size="sm"
                                             value={filterValue}
                                             onChange={(e) => setFilterValue(e.target.value)}
                                         >
@@ -721,47 +721,49 @@ function Sales() {
                                             {activeStages.map(s => (
                                                 <option key={s.id} value={s.label}>{s.label}</option>
                                             ))}
-                                        </select>
+                                        </Form.Select>
                                     </div>
                                 )}
                                 {filterBy !== 'all' && (
                                     <div className="mt-3 pt-2 border-top text-end">
-                                        <button
-                                            className="btn btn-link btn-sm text-danger text-decoration-none p-0"
+                                        <Button
+                                            variant="link"
+                                            size="sm"
+                                            className="text-danger text-decoration-none p-0"
                                             onClick={() => {
                                                 setFilterBy('all');
                                                 setFilterValue('');
                                             }}
                                         >
                                             Clear Filters
-                                        </button>
+                                        </Button>
                                     </div>
                                 )}
-                            </div>
-                        </div>
+                            </Dropdown.Menu>
+                        </Dropdown>
 
                         {/* Sort Button */}
-                        <div className="dropdown">
-                            <button className="icon-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <Dropdown>
+                            <Dropdown.Toggle as="button" className="icon-btn" bsPrefix="p-0 border-0 bg-transparent">
                                 <div className="icon-wrapper">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <line x1="12" y1="5" x2="12" y2="19"></line>
                                         <polyline points="19 12 12 19 5 12"></polyline>
                                     </svg>
                                 </div>
-                            </button>
-                            <div className="dropdown-menu timesheet-dropdown-menu p-3" style={{ minWidth: '240px' }}>
+                            </Dropdown.Toggle>
+                            <Dropdown.Menu className="timesheet-dropdown-menu p-3 shadow-sm border-0" style={{ minWidth: '240px', borderRadius: '12px' }}>
                                 <div className="mb-3">
                                     <label className="small text-muted fw-bold mb-2">SORT BY</label>
-                                    <select
-                                        className="form-select form-select-sm"
+                                    <Form.Select
+                                        size="sm"
                                         value={sortBy}
                                         onChange={(e) => setSortBy(e.target.value)}
                                     >
                                         <option value="id">Project ID</option>
                                         <option value="rating">Rating</option>
                                         <option value="delay">Delay</option>
-                                    </select>
+                                    </Form.Select>
                                 </div>
                                 <div>
                                     <label className="small text-muted fw-bold mb-2">ORDER</label>
@@ -784,8 +786,8 @@ function Sales() {
                                         </Button>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
+                            </Dropdown.Menu>
+                        </Dropdown>
 
                         <div className="vr mx-2 opacity-25"></div>
 
@@ -880,8 +882,8 @@ function Sales() {
                                 value={newProjectData.type}
                                 onChange={(e) => setNewProjectData({ ...newProjectData, type: e.target.value })}
                             >
-                                <option value="Product">Product</option>
-                                <option value="Service">Service</option>
+                                <option value="Product">{productLabel}</option>
+                                <option value="Service">{serviceLabel}</option>
                             </Form.Select>
                         </Form.Group>
                     </Form>
@@ -936,8 +938,8 @@ function Sales() {
                                 value={editProjectData.type}
                                 onChange={(e) => setEditProjectData({ ...editProjectData, type: e.target.value })}
                             >
-                                <option value="Product">Product</option>
-                                <option value="Service">Service</option>
+                                <option value="Product">{productLabel}</option>
+                                <option value="Service">{serviceLabel}</option>
                             </Form.Select>
                         </Form.Group>
                     </Form>

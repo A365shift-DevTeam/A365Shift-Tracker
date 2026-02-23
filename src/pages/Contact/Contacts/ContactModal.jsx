@@ -18,13 +18,9 @@ const JOB_TITLES = [
   'Other'
 ];
 
-const COMPANIES = [
-  'TechCorp Solutions',
-  'InnovateX',
-  'Global Dynamics',
-  'Alpha Systems',
-  'Omega Services'
-];
+
+
+
 
 const LOCATIONS = [
   'New York, USA',
@@ -150,8 +146,7 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
       <Form onSubmit={handleSubmit}>
         <Modal.Body className="p-3">
           <Row className="g-2">
-            {/* ROW 1: Identity & Role */}
-            <Col md={3}>
+            <Col md={4}>
               <Form.Group>
                 <Form.Label className="small fw-bold mb-1">Entity Type</Form.Label>
                 <Form.Select
@@ -165,7 +160,7 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
                 </Form.Select>
               </Form.Group>
             </Col>
-            <Col md={3}>
+            <Col md={4}>
               <Form.Group>
                 <Form.Label className="small fw-bold mb-1">Name <span className="text-danger">*</span></Form.Label>
                 <Form.Control
@@ -178,22 +173,26 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
                 />
               </Form.Group>
             </Col>
-            <Col md={3}>
+            <Col md={4}>
               <Form.Group>
                 <Form.Label className="small fw-bold mb-1">Job Title</Form.Label>
-                <Form.Select
+                <Form.Control
                   size="sm"
+                  type="text"
+                  list="job-title-suggestions"
                   value={formData.jobTitle}
                   onChange={(e) => handleChange('jobTitle', e.target.value)}
-                >
-                  <option value="">Select Role</option>
+                  placeholder="Enter or select Role"
+                />
+                <datalist id="job-title-suggestions">
                   {JOB_TITLES.map(title => (
-                    <option key={title} value={title}>{title}</option>
+                    <option key={title} value={title} />
                   ))}
-                </Form.Select>
+                </datalist>
               </Form.Group>
             </Col>
-            <Col md={3}>
+
+            <Col md={4}>
               <Form.Group>
                 <Form.Label className="small fw-bold mb-1">Status <span className="text-danger">*</span></Form.Label>
                 <Form.Select
@@ -208,8 +207,6 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
                 </Form.Select>
               </Form.Group>
             </Col>
-
-            {/* ROW 2: Communication */}
             <Col md={4}>
               <Form.Group>
                 <Form.Label className="small fw-bold mb-1">Email <span className="text-danger">*</span></Form.Label>
@@ -235,6 +232,7 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
                 />
               </Form.Group>
             </Col>
+
             <Col md={4}>
               <Form.Group>
                 <Form.Label className="small fw-bold mb-1">LinkedIn</Form.Label>
@@ -247,38 +245,37 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
                 />
               </Form.Group>
             </Col>
-
-            {/* ROW 3: Organization */}
             <Col md={4}>
               <Form.Group>
                 <Form.Label className="small fw-bold mb-1">Company</Form.Label>
-                <Form.Select
+                <Form.Control
                   size="sm"
+                  type="text"
                   value={formData.company}
                   onChange={(e) => handleChange('company', e.target.value)}
-                >
-                  <option value="">Select Company</option>
-                  {COMPANIES.map(company => (
-                    <option key={company} value={company}>{company}</option>
-                  ))}
-                </Form.Select>
+                  placeholder="Enter Company"
+                />
               </Form.Group>
             </Col>
             <Col md={4}>
               <Form.Group>
                 <Form.Label className="small fw-bold mb-1">Location</Form.Label>
-                <Form.Select
+                <Form.Control
                   size="sm"
+                  type="text"
+                  list="location-suggestions"
                   value={formData.location}
                   onChange={(e) => handleChange('location', e.target.value)}
-                >
-                  <option value="">Select Location</option>
-                  {LOCATIONS.map(location => (
-                    <option key={location} value={location}>{location}</option>
+                  placeholder="Enter or select Location"
+                />
+                <datalist id="location-suggestions">
+                  {LOCATIONS.map(loc => (
+                    <option key={loc} value={loc} />
                   ))}
-                </Form.Select>
+                </datalist>
               </Form.Group>
             </Col>
+
             <Col md={4}>
               <Form.Group>
                 <Form.Label className="small fw-bold mb-1">Address</Form.Label>
@@ -292,7 +289,6 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
               </Form.Group>
             </Col>
 
-            {/* ROW 4: Notes */}
             <Col xs={12}>
               <Form.Group>
                 <Form.Label className="small fw-bold mb-1">Notes</Form.Label>

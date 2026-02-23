@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FaChartColumn, FaUserGroup, FaClock, FaRightFromBracket, FaHouse, FaMoneyBillWave, FaListCheck, FaFileInvoice } from 'react-icons/fa6';
+import { FaChartColumn, FaUserGroup, FaClock, FaRightFromBracket, FaHouse, FaMoneyBillWave, FaListCheck, FaFileInvoice, FaBars, FaXmark } from 'react-icons/fa6';
 
 function useIsMobile(breakpoint = 768) {
     const [isMobile, setIsMobile] = React.useState(window.innerWidth <= breakpoint);
@@ -16,8 +16,13 @@ function useIsMobile(breakpoint = 768) {
 export default function MainLayout() {
     const { logout } = useAuth();
     const location = useLocation();
-    const [isHovered, setIsHovered] = React.useState(false);
+    const [sidebarOpen, setSidebarOpen] = React.useState(false);
     const isMobile = useIsMobile();
+
+    // Close sidebar when navigating
+    React.useEffect(() => {
+        setSidebarOpen(false);
+    }, [location.pathname]);
 
     const handleLogout = async () => {
         try {
@@ -156,28 +161,45 @@ export default function MainLayout() {
     /* ───── DESKTOP LAYOUT ───── */
     return (
         <div className="d-flex" style={{ height: '100vh', overflow: 'hidden', background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' }}>
-            {/* Sidebar */}
+            {/* Overlay (visible when sidebar is open) */}
+            {sidebarOpen && (
+                <div
+                    onClick={() => setSidebarOpen(false)}
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0, 0, 0, 0.3)',
+                        zIndex: 998,
+                        transition: 'opacity 0.3s ease'
+                    }}
+                />
+            )}
+
+            {/* Sidebar - slides in from the left */}
             <div
-                className="d-flex flex-column p-3 m-3"
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
+                className="d-flex flex-column p-3"
                 style={{
-                    width: isHovered ? '240px' : '80px',
-                    transition: 'width 0.3s ease, background 0.3s ease',
-                    background: 'rgba(255, 255, 255, 0.85)',
+                    width: '240px',
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    bottom: 0,
+                    transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+                    transition: 'transform 0.3s ease',
+                    background: 'rgba(255, 255, 255, 0.95)',
                     backdropFilter: 'blur(16px)',
                     WebkitBackdropFilter: 'blur(16px)',
-                    border: '1px solid rgba(255, 255, 255, 0.6)',
-                    borderRadius: '16px',
-                    flexShrink: 0,
-                    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02), inset 0 1px 0 rgba(255, 255, 255, 0.9)'
+                    borderRight: '1px solid rgba(0, 0, 0, 0.06)',
+                    zIndex: 999,
+                    boxShadow: sidebarOpen ? '4px 0 24px rgba(0, 0, 0, 0.08)' : 'none'
                 }}
             >
-                <Link to="/" className={`d-flex align-items-center mb-3 text-decoration-none px-2 ${!isHovered ? 'justify-content-center' : ''}`} style={{ height: '40px' }}>
-                    <div className="d-flex align-items-center justify-content-center" style={{ minWidth: '24px' }}>
-                        {!isHovered && <FaChartColumn size={24} color="#3b82f6" />}
-                    </div>
-                    {isHovered && (
+                {/* Sidebar Header */}
+                <div className="d-flex align-items-center justify-content-between mb-3 px-2" style={{ height: '40px' }}>
+                    <Link to="/" className="d-flex align-items-center text-decoration-none">
                         <span className="fs-5 fw-bold text-nowrap" style={{
                             background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
                             WebkitBackgroundClip: 'text',
@@ -187,8 +209,24 @@ export default function MainLayout() {
                         }}>
                             A365 Tracker
                         </span>
-                    )}
-                </Link>
+                    </Link>
+                    <button
+                        onClick={() => setSidebarOpen(false)}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#64748b',
+                            cursor: 'pointer',
+                            padding: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: '6px'
+                        }}
+                    >
+                        <FaXmark size={20} />
+                    </button>
+                </div>
                 <hr style={{ borderColor: 'rgba(0,0,0,0.08)', opacity: 0.5 }} />
                 <ul className="nav nav-pills flex-column mb-auto gap-1">
                     {navItems.map((item) => {
@@ -197,7 +235,7 @@ export default function MainLayout() {
                             <li className="nav-item" key={item.path}>
                                 <Link
                                     to={item.path}
-                                    className={`nav-link d-flex align-items-center ${isHovered ? 'gap-3 px-3' : 'justify-content-center px-0'} py-2`}
+                                    className="nav-link d-flex align-items-center gap-3 px-3 py-2"
                                     style={{
                                         color: isActive ? '#3b82f6' : '#64748b',
                                         background: isActive ? 'rgba(59, 130, 246, 0.08)' : 'transparent',
@@ -205,16 +243,14 @@ export default function MainLayout() {
                                         borderRadius: '10px',
                                         fontWeight: isActive ? 600 : 500,
                                         fontSize: '0.9rem',
-                                        transition: 'all 0.2s ease',
                                         whiteSpace: 'nowrap',
                                         overflow: 'hidden'
                                     }}
-                                    title={!isHovered ? item.label : ''}
                                 >
                                     <div style={{ minWidth: '20px', display: 'flex', justifyContent: 'center' }}>
                                         {item.icon}
                                     </div>
-                                    {isHovered && <span>{item.label}</span>}
+                                    <span>{item.label}</span>
                                 </Link>
                             </li>
                         );
@@ -223,7 +259,7 @@ export default function MainLayout() {
                 <hr style={{ borderColor: 'rgba(0,0,0,0.08)', opacity: 0.5 }} />
                 <button
                     onClick={handleLogout}
-                    className={`btn d-flex align-items-center w-100 py-2 ${isHovered ? 'gap-2 justify-content-center' : 'justify-content-center px-0'}`}
+                    className="btn d-flex align-items-center w-100 py-2 gap-2 justify-content-center"
                     style={{
                         background: 'rgba(239, 68, 68, 0.06)',
                         border: '1px solid rgba(239, 68, 68, 0.12)',
@@ -231,31 +267,57 @@ export default function MainLayout() {
                         borderRadius: '10px',
                         fontWeight: 500,
                         fontSize: '0.85rem',
-                        transition: 'all 0.2s ease',
                         whiteSpace: 'nowrap',
                         overflow: 'hidden'
                     }}
-                    title={!isHovered ? 'Sign out' : ''}
                 >
                     <FaRightFromBracket />
-                    {isHovered && <span>Sign out</span>}
+                    <span>Sign out</span>
                 </button>
             </div>
 
             {/* Main Content */}
-            <div className="flex-grow-1 p-3" style={{ minWidth: 0 }}>
+            <div className="flex-grow-1 p-3 d-flex flex-column" style={{ minWidth: 0, width: '100%' }}>
                 <div
-                    className="h-100 w-100 overflow-auto"
+                    className="h-100 w-100 d-flex flex-column"
                     style={{
                         background: 'rgba(255, 255, 255, 0.85)',
                         backdropFilter: 'blur(16px)',
                         WebkitBackdropFilter: 'blur(16px)',
                         border: '1px solid rgba(255, 255, 255, 0.6)',
                         borderRadius: '16px',
-                        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02), inset 0 1px 0 rgba(255, 255, 255, 0.9)'
+                        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
+                        overflow: 'hidden'
                     }}
                 >
-                    <Outlet />
+                    {/* Top Header Bar with Menu Button */}
+                    <div style={{
+                        padding: '10px 16px',
+                        flexShrink: 0
+                    }}>
+                        <button
+                            onClick={() => setSidebarOpen(true)}
+                            style={{
+                                background: 'rgba(255, 255, 255, 0.9)',
+                                border: '1px solid rgba(0, 0, 0, 0.08)',
+                                borderRadius: '10px',
+                                padding: '8px 10px',
+                                cursor: 'pointer',
+                                color: '#3b82f6',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
+                            }}
+                            title="Open menu"
+                        >
+                            <FaBars size={18} />
+                        </button>
+                    </div>
+                    {/* Scrollable Content */}
+                    <div className="flex-grow-1 overflow-auto">
+                        <Outlet />
+                    </div>
                 </div>
             </div>
         </div>
