@@ -1662,10 +1662,10 @@ const StageTwoCombined = ({ stakeholders, addStakeholder, removeStakeholder, upd
                 <span>Stage 2 — Project Splits & Finance Charges</span>
                 <div className="d-flex gap-2">
                     <button className="btn btn-sm btn-white d-flex align-items-center gap-1" onClick={addStakeholder}>
-                        <Plus size={14} /> Add Party
+                        <Plus size={14} />Splits
                     </button>
                     <button className="btn btn-sm btn-white d-flex align-items-center gap-1" onClick={addCharge}>
-                        <Plus size={14} /> Add Charge
+                        <Plus size={14} /> Tax
                     </button>
                 </div>
             </div>
@@ -1873,7 +1873,7 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
             <div className="bar">
                 <span>Stage 3 — Invoice Cycle</span>
                 <button className="btn btn-sm btn-white d-flex align-items-center gap-1" onClick={addMilestone}>
-                    <Plus size={14} /> Add Payment
+                    <Plus size={14} />Payment
                 </button>
             </div>
             <div className="stage-p">
@@ -1889,30 +1889,30 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
                 </div>
 
                 <div className="table-responsive">
-                    <table className="stage-table">
+                    <table className="stage-table" style={{ tableLayout: 'fixed', width: '100%' }}>
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>Payment</th>
-                                <th style={{ width: '80px' }}>%</th>
-                                <th>Inv Date</th>
-                                <th className="text-end">Base ({details.currency})</th>
+                                <th style={{ width: '180px' }}>Payment</th>
+                                <th>Value %</th>
+                                <th style={{ width: '140px' }}>Inv Date</th>
+                                <th>Base ({details.currency})</th>
 
                                 {isIntraState ? (
                                     <>
-                                        <th className="text-end">CGST</th>
-                                        <th className="text-end">SGST</th>
+                                        <th>CGST</th>
+                                        <th>SGST</th>
                                     </>
                                 ) : (
-                                    <th className="text-end">GST</th>
+                                    <th>GST</th>
                                 )}
 
-                                <th className="text-end">Total ({details.currency})</th>
-                                <th>Paid Date</th>
-                                <th className="text-end">Paid ({details.currency})</th>
-                                <th className="text-center">Ageing</th>
-                                <th>Status</th>
-                                <th className="text-center">Action</th>
+                                <th>Total ({details.currency})</th>
+                                <th style={{ width: '140px' }}>Paid Date</th>
+                                <th>Paid ({details.currency})</th>
+                                <th>Ageing</th>
+                                <th style={{ width: '120px' }}>Status</th>
+                                <th style={{ width: '200px' }}>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1933,24 +1933,24 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
                                         <td>
                                             <input type="date" className="stage-input p-1" value={milestone.invoiceDate || ''} onChange={(e) => updateMilestone(milestone.id, 'invoiceDate', e.target.value)} />
                                         </td>
-                                        <td className="font-monospace text-end">{raisedAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                        <td className="text-end">{raisedAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
 
                                         {isIntraState ? (
                                             <>
-                                                <td className="font-monospace text-end text-muted small">{(taxAmount / 2).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                                                <td className="font-monospace text-end text-muted small">{(taxAmount / 2).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                                <td className="text-end">{(taxAmount / 2).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                                <td className="text-end">{(taxAmount / 2).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                                             </>
                                         ) : (
-                                            <td className="font-monospace text-end text-muted small">{taxAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                            <td className="text-end">{taxAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                                         )}
 
-                                        <td className="font-monospace text-end fw-bold">{totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                        <td className="text-end">{totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
 
                                         <td>
                                             <input type="date" className="stage-input p-1" value={milestone.paidDate || ''} onChange={(e) => updateMilestone(milestone.id, 'paidDate', e.target.value)} />
                                         </td>
-                                        <td className="font-monospace text-end text-success">{raisedAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                                        <td className="text-center font-monospace small">
+                                        <td className="text-end">{raisedAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                        <td className="text-center">
                                             {calculateAgeing(milestone.invoiceDate, milestone.paidDate)}
                                         </td>
                                         <td>
@@ -1983,10 +1983,10 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
                                                         e.target.value = '';
                                                     }}
                                                 >
-                                                    <option value="">📥 Download</option>
-                                                    <option value="investor">📤 Payment to Investor</option>
-                                                    <option value="client">📥 Client Invoice</option>
-                                                    <option value="tax">🧾 Tax Invoice</option>
+                                                    <option value="">Download</option>
+                                                    <option value="investor">Payment to Investor</option>
+                                                    <option value="client">Client Invoice</option>
+                                                    <option value="tax">Tax Invoice</option>
                                                 </select>
                                                 <button className="btn-icon text-danger" onClick={() => removeMilestone(milestone.id)} title="Delete Item">
                                                     <Trash2 size={16} />
@@ -2053,7 +2053,7 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
                 <div className="bar">Stage 4 — Payment Process</div>
                 <div className="stage-p">
                     <div className="table-responsive">
-                        <table className="stage-table">
+                        <table className="stage-table" style={{ tableLayout: 'fixed', width: '100%' }}>
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -2064,7 +2064,7 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
                                     <th>GST Amt</th>
                                     <th>Net Pay</th>
                                     <th>Paid Date</th>
-                                    <th>Status</th>
+                                    <th style={{ width: '120px' }}>Status</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -2078,16 +2078,16 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
                                     return (
                                         <tr key={s.id}>
                                             <td>{idx + 1}</td>
-                                            <td><span className="fw-bold">{s.name}</span></td>
+                                            <td>{s.name}</td>
                                             <td>
                                                 <input type="number" className="stage-input text-center p-1" style={{ width: '80px' }} value={s.percentage} onChange={(e) => updateStakeholder(s.id, 'percentage', e.target.value)} />
                                             </td>
-                                            <td className="font-monospace fw-bold">{details.currency} {payAmt.toLocaleString()}</td>
+                                            <td>{details.currency} {payAmt.toLocaleString()}</td>
                                             <td>
                                                 <input type="number" className="stage-input p-1 text-center" style={{ width: '60px' }} value={s.payoutTax ?? 18} onChange={(e) => updateStakeholder(s.id, 'payoutTax', e.target.value)} />
                                             </td>
-                                            <td className="font-monospace text-muted">{details.currency} {taxAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                                            <td className="font-monospace fw-bold text-success">{details.currency} {netPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                            <td>{details.currency} {taxAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                            <td>{details.currency} {netPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                                             <td>
                                                 <input type="date" className="stage-input p-1" value={s.paidDate || ''} onChange={(e) => updateStakeholder(s.id, 'paidDate', e.target.value)} />
                                             </td>
@@ -2290,7 +2290,7 @@ const ProjectTrackerComplete = () => {
     }));
 
     return (
-        <div className="tracker-wrapper">
+        <div className="tracker-wrapper" style={{ fontFamily: "'Inter', sans-serif" }}>
             <TrackerStyles />
             {view === 'invoice' && activeProject && (
                 <div className="mb-4" style={{ paddingLeft: '0.5rem' }}>

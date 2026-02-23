@@ -10,6 +10,7 @@ const fieldTypes = [
   { value: 'email', label: 'Email' },
   { value: 'image', label: 'Image' },
   { value: 'choice', label: 'Choice' },
+  { value: 'dropdown', label: 'Dropdown' },
   { value: 'currency', label: 'Currency' },
   { value: 'location', label: 'Location' },
   { value: 'datetime', label: 'Date and Time' }
@@ -83,7 +84,7 @@ const SortableColumnItem = ({ column, onToggleVisibility, onEdit, onDelete }) =>
 
         {column.config && (
           <div className="column-config-info">
-            {column.type === 'choice' && column.config.options && (
+            {(column.type === 'choice' || column.type === 'dropdown') && column.config.options && (
               <div className="column-options-preview">
                 <span className="options-label">Options:</span>
                 <div className="options-list">
@@ -202,7 +203,7 @@ const ColumnConfigModal = ({ show, onHide, column, onSave, onDelete }) => {
     }
 
     // Validate config based on type
-    if (formData.type === 'choice') {
+    if (formData.type === 'choice' || formData.type === 'dropdown') {
       // Filter out empty options and normalize to object format
       const normalizedOptions = normalizeOptions(formData.config.options || [])
       const validOptions = normalizedOptions.filter(opt => {
@@ -315,7 +316,7 @@ const ColumnConfigModal = ({ show, onHide, column, onSave, onDelete }) => {
               onChange={(e) => {
                 const newType = e.target.value
                 // For choice type, initialize with object format (label + color)
-                const newConfig = newType === 'choice'
+                const newConfig = (newType === 'choice' || newType === 'dropdown')
                   ? { options: [{ label: '', color: '#0078d4' }] }
                   : {}
                 setFormData({ ...formData, type: newType, config: newConfig })
@@ -368,7 +369,7 @@ const ColumnConfigModal = ({ show, onHide, column, onSave, onDelete }) => {
           )}
 
           {/* Choice Config */}
-          {formData.type === 'choice' && (
+          {(formData.type === 'choice' || formData.type === 'dropdown') && (
             <div className="mb-3">
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <Form.Label>Options *</Form.Label>

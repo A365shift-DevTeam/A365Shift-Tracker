@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Button, Form } from 'react-bootstrap'
 import { Edit, Trash2, Eye, ArrowUp, ArrowDown, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, MoreHorizontal, Building, User, Plus, ArrowUpRight } from 'lucide-react'
 
-export const ListView = ({ contacts, sortBy, sortOrder, onSort, onEdit, onDelete, onPreview, onConvertToSales }) => {
+export const ListView = ({ contacts, columns: columnsProp, sortBy, sortOrder, onSort, onEdit, onDelete, onPreview, onConvertToSales }) => {
   const [currentPage, setCurrentPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const tableRef = useRef(null)
@@ -13,7 +13,7 @@ export const ListView = ({ contacts, sortBy, sortOrder, onSort, onEdit, onDelete
   const [resizeStartX, setResizeStartX] = useState(0)
   const [resizeStartWidth, setResizeStartWidth] = useState(0)
 
-  const columns = [
+  const defaultColumns = [
     { id: 'name', name: 'Name' },
     { id: 'jobTitle', name: 'Job Title' },
     { id: 'phone', name: 'Phone' },
@@ -23,6 +23,11 @@ export const ListView = ({ contacts, sortBy, sortOrder, onSort, onEdit, onDelete
     { id: 'type', name: 'Entity Type' },
     { id: 'status', name: 'Status' }
   ]
+
+  // Use columns prop (respecting visibility & order) or fallback to defaults
+  const columns = columnsProp
+    ? columnsProp.filter(c => c.visible !== false).map(c => ({ id: c.id, name: c.name }))
+    : defaultColumns
 
   const handleSort = (columnId) => {
     onSort(columnId)
@@ -42,7 +47,6 @@ export const ListView = ({ contacts, sortBy, sortOrder, onSort, onEdit, onDelete
 
   // Reset to first page when contacts change or rows per page changes
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(1)
   }, [contacts.length, rowsPerPage])
 
@@ -57,7 +61,7 @@ export const ListView = ({ contacts, sortBy, sortOrder, onSort, onEdit, onDelete
   const goToLastPage = () => setCurrentPage(totalPages)
 
   // -- Resizing Logic --
-  const visibleColumns = columns // All defined columns are visible in this view
+  const visibleColumns = columns // All filtered columns are visible
 
   const handleResizeStart = useCallback((columnId, e) => {
     e.preventDefault()
@@ -235,61 +239,79 @@ export const ListView = ({ contacts, sortBy, sortOrder, onSort, onEdit, onDelete
               ) : (
                 paginatedContacts.map(contact => (
                   <tr key={contact.id} className="contacts-table-row">
-                    {/* Name Column */}
-                    <td style={{ width: getColumnWidth('name') || undefined, minWidth: getColumnWidth('name') || '100px' }}>
-                      <div className="contact-cell-primary">
-                        <span className="contact-name">{contact.name || '-'}</span>
-                        <span className="contact-subtext">
-                          <Building size={12} /> {contact.company || 'No Company'}
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* Job Title Column */}
-                    <td style={{ width: getColumnWidth('jobTitle') || undefined, minWidth: getColumnWidth('jobTitle') || '100px' }}>
-                      <div className="contact-cell-primary">
-                        <span className="fw-medium text-dark">{contact.jobTitle || 'Unknown Role'}</span>
-                        <span className="contact-subtext">{contact.department || contact.company}</span>
-                      </div>
-                    </td>
-
-                    {/* Phone Column */}
-                    <td className="fw-medium text-secondary" style={{ width: getColumnWidth('phone') || undefined, minWidth: getColumnWidth('phone') || '100px' }}>
-                      {contact.phone || '-'}
-                    </td>
-
-                    {/* Company Column */}
-                    <td style={{ width: getColumnWidth('company') || undefined, minWidth: getColumnWidth('company') || '100px' }}>
-                      <div className="contact-cell-primary">
-                        <span className="fw-medium text-dark">{contact.company || '-'}</span>
-                        <span className="contact-subtext">{contact.company}</span>
-                      </div>
-                    </td>
-
-                    {/* Location Column */}
-                    <td className="text-secondary" style={{ width: getColumnWidth('location') || undefined, minWidth: getColumnWidth('location') || '100px' }}>
-                      {contact.location || 'San Francisco, CA'}
-                    </td>
-
-                    {/* Address Column */}
-                    <td className="text-secondary" style={{ width: getColumnWidth('address') || undefined, minWidth: getColumnWidth('address') || '100px' }}>
-                      {contact.address || '-'}
-                    </td>
-
-                    {/* Entity Type Column */}
-                    <td style={{ width: getColumnWidth('type') || undefined, minWidth: getColumnWidth('type') || '100px' }}>
-                      <span className={getTypeBadgeClass('Company')}>
-                        Company
-                      </span>
-                    </td>
-
-                    {/* Status Column */}
-                    <td style={{ width: getColumnWidth('status') || undefined, minWidth: getColumnWidth('status') || '100px' }}>
-                      <span className={getStatusBadgeClass(contact.status)}>
-                        {contact.status || '-'}
-                      </span>
-                    </td>
-
+                    {columns.map(column => {
+                      const cellStyle = { width: getColumnWidth(column.id) || undefined, minWidth: getColumnWidth(column.id) || '100px' };
+                      switch (column.id) {
+                        case 'name':
+                          return (
+                            <td key={column.id} style={cellStyle}>
+                              <div className="contact-cell-primary">
+                                <span className="contact-name">{contact.name || '-'}</span>
+                                <span className="contact-subtext">
+                                  <Building size={12} /> {contact.company || 'No Company'}
+                                </span>
+                              </div>
+                            </td>
+                          );
+                        case 'jobTitle':
+                          return (
+                            <td key={column.id} style={cellStyle}>
+                              <div className="contact-cell-primary">
+                                <span className="fw-medium text-dark">{contact.jobTitle || 'Unknown Role'}</span>
+                                <span className="contact-subtext">{contact.department || contact.company}</span>
+                              </div>
+                            </td>
+                          );
+                        case 'phone':
+                          return (
+                            <td key={column.id} className="fw-medium text-secondary" style={cellStyle}>
+                              {contact.phone || '-'}
+                            </td>
+                          );
+                        case 'company':
+                          return (
+                            <td key={column.id} style={cellStyle}>
+                              <div className="contact-cell-primary">
+                                <span className="fw-medium text-dark">{contact.company || '-'}</span>
+                              </div>
+                            </td>
+                          );
+                        case 'location':
+                          return (
+                            <td key={column.id} className="text-secondary" style={cellStyle}>
+                              {contact.location || '-'}
+                            </td>
+                          );
+                        case 'address':
+                          return (
+                            <td key={column.id} className="text-secondary" style={cellStyle}>
+                              {contact.address || '-'}
+                            </td>
+                          );
+                        case 'type':
+                          return (
+                            <td key={column.id} style={cellStyle}>
+                              <span className={getTypeBadgeClass(contact.type || 'Company')}>
+                                {contact.type || 'Company'}
+                              </span>
+                            </td>
+                          );
+                        case 'status':
+                          return (
+                            <td key={column.id} style={cellStyle}>
+                              <span className={getStatusBadgeClass(contact.status)}>
+                                {contact.status || '-'}
+                              </span>
+                            </td>
+                          );
+                        default:
+                          return (
+                            <td key={column.id} className="text-secondary" style={cellStyle}>
+                              {contact[column.id] || '-'}
+                            </td>
+                          );
+                      }
+                    })}
                     {/* Actions Column */}
                     <td className="text-center">
                       <div className="d-flex gap-3 justify-content-center">

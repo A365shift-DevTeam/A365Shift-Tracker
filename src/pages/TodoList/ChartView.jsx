@@ -6,7 +6,7 @@ export const ChartView = ({ tasks, columns }) => {
   const visibleColumns = columns.filter(col => col && col.visible !== false)
 
   // Get choice columns for charting
-  const choiceColumns = visibleColumns.filter(col => col.type === 'choice')
+  const choiceColumns = visibleColumns.filter(col => col.type === 'choice' || col.type === 'dropdown')
   const dateColumns = visibleColumns.filter(col => col.type === 'datetime')
 
   // Calculate statistics for choice columns
@@ -14,7 +14,7 @@ export const ChartView = ({ tasks, columns }) => {
     return choiceColumns.map(column => {
       const stats = {}
       const options = column.config?.options || []
-      
+
       // Normalize options to get labels
       const normalizedOptions = options.map(opt => {
         if (typeof opt === 'string') return opt
@@ -60,7 +60,7 @@ export const ChartView = ({ tasks, columns }) => {
 
     const dateColumn = dateColumns[0] // Use first date column
     const monthlyStats = {}
-    
+
     tasks.forEach(task => {
       const dateValue = task.values?.[dateColumn.id]
       if (dateValue) {
@@ -88,11 +88,11 @@ export const ChartView = ({ tasks, columns }) => {
       if (typeof opt === 'string') return opt === optionLabel
       return opt.label === optionLabel
     })
-    
+
     if (option && typeof option === 'object' && option.color) {
       return option.color
     }
-    
+
     // Default colors
     const defaultColors = ['#0078d4', '#107c10', '#ffaa44', '#e81123', '#8764b8', '#00bcf2', '#ff8c00', '#737373']
     return defaultColors[index % defaultColors.length]
@@ -179,7 +179,7 @@ export const ChartView = ({ tasks, columns }) => {
       const startAngle = currentAngle
       currentAngle += angle
       const color = getOptionColor(column, label, index)
-      
+
       return {
         label,
         count,
@@ -199,7 +199,7 @@ export const ChartView = ({ tasks, columns }) => {
       const x2 = 100 + radius * Math.cos(end)
       const y2 = 100 + radius * Math.sin(end)
       const largeArc = angle > 180 ? 1 : 0
-      
+
       return `M 100 100 L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`
     }
 
@@ -299,7 +299,7 @@ export const ChartView = ({ tasks, columns }) => {
                   <stop offset="100%" stopColor="#0078d4" stopOpacity="0" />
                 </linearGradient>
               </defs>
-              
+
               {/* Grid lines */}
               {[0, 0.25, 0.5, 0.75, 1].map(ratio => (
                 <line
@@ -316,7 +316,7 @@ export const ChartView = ({ tasks, columns }) => {
               {/* Area under line */}
               {entries.length > 0 && (
                 <path
-                  d={`M 0 ${chartHeight} ${entries.map(([_, count], index) => 
+                  d={`M 0 ${chartHeight} ${entries.map(([_, count], index) =>
                     `L ${index * 60 + 30} ${chartHeight - (count / maxValue) * chartHeight * 0.8}`
                   ).join(' ')} L ${(entries.length - 1) * 60 + 30} ${chartHeight} Z`}
                   fill="url(#lineGradient)"
@@ -326,7 +326,7 @@ export const ChartView = ({ tasks, columns }) => {
               {/* Line */}
               {entries.length > 1 && (
                 <polyline
-                  points={entries.map(([_, count], index) => 
+                  points={entries.map(([_, count], index) =>
                     `${index * 60 + 30},${chartHeight - (count / maxValue) * chartHeight * 0.8}`
                   ).join(' ')}
                   fill="none"

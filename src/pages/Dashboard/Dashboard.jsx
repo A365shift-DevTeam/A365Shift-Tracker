@@ -145,13 +145,27 @@ export default function Dashboard() {
       if (entryDate >= startOfWeek) totalMinutesWeek += mins;
     });
 
+    const hoursThisWeek = Math.floor(totalMinutesWeek / 60);
+    const totalHoursAll = Math.floor(totalMinutesAll / 60);
+
+    const activeProjectProgress = totalProjects > 0 ? Math.round((activeProjects / totalProjects) * 100) : 0;
+    const wonProjectProgress = totalProjects > 0 ? Math.round((wonProjects / totalProjects) * 100) : 0;
+    const leadsProgress = totalContacts > 0 ? Math.round((leads / totalContacts) * 100) : 0;
+    const hoursProgress = totalHoursAll > 0 ? Math.round((hoursThisWeek / totalHoursAll) * 100) : 0;
+
     return {
       totalProjects, activeProjects, wonProjects,
       totalContacts, leads, customers, activeContacts,
-      hoursThisWeek: Math.floor(totalMinutesWeek / 60),
+      hoursThisWeek,
       minutesRemainder: totalMinutesWeek % 60,
-      totalHoursAll: Math.floor(totalMinutesAll / 60),
-      totalSessions: timesheetEntries.length
+      totalHoursAll,
+      totalSessions: timesheetEntries.length,
+      progress: {
+        activeProjects: activeProjectProgress,
+        wonProjects: wonProjectProgress,
+        leads: leadsProgress,
+        hours: hoursProgress
+      }
     };
   }, [projects, contacts, timesheetEntries]);
 
@@ -160,7 +174,12 @@ export default function Dashboard() {
     const totalExpense = expenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
     const totalIncome = incomes.reduce((sum, inc) => sum + (Number(inc.amount) || 0), 0);
     const netProfit = totalIncome - totalExpense;
-    return { totalExpense, totalIncome, netProfit };
+
+    // Profit margin percentage
+    const profitMargin = totalIncome > 0 ? parseFloat(((netProfit / totalIncome) * 100).toFixed(1)) : 0;
+    const expenseRatio = totalIncome > 0 ? parseFloat(((totalExpense / totalIncome) * 100).toFixed(1)) : 0;
+
+    return { totalExpense, totalIncome, netProfit, profitMargin, expenseRatio };
   }, [expenses, incomes]);
 
   // Extract Recent Invoices (Milestones) from Projects
@@ -200,12 +219,38 @@ export default function Dashboard() {
   }, [contacts]);
 
   const pipelineSummary = useMemo(() => {
-    const stages = {};
+    const defaultStages = [
+      { label: 'Demo', color: '#06b6d4' },
+      { label: 'Proposal', color: '#f59e0b' },
+      { label: 'Negotiation', color: '#f97316' },
+      { label: 'Approval', color: '#8b5cf6' },
+      { label: 'Won', color: '#10b981' },
+      { label: 'Closed', color: '#10b981' },
+      { label: 'Lost', color: '#ef4444' }
+    ];
+    const stageMap = {};
+    let totalPipelineValue = 0;
     projects.forEach(p => {
-      const stage = p.currentStageLabel || p.status || 'Unknown';
-      stages[stage] = (stages[stage] || 0) + 1;
+      const stageIndex = p.activeStage ?? 0;
+      const stageLabel = defaultStages[stageIndex]?.label || p.status || 'Unknown';
+      if (!stageMap[stageLabel]) stageMap[stageLabel] = { count: 0, value: 0, color: defaultStages[stageIndex]?.color || '#94a3b8' };
+      stageMap[stageLabel].count += 1;
+      // Amount is stored in history entries from stage transitions, or as dealValue/amount on the project
+      let dv = parseFloat(p.dealValue || p.amount || 0);
+      if (dv === 0 && p.history && p.history.length > 0) {
+        // Get the latest non-zero amount from history
+        for (const h of p.history) {
+          const histAmt = parseFloat(h.amount || 0);
+          if (histAmt > 0) { dv = histAmt; break; }
+        }
+      }
+      stageMap[stageLabel].value += dv;
+      totalPipelineValue += dv;
     });
-    return Object.entries(stages).map(([name, count]) => ({ name, count }));
+    const entries = Object.entries(stageMap).map(([name, data]) => ({
+      name, count: data.count, value: data.value, color: data.color
+    }));
+    return { stages: entries, totalPipelineValue };
   }, [projects]);
 
   const chartData = useMemo(() => {
@@ -257,16 +302,16 @@ export default function Dashboard() {
       </div>
 
       <div className="stats-row">
-        <StatCard icon={<FaBriefcase />} label="Active Deals" value={stats.activeProjects} subtitle={`${stats.totalProjects} total`} color="blue" loading={loadingProjects} />
-        <StatCard icon={<FaUserGroup />} label="Total Contacts" value={stats.totalContacts} subtitle={`${stats.leads} leads`} color="purple" loading={loadingContacts} />
-        <StatCard icon={<FaClock />} label="Hours This Week" value={`${stats.hoursThisWeek}h ${stats.minutesRemainder}m`} subtitle={`${stats.totalHoursAll}h logged`} color="cyan" loading={loadingTimesheet} />
-        <StatCard icon={<FaFire />} label="Won Deals" value={stats.wonProjects} subtitle={`of ${stats.totalProjects} total`} color="green" loading={loadingProjects} />
+        <StatCard icon={<FaBriefcase />} label="Active Deals" value={stats.activeProjects} subtitle={`${stats.totalProjects} total`} color="blue" loading={loadingProjects} progress={stats.progress?.activeProjects} progressLabel="of total" />
+        <StatCard icon={<FaUserGroup />} label="Total Contacts" value={stats.totalContacts} subtitle={`${stats.activeContacts} Active · ${stats.leads} Leads · ${stats.customers} Customers · ${contacts.filter(c => c.status === 'Inactive').length} Inactive`} color="purple" loading={loadingContacts} progress={stats.progress?.leads} progressLabel="leads" />
+        <StatCard icon={<FaClock />} label="Hours This Week" value={`${stats.hoursThisWeek}h ${stats.minutesRemainder}m`} subtitle={`${stats.totalHoursAll}h logged`} color="cyan" loading={loadingTimesheet} progress={stats.progress?.hours} progressLabel="of week" />
+        <StatCard icon={<FaFire />} label="Won Deals" value={stats.wonProjects} subtitle={`of ${stats.totalProjects} total`} color="green" loading={loadingProjects} progress={stats.progress?.wonProjects} progressLabel="win rate" />
       </div>
 
       <div className="stats-row" style={{ marginTop: '1.5rem' }}>
-        <StatCard icon={<FaMoneyBillWave />} label="Total Income" value={new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(financeStats.totalIncome)} color="green" loading={loadingFinance} />
-        <StatCard icon={<FaFileInvoiceDollar />} label="Total Expenses" value={new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(financeStats.totalExpense)} color="red" loading={loadingFinance} />
-        <StatCard icon={<FaDollarSign />} label="Net Profit" value={new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(financeStats.netProfit)} color={financeStats.netProfit >= 0 ? 'green' : 'red'} loading={loadingFinance} />
+        <StatCard icon={<FaMoneyBillWave />} label="Total Income" value={new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(financeStats.totalIncome)} color="green" loading={loadingFinance} progress={100} progressLabel="income" progressType="positive" />
+        <StatCard icon={<FaFileInvoiceDollar />} label="Total Expenses" value={new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(financeStats.totalExpense)} color="red" loading={loadingFinance} progress={financeStats.expenseRatio} progressLabel="of income" progressType="negative" />
+        <StatCard icon={<FaDollarSign />} label="Net Profit" value={new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(financeStats.netProfit)} color={financeStats.netProfit >= 0 ? 'green' : 'red'} loading={loadingFinance} progress={financeStats.profitMargin} progressLabel="margin" progressType="positive" />
       </div>
 
       <div className="dashboard-grid">
@@ -297,169 +342,138 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="dashboard-card">
-          <div className="card-header">
-            <h3><FaUserGroup className="card-header-icon" /> Recent Contacts</h3>
-            <span className="badge-count">{contacts.length}</span>
-          </div>
-          <div className="card-body-content" style={{ padding: '0 24px' }}>
-            {loadingContacts ? (
-              <div className="card-loading"><div className="loading-spinner small" /></div>
-            ) : recentContacts.length === 0 ? (
-              <div className="empty-state"><FaUserGroup className="empty-icon" /><p>No contacts yet</p></div>
-            ) : (
-              <div className="contacts-list">
-                {recentContacts.map(contact => (
-                  <div key={contact.id} className="contact-row">
-                    <div className="contact-avatar" style={{ background: getAvatarColor(contact.name) }}>
-                      {getInitials(contact.name)}
-                    </div>
-                    <div className="contact-info">
-                      <span className="contact-name">{contact.name}</span>
-                      <span className="contact-detail">{contact.company || contact.email || contact.type || 'Contact'}</span>
-                    </div>
-                    <span className={`status-badge status-${(contact.status || 'active').toLowerCase()}`}>
-                      {contact.status || 'Active'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+
 
         <div className="dashboard-card">
           <div className="card-header">
-            <h3><FaChartLine className="card-header-icon" /> Pipeline Overview</h3>
-            <span className="badge-count">{projects.length}</span>
+            <h3><FaChartLine className="card-header-icon" /> Sales Pipeline</h3>
+            <span className="badge-count">{projects.length} deals</span>
           </div>
           <div className="card-body-content">
             {loadingProjects ? (
               <div className="card-loading"><div className="loading-spinner small" /></div>
-            ) : pipelineSummary.length === 0 ? (
+            ) : pipelineSummary.stages.length === 0 ? (
               <div className="empty-state"><FaBriefcase className="empty-icon" /><p>No deals in pipeline</p></div>
             ) : (
-              <div className="pipeline-list">
-                {pipelineSummary.map(stage => (
-                  <div key={stage.name} className="pipeline-row">
-                    <div className="pipeline-info">
-                      <FaCircle className="pipeline-dot" />
-                      <span className="pipeline-name">{stage.name}</span>
+              <>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #f1f5f9' }}>
+                  <span style={{ fontSize: '1.5rem', fontWeight: '700', color: '#0f172a' }}>
+                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(pipelineSummary.totalPipelineValue)}
+                  </span>
+                  <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '500' }}>total pipeline</span>
+                </div>
+                <div className="pipeline-list">
+                  {pipelineSummary.stages.map(stage => (
+                    <div key={stage.name} className="pipeline-row">
+                      <div className="pipeline-info">
+                        <FaCircle className="pipeline-dot" style={{ color: stage.color }} />
+                        <span className="pipeline-name">{stage.name}</span>
+                      </div>
+                      <div className="pipeline-bar-wrapper">
+                        <div className="pipeline-bar" style={{ width: `${Math.min(100, (stage.count / Math.max(projects.length, 1)) * 100)}%`, background: stage.color }} />
+                      </div>
+                      <div style={{ textAlign: 'right', minWidth: '90px' }}>
+                        <span className="pipeline-count">{stage.count}</span>
+                        <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                          {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(stage.value)}
+                        </div>
+                      </div>
                     </div>
-                    <div className="pipeline-bar-wrapper">
-                      <div className="pipeline-bar" style={{ width: `${Math.min(100, (stage.count / Math.max(projects.length, 1)) * 100)}%` }} />
-                    </div>
-                    <span className="pipeline-count">{stage.count}</span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         </div>
 
-        <div className="dashboard-card">
-          <div className="card-header">
-            <h3><FaClock className="card-header-icon" /> Time Tracking</h3>
-            <span className="badge-count">{stats.totalSessions} sessions</span>
-          </div>
-          <div className="card-body-content">
-            {loadingTimesheet ? (
-              <div className="card-loading"><div className="loading-spinner small" /></div>
-            ) : timesheetEntries.length === 0 ? (
-              <div className="empty-state"><FaClock className="empty-icon" /><p>No time entries</p></div>
-            ) : (
-              <div className="time-summary">
-                <div className="time-ring-container">
-                  <div className="time-ring">
-                    <div className="time-ring-inner">
-                      <span className="time-ring-value">{stats.hoursThisWeek}h</span>
-                      <span className="time-ring-label">this week</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="time-details">
-                  <div className="time-detail-row">
-                    <span className="time-label">Total tracked</span>
-                    <span className="time-value">{stats.totalHoursAll}h</span>
-                  </div>
-                  <div className="time-detail-row">
-                    <span className="time-label">Sessions</span>
-                    <span className="time-value">{stats.totalSessions}</span>
-                  </div>
-                  <div className="time-detail-row">
-                    <span className="time-label">Avg session</span>
-                    <span className="time-value">{stats.totalSessions > 0 ? `${Math.round(stats.totalHoursAll / stats.totalSessions * 10) / 10}h` : '—'}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
 
         <div className="dashboard-card">
           <div className="card-header">
-            <h3><FaBolt className="card-header-icon" /> Contact Breakdown</h3>
+            <h3><FaBriefcase className="card-header-icon" /> Recent Deals</h3>
           </div>
           <div className="card-body-content">
-            {loadingContacts ? (
-              <div className="card-loading"><div className="loading-spinner small" /></div>
-            ) : (
-              <div className="breakdown-grid">
-                <BreakdownItem label="Active" value={stats.activeContacts} color="var(--color-blue)" />
-                <BreakdownItem label="Leads" value={stats.leads} color="var(--color-purple)" />
-                <BreakdownItem label="Customers" value={stats.customers} color="var(--color-green)" />
-                <BreakdownItem label="Inactive" value={contacts.filter(c => c.status === 'Inactive').length} color="var(--text-muted)" />
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="dashboard-card">
-          <div className="card-header">
-            <h3><FaFileInvoice className="card-header-icon" /> Recent Invoices</h3>
-          </div>
-          <div className="card-body-content" style={{ padding: '0 24px' }}>
             {loadingProjects ? (
               <div className="card-loading"><div className="loading-spinner small" /></div>
-            ) : recentInvoices.length === 0 ? (
-              <div className="empty-state"><FaFileInvoice className="empty-icon" /><p>No invoices yet</p></div>
+            ) : projects.length === 0 ? (
+              <div className="empty-state"><FaBriefcase className="empty-icon" /><p>No deals yet</p></div>
             ) : (
-              <div className="contacts-list">
-                {recentInvoices.map(inv => (
-                  <div key={inv.id} className="contact-row" style={{ gridTemplateColumns: 'auto 1fr auto' }}>
-                    <div className="contact-avatar" style={{ background: '#3b82f6', borderRadius: '8px', fontSize: '1rem' }}>
-                      <FaFileInvoiceDollar />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {[...projects].slice(0, 5).map((p, i) => {
+                  const defaultStages = [
+                    { label: 'Demo', color: '#06b6d4' },
+                    { label: 'Proposal', color: '#f59e0b' },
+                    { label: 'Negotiation', color: '#f97316' },
+                    { label: 'Approval', color: '#8b5cf6' },
+                    { label: 'Won', color: '#10b981' },
+                    { label: 'Closed', color: '#10b981' },
+                    { label: 'Lost', color: '#ef4444' }
+                  ];
+                  const stageInfo = defaultStages[p.activeStage ?? 0] || { label: 'Unknown', color: '#94a3b8' };
+                  let dv = parseFloat(p.dealValue || p.amount || 0);
+                  if (dv === 0 && p.history && p.history.length > 0) {
+                    for (const h of p.history) {
+                      const histAmt = parseFloat(h.amount || 0);
+                      if (histAmt > 0) { dv = histAmt; break; }
+                    }
+                  }
+                  return (
+                    <div key={p.id || i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: '8px', background: '#f8fafc', border: '1px solid #f1f5f9' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: '600', fontSize: '0.875rem', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {p.clientName || 'Unknown Client'}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px' }}>
+                          {p.customId || p.brandingName || 'No ID'}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'center', minWidth: '80px' }}>
+                        <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: '600', background: `${stageInfo.color}18`, color: stageInfo.color }}>
+                          {stageInfo.label}
+                        </span>
+                      </div>
+                      <div style={{ textAlign: 'right', minWidth: '90px' }}>
+                        <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#0f172a' }}>
+                          {dv > 0 ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: p.currency || 'INR', maximumFractionDigits: 0 }).format(dv) : '—'}
+                        </div>
+                        <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{p.type || 'Service'}</div>
+                      </div>
                     </div>
-                    <div className="contact-info" style={{ minWidth: 0 }}>
-                      <span className="contact-name text-truncate d-block" style={{ maxWidth: '180px' }} title={inv.name}>{inv.name || 'Milestone'}</span>
-                      <span className="contact-detail text-truncate d-block" style={{ maxWidth: '180px' }} title={inv.projectName}>{inv.projectName}</span>
-                    </div>
-                    <div className="d-flex flex-column align-items-end">
-                      <span className={`status-badge fw-bold bg-transparent px-0 pt-0 ${inv.isPaid ? 'text-success' : 'text-danger'}`} style={{ border: 'none' }}>
-                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: inv.currency || 'INR', maximumFractionDigits: 0 }).format((inv.dealValue * (inv.percentage || 0)) / 100)}
-                      </span>
-                      <span className="contact-detail mt-1" style={{ fontSize: '0.75rem' }}>
-                        {inv.invoiceDate ? new Date(inv.invoiceDate).toLocaleDateString() : 'Pending'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
         </div>
+
       </div>
     </div>
   );
 }
 
-function StatCard({ icon, label, value, subtitle, color, loading }) {
+function StatCard({ icon, label, value, subtitle, color, loading, progress, progressLabel, progressType }) {
+  // Determine pill style based on explicit type, or infer from progress value
+  let pillClass = "neutral";
+  let displayProgress = progress;
+  if (progressType === 'positive') pillClass = "positive";
+  else if (progressType === 'negative') pillClass = "negative";
+  else if (progress !== undefined) {
+    pillClass = progress > 50 ? "positive" : (progress > 20 ? "neutral" : "negative");
+  }
+
   return (
     <div className={`stat-card-dash stat-${color}`}>
       {loading ? (
         <div className="stat-loading"><div className="loading-spinner small" /></div>
       ) : (
         <>
-          <div className="stat-icon-dash">{icon}</div>
+          <div className="stat-header-flex">
+            <div className="stat-icon-dash">{icon}</div>
+            {progress !== undefined && (
+              <div className={`stat-progress-pill ${pillClass}`}>
+                {displayProgress}% {progressLabel}
+              </div>
+            )}
+          </div>
           <div className="stat-value-dash">{value}</div>
           <div className="stat-label-dash">{label}</div>
           {subtitle && <div className="stat-subtitle-dash">{subtitle}</div>}

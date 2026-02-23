@@ -155,8 +155,8 @@ export const KanbanView = ({ tasks, columns, onTaskUpdate, onEdit, onDelete }) =
 
   // Find the choice column to use for Kanban grouping (prefer 'Status')
   const kanbanColumn = columns.find(col =>
-    col.type === 'choice' && col.name.toLowerCase() === 'status'
-  ) || columns.find(col => col.type === 'choice' && col.config?.options)
+    (col.type === 'choice' || col.type === 'dropdown') && col.name.toLowerCase() === 'status'
+  ) || columns.find(col => (col.type === 'choice' || col.type === 'dropdown') && col.config?.options)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

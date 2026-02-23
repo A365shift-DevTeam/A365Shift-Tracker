@@ -136,15 +136,15 @@ h4,
 .stats-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  margin-bottom: 24px;
+  gap: 16px;
+  margin-bottom: 20px;
 }
 
 .stat-card-dash {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
-  padding: 24px;
+  padding: 16px;
   position: relative;
   transition: var(--transition);
   box-shadow: var(--card-shadow);
@@ -158,14 +158,14 @@ h4,
 
 /* Crisp Icon container */
 .stat-icon-dash {
-  width: 44px;
-  height: 44px;
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
-  margin-bottom: 20px;
+  font-size: 1rem;
+  margin-bottom: 12px;
 }
 
 .stat-blue .stat-icon-dash {
@@ -189,11 +189,11 @@ h4,
 }
 
 .stat-value-dash {
-  font-size: 1.875rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--text-main);
   line-height: 1.1;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .stat-label-dash {
@@ -207,8 +207,39 @@ h4,
 .stat-subtitle-dash {
   font-size: 0.75rem;
   color: var(--text-light);
-  margin-top: 12px;
+  margin-top: 8px;
   font-weight: 500;
+}
+
+.stat-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.stat-progress-pill {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-progress-pill.positive {
+  background-color: var(--color-green-light);
+  color: var(--color-green);
+}
+
+.stat-progress-pill.negative {
+  background-color: var(--color-red-light);
+  color: var(--color-red);
+}
+
+.stat-progress-pill.neutral {
+  background-color: var(--color-blue-light);
+  color: var(--color-blue);
 }
 
 .stat-loading {

@@ -18,7 +18,7 @@ export const TaskModal = ({ show, onHide, task, columns, onSave, onDelete }) => 
         if (Array.isArray(columns) && columns.length > 0) {
           columns.forEach(col => {
             if (col && col.id) {
-              if (col.type === 'choice' && col.config?.multiSelect) {
+              if ((col.type === 'choice' || col.type === 'dropdown') && col.config?.multiSelect) {
                 initialValues[col.id] = []
               } else {
                 initialValues[col.id] = null

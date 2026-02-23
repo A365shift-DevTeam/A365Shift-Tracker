@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Container, Row, Col, Card, Button, InputGroup, Form, Dropdown } from 'react-bootstrap'
-import { Plus, LayoutGrid, List as ListIcon, Search, SlidersHorizontal, Settings, Calendar, ClipboardList, AlertCircle, Clock, ChevronDown, Filter, BarChart2, ArrowUpDown } from 'lucide-react'
+import { Plus, LayoutGrid, List as ListIcon, Search, SlidersHorizontal, Settings, Calendar, ClipboardList, AlertCircle, Clock, ChevronDown, Filter, BarChart2, ArrowUpDown, X } from 'lucide-react'
 import { ListView } from './ListView'
 import { KanbanView } from './KanbanView'
 import { TaskModal } from './TaskModal'
@@ -252,7 +252,7 @@ const TodoList = () => {
                                 <label className="small text-muted fw-bold mb-2">FILTER BY</label>
                                 <Form.Select size="sm" value={filterBy} onChange={(e) => { setFilterBy(e.target.value); setFilterValue(''); }}>
                                     <option value="all">None</option>
-                                    {columns.filter(c => c.type === 'choice' || c.type === 'text').map(col => (
+                                    {columns.filter(c => c.type === 'choice' || c.type === 'dropdown' || c.type === 'text').map(col => (
                                         <option key={col.id} value={col.id}>{col.name}</option>
                                     ))}
                                 </Form.Select>
@@ -385,20 +385,27 @@ const TodoList = () => {
             />
 
             {showColumnManager && (
-                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1050, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ background: 'white', borderRadius: '8px', padding: '20px', width: '90%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto' }}>
-                        <div className="d-flex justify-content-between align-items-center mb-4">
-                            <h4>Customize Columns</h4>
-                            <Button variant="close" onClick={() => setShowColumnManager(false)} />
+                <div className="column-manager-overlay" onClick={(e) => { if (e.target === e.currentTarget) setShowColumnManager(false); }}>
+                    <div className="column-manager-modal">
+                        <div className="column-manager-modal-header">
+                            <div>
+                                <h4 className="column-manager-modal-title">Customize Columns</h4>
+                                <p className="column-manager-modal-subtitle">Drag to reorder, toggle visibility, or add new columns</p>
+                            </div>
+                            <button className="column-manager-close-btn" onClick={() => setShowColumnManager(false)}>
+                                <X size={20} />
+                            </button>
                         </div>
-                        <ColumnManager
-                            columns={columns}
-                            onColumnsChange={setColumns}
-                            onReorder={(newOrder) => {
-                                const newColumns = [...columns].sort((a, b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id))
-                                setColumns(newColumns)
-                            }}
-                        />
+                        <div className="column-manager-modal-body">
+                            <ColumnManager
+                                columns={columns}
+                                onColumnsChange={setColumns}
+                                onReorder={(newOrder) => {
+                                    const newColumns = [...columns].sort((a, b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id))
+                                    setColumns(newColumns)
+                                }}
+                            />
+                        </div>
                     </div>
                 </div>
             )}
