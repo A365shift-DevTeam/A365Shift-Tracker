@@ -1502,7 +1502,10 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject, onStatusChange })
                                                 <option value="Archived">Archived</option>
                                             </select>
                                         </td>
-                                        <td><button className="btn btn-sm btn-outline-primary rounded-circle"><ArrowRight size={14} /></button></td>
+                                        <td>
+                                            <button className="btn btn-sm btn-primary" style={{ padding: '4px 14px', fontSize: '0.78rem' }} onClick={(e) => { e.stopPropagation(); onOpenProject(project.id); }}>View</button>
+                                        </td>
+
                                     </tr>
                                 );
                             })}
@@ -2044,7 +2047,7 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
         <div className="invoice-view">
             <div className="d-flex justify-content-between align-items-center mb-4 p-3 bg-white rounded shadow-sm border">
                 <div className="d-flex align-items-center gap-3">
-                    <div className="p-2 bg-primary bg-opacity-10 rounded-circle"><LayoutDashboard size={24} className="text-primary" /></div>
+                    <div className="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style={{ width: '44px', height: '44px', minWidth: '44px' }}><LayoutDashboard size={22} className="text-primary" /></div>
                     <div><h4 className="m-0 fw-bold">Deal Finance Tracker</h4><span className="text-muted small">Professional Financial Management</span></div>
                 </div>
                 <div className="d-flex gap-2">
@@ -2136,8 +2139,8 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
                                                 </select>
                                             </td>
                                             <td className="text-center">
-                                                <button className="btn-icon text-success" onClick={() => generatePaymentInvoicePDF(s, details, dVal)} title="Download Voucher">
-                                                    <FileDown size={18} />
+                                                <button className="btn btn-sm btn-outline-primary" style={{ padding: '4px 10px', borderRadius: '6px' }} onClick={() => generatePaymentInvoicePDF(s, details, dVal)} title="Download Voucher">
+                                                    <FileDown size={16} />
                                                 </button>
                                             </td>
                                         </tr>
