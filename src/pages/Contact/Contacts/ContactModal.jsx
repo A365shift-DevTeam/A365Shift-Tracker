@@ -44,10 +44,8 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
     email: '',
     phone: '',
     company: '',
-    partyName: '',
-    location: '', // New field
-    address: '', // New Address field
-    regdAddress: '',
+    Billinglocation: '', // New field
+    clientAddress: '', // Added back per user request
     gstin: '',
     pan: '',
     cin: '',
@@ -71,10 +69,8 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
           email: contact.email || '',
           phone: contact.phone || '',
           company: contact.company || '',
-          partyName: contact.partyName || '',
           location: contact.location || '',
-          address: contact.address || '',
-          regdAddress: contact.regdAddress || '',
+          clientAddress: contact.clientAddress || '',
           gstin: contact.gstin || '',
           pan: contact.pan || '',
           cin: contact.cin || '',
@@ -93,10 +89,8 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
           email: '',
           phone: '',
           company: '',
-          partyName: '',
           location: '',
-          address: '',
-          regdAddress: '',
+          clientAddress: '',
           gstin: '',
           pan: '',
           cin: '',
@@ -283,19 +277,7 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
             </Col>
             <Col md={4}>
               <Form.Group>
-                <Form.Label className="small fw-bold mb-1">Party Name</Form.Label>
-                <Form.Control
-                  size="sm"
-                  type="text"
-                  value={formData.partyName}
-                  onChange={(e) => handleChange('partyName', e.target.value)}
-                  placeholder="Enter Party Name"
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label className="small fw-bold mb-1">Location</Form.Label>
+                <Form.Label className="small fw-bold mb-1">Billing Location</Form.Label>
                 <Form.Control
                   size="sm"
                   type="text"
@@ -311,31 +293,19 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
                 </datalist>
               </Form.Group>
             </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label className="small fw-bold mb-1">Client Address</Form.Label>
+                <Form.Control
+                  size="sm"
+                  type="text"
+                  value={formData.clientAddress}
+                  onChange={(e) => handleChange('clientAddress', e.target.value)}
+                  placeholder="Client billing address"
+                />
+              </Form.Group>
+            </Col>
 
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label className="small fw-bold mb-1">Address</Form.Label>
-                <Form.Control
-                  size="sm"
-                  type="text"
-                  value={formData.address}
-                  onChange={(e) => handleChange('address', e.target.value)}
-                  placeholder="Street Address"
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label className="small fw-bold mb-1">Regd Address</Form.Label>
-                <Form.Control
-                  size="sm"
-                  type="text"
-                  value={formData.regdAddress}
-                  onChange={(e) => handleChange('regdAddress', e.target.value)}
-                  placeholder="Registered Address"
-                />
-              </Form.Group>
-            </Col>
             <Col md={4}>
               <Form.Group>
                 <Form.Label className="small fw-bold mb-1">GSTIN</Form.Label>
@@ -388,13 +358,18 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
             <Col md={4}>
               <Form.Group>
                 <Form.Label className="small fw-bold mb-1">TDS Section</Form.Label>
-                <Form.Control
+                <Form.Select
                   size="sm"
-                  type="text"
                   value={formData.tdsSection}
                   onChange={(e) => handleChange('tdsSection', e.target.value)}
-                  placeholder="e.g. 194C"
-                />
+                >
+                  <option value="">Select Section</option>
+                  <option value="194J">194J (Professional Services)</option>
+                  <option value="194C">194C (Contracts)</option>
+                  <option value="194H">194H (Commission/Brokerage)</option>
+                  <option value="194I">194I (Rent)</option>
+                  <option value="Other">Other</option>
+                </Form.Select>
               </Form.Group>
             </Col>
             <Col md={4}>

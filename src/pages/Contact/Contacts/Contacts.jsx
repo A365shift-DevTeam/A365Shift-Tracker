@@ -44,10 +44,8 @@ const Contacts = () => {
     { id: 'jobTitle', name: 'Job Title', type: 'text', visible: true },
     { id: 'phone', name: 'Phone', type: 'text', visible: true },
     { id: 'company', name: 'Company', type: 'text', visible: true },
-    { id: 'partyName', name: 'Party Name', type: 'text', visible: false },
     { id: 'location', name: 'Location', type: 'location', visible: true },
-    { id: 'address', name: 'Address', type: 'text', visible: true },
-    { id: 'regdAddress', name: 'Regd Address', type: 'text', visible: false },
+    { id: 'clientAddress', name: 'Client Address', type: 'text', visible: true },
     { id: 'gstin', name: 'GSTIN', type: 'text', visible: false },
     { id: 'pan', name: 'PAN', type: 'text', visible: false },
     { id: 'cin', name: 'CIN', type: 'text', visible: false },
@@ -112,7 +110,7 @@ const Contacts = () => {
     { id: 'type', name: 'Type' },
     { id: 'company', name: 'Company' },
     { id: 'location', name: 'Location' },
-    { id: 'address', name: 'Address' }
+    { id: 'clientAddress', name: 'Client Address' }
   ]
 
   const getFilterOptions = (columnId) => {
@@ -324,8 +322,7 @@ const Contacts = () => {
       // Map new contact fields
       clientEmail: c.email || '',
       clientPhone: c.phone || '',
-      clientAddress: c.address || '',
-      regdAddress: c.regdAddress || '',
+      clientAddress: c.clientAddress || '',
       clientGstin: c.gstin || '',
       clientPan: c.pan || '',
       clientCin: c.cin || '',

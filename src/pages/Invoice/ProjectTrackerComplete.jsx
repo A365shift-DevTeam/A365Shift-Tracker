@@ -436,7 +436,7 @@ const generateInvoicePDF = (milestone, details, taxes) => {
     doc.text("BILL TO:", 14, y);
     doc.setFont(undefined, 'normal');
     doc.text(details.clientName || "Client Name", 14, y + 5);
-    const billAddress = details.regdAddress || details.clientAddress;
+    const billAddress = details.clientAddress;
     if (billAddress) doc.text(billAddress, 14, y + 9);
 
     let currentY = y + (billAddress ? 13 : 9);
@@ -827,7 +827,7 @@ const generateTaxInvoicePDF = (milestone, details, taxes) => {
     doc.text("BILL TO:", 14, y);
     doc.setFont(undefined, 'normal'); doc.setFontSize(9);
     doc.text(details.clientName || "Client Name", 14, y + 5);
-    const billAddress = details.regdAddress || details.clientAddress;
+    const billAddress = details.clientAddress;
     if (billAddress) doc.text(billAddress, 14, y + 9);
 
     let currentY = y + (billAddress ? 13 : 9);
@@ -2160,6 +2160,31 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
 // 4. MAIN COMPONENT (App Logic)
 // ==========================================
 
+const detectTaxFromAddress = (address) => {
+    if (!address) return { taxType: 'Inter-State (IGST)', name: 'IGST', percentage: 18, country: 'India', state: '' };
+
+    const lowerAddr = address.toLowerCase();
+
+    // Export Tax (Outside India)
+    if (
+        (lowerAddr.includes('usa') || lowerAddr.includes('uk') || lowerAddr.includes('uae') || lowerAddr.includes('dubai') || lowerAddr.includes('london') || lowerAddr.includes('new york') || lowerAddr.includes('canada') || lowerAddr.includes('australia') || lowerAddr.includes('japan') || lowerAddr.includes('singapore') || lowerAddr.includes('france') || lowerAddr.includes('germany') || lowerAddr.includes('international')) && !lowerAddr.includes('india')
+    ) {
+        return { taxType: 'Export (Nil Rate)', name: 'Export (Nil)', percentage: 0, country: 'Other', state: '' };
+    }
+
+    // Tamil Nadu Districts (Intra-State)
+    const tnKeywords = ['tamil nadu', 'tamilnadu', 'chennai', 'coimbatore', 'madurai', 'tiruchirappalli', 'trichy', 'salem', 'tirunelveli', 'tiruppur', 'vellore', 'erode', 'thoothukudi', 'tuticorin', 'dindigul', 'thanjavur', 'ranipet', 'karur', 'ooty', 'kanyakumari', 'kancheepuram', 'kanchipuram', 'tiruvallur', 'cuddalore', 'hosur', 'nagercoil'];
+
+    const isTN = tnKeywords.some(kw => lowerAddr.includes(kw));
+
+    if (isTN) {
+        return { taxType: 'Intra-State (CGST + SGST)', name: 'GST (Intra)', percentage: 18, country: 'India', state: 'Tamil Nadu' };
+    }
+
+    // Other cases in India (Inter-State)
+    return { taxType: 'Inter-State (IGST)', name: 'IGST', percentage: 18, country: 'India', state: '' };
+};
+
 const ProjectTrackerComplete = () => {
     const location = useLocation();
 
@@ -2238,6 +2263,8 @@ const ProjectTrackerComplete = () => {
                     }
 
                     // Map Sales data to Invoice structure with fetched Location
+                    const taxConfig = detectTaxFromAddress(receivedProject.clientAddress || retrievedAddress);
+
                     const newProject = {
                         id: receivedProject.id,
                         projectId: receivedProject.customId || `PROJ-${receivedProject.id}`,
@@ -2245,22 +2272,21 @@ const ProjectTrackerComplete = () => {
                         clientName: receivedProject.clientName || 'Unknown Client',
                         delivery: receivedProject.brandingName || '',
                         dealValue: 0,
-                        currency: retrievedCountry === 'UAE' ? 'AED' : 'INR',
+                        currency: taxConfig.country === 'Other' ? 'AED' : 'INR',
                         location: retrievedAddress || 'India',
                         stakeholders: [],
                         milestones: [],
                         charges: [{
                             id: 1,
-                            name: retrievedCountry === 'India' ? 'IGST' : 'Tax',
-                            taxType: retrievedCountry === 'India' ? 'Inter-State (IGST)' : 'Export (Nil Rate)',
-                            country: retrievedCountry,
-                            state: '',
-                            percentage: retrievedCountry === 'India' ? 18 : 0
+                            name: taxConfig.name,
+                            taxType: taxConfig.taxType,
+                            country: taxConfig.country,
+                            state: taxConfig.state,
+                            percentage: taxConfig.percentage
                         }],
                         clientEmail: receivedProject.clientEmail || '',
                         clientPhone: receivedProject.clientPhone || '',
                         clientAddress: receivedProject.clientAddress || '',
-                        regdAddress: receivedProject.regdAddress || '',
                         clientGstin: receivedProject.clientGstin || '',
                         clientPan: receivedProject.clientPan || '',
                         clientCin: receivedProject.clientCin || '',
@@ -2316,7 +2342,28 @@ const ProjectTrackerComplete = () => {
     };
 
     const updateProject = (fn) => setProjects(projects.map(p => p.id === activeProjectId ? fn(p) : p));
-    const updateDetails = (f, v) => updateProject(p => ({ ...p, [f]: v }));
+    const updateDetails = (f, v) => {
+        updateProject(p => {
+            const updated = { ...p, [f]: v };
+
+            // Auto tax calculation when clientAddress changes
+            if (f === 'clientAddress' && updated.charges && updated.charges.length > 0) {
+                const taxConfig = detectTaxFromAddress(v);
+                const newCharges = [...updated.charges];
+                newCharges[0] = {
+                    ...newCharges[0],
+                    name: taxConfig.name,
+                    taxType: taxConfig.taxType,
+                    country: taxConfig.country,
+                    state: taxConfig.state,
+                    percentage: taxConfig.percentage
+                };
+                updated.charges = newCharges;
+            }
+
+            return updated;
+        });
+    };
 
     // Stakeholders logic
     const addStakeholder = () => updateProject(p => ({ ...p, stakeholders: [...p.stakeholders, { id: Date.now(), name: 'New', percentage: 0, payoutTax: 18, payoutStatus: 'Pending', paidDate: '' }] }));
