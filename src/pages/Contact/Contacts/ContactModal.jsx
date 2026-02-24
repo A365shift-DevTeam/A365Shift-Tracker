@@ -44,8 +44,16 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
     email: '',
     phone: '',
     company: '',
+    partyName: '',
     location: '', // New field
     address: '', // New Address field
+    regdAddress: '',
+    gstin: '',
+    pan: '',
+    cin: '',
+    msmeStatus: 'NON MSME',
+    tdsSection: '',
+    tdsRate: '',
     linkedin: '', // New field
     status: 'Active',
     entityType: 'Individual', // New field
@@ -63,8 +71,16 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
           email: contact.email || '',
           phone: contact.phone || '',
           company: contact.company || '',
+          partyName: contact.partyName || '',
           location: contact.location || '',
           address: contact.address || '',
+          regdAddress: contact.regdAddress || '',
+          gstin: contact.gstin || '',
+          pan: contact.pan || '',
+          cin: contact.cin || '',
+          msmeStatus: contact.msmeStatus || 'NON MSME',
+          tdsSection: contact.tdsSection || '',
+          tdsRate: contact.tdsRate || '',
           linkedin: contact.linkedin || '',
           status: contact.status || 'Active',
           entityType: contact.entityType || 'Individual',
@@ -77,8 +93,16 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
           email: '',
           phone: '',
           company: '',
+          partyName: '',
           location: '',
           address: '',
+          regdAddress: '',
+          gstin: '',
+          pan: '',
+          cin: '',
+          msmeStatus: 'NON MSME',
+          tdsSection: '',
+          tdsRate: '',
           linkedin: '',
           status: 'Active',
           entityType: 'Individual',
@@ -259,6 +283,18 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
             </Col>
             <Col md={4}>
               <Form.Group>
+                <Form.Label className="small fw-bold mb-1">Party Name</Form.Label>
+                <Form.Control
+                  size="sm"
+                  type="text"
+                  value={formData.partyName}
+                  onChange={(e) => handleChange('partyName', e.target.value)}
+                  placeholder="Enter Party Name"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group>
                 <Form.Label className="small fw-bold mb-1">Location</Form.Label>
                 <Form.Control
                   size="sm"
@@ -285,6 +321,92 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
                   value={formData.address}
                   onChange={(e) => handleChange('address', e.target.value)}
                   placeholder="Street Address"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label className="small fw-bold mb-1">Regd Address</Form.Label>
+                <Form.Control
+                  size="sm"
+                  type="text"
+                  value={formData.regdAddress}
+                  onChange={(e) => handleChange('regdAddress', e.target.value)}
+                  placeholder="Registered Address"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label className="small fw-bold mb-1">GSTIN</Form.Label>
+                <Form.Control
+                  size="sm"
+                  type="text"
+                  value={formData.gstin}
+                  onChange={(e) => handleChange('gstin', e.target.value)}
+                  placeholder="Enter GSTIN"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label className="small fw-bold mb-1">PAN</Form.Label>
+                <Form.Control
+                  size="sm"
+                  type="text"
+                  value={formData.pan}
+                  onChange={(e) => handleChange('pan', e.target.value)}
+                  placeholder="Enter PAN"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label className="small fw-bold mb-1">CIN</Form.Label>
+                <Form.Control
+                  size="sm"
+                  type="text"
+                  value={formData.cin}
+                  onChange={(e) => handleChange('cin', e.target.value)}
+                  placeholder="Enter CIN"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label className="small fw-bold mb-1">MSME Status</Form.Label>
+                <Form.Select
+                  size="sm"
+                  value={formData.msmeStatus}
+                  onChange={(e) => handleChange('msmeStatus', e.target.value)}
+                >
+                  <option value="NON MSME">NON MSME</option>
+                  <option value="MSME">MSME</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label className="small fw-bold mb-1">TDS Section</Form.Label>
+                <Form.Control
+                  size="sm"
+                  type="text"
+                  value={formData.tdsSection}
+                  onChange={(e) => handleChange('tdsSection', e.target.value)}
+                  placeholder="e.g. 194C"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label className="small fw-bold mb-1">TDS Rate (%)</Form.Label>
+                <Form.Control
+                  size="sm"
+                  type="number"
+                  step="0.01"
+                  value={formData.tdsRate}
+                  onChange={(e) => handleChange('tdsRate', e.target.value)}
+                  placeholder="e.g. 10"
                 />
               </Form.Group>
             </Col>

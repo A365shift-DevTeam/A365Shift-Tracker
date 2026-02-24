@@ -44,8 +44,16 @@ const Contacts = () => {
     { id: 'jobTitle', name: 'Job Title', type: 'text', visible: true },
     { id: 'phone', name: 'Phone', type: 'text', visible: true },
     { id: 'company', name: 'Company', type: 'text', visible: true },
+    { id: 'partyName', name: 'Party Name', type: 'text', visible: false },
     { id: 'location', name: 'Location', type: 'location', visible: true },
     { id: 'address', name: 'Address', type: 'text', visible: true },
+    { id: 'regdAddress', name: 'Regd Address', type: 'text', visible: false },
+    { id: 'gstin', name: 'GSTIN', type: 'text', visible: false },
+    { id: 'pan', name: 'PAN', type: 'text', visible: false },
+    { id: 'cin', name: 'CIN', type: 'text', visible: false },
+    { id: 'msmeStatus', name: 'MSME Status', type: 'text', visible: false },
+    { id: 'tdsSection', name: 'TDS Section', type: 'text', visible: false },
+    { id: 'tdsRate', name: 'TDS Rate', type: 'number', visible: false },
     { id: 'type', name: 'Entity Type', type: 'choice', visible: true, config: { options: [{ label: 'Company', color: '#3b82f6' }, { label: 'Individual', color: '#8b5cf6' }] } },
     { id: 'status', name: 'Status', type: 'choice', visible: true, config: { options: [{ label: 'Active', color: '#10b981' }, { label: 'Inactive', color: '#94a3b8' }, { label: 'Lead', color: '#3b82f6' }, { label: 'Customer', color: '#06b6d4' }] } }
   ])
@@ -312,7 +320,18 @@ const Contacts = () => {
       title: `${convertClient} - ${convertBranding || 'Direct'}`,
       clientName: convertClient || 'New Client',
       brandingName: convertBranding || 'A365Shift',
-      customId
+      customId,
+      // Map new contact fields
+      clientEmail: c.email || '',
+      clientPhone: c.phone || '',
+      clientAddress: c.address || '',
+      regdAddress: c.regdAddress || '',
+      clientGstin: c.gstin || '',
+      clientPan: c.pan || '',
+      clientCin: c.cin || '',
+      msmeStatus: c.msmeStatus || 'NON MSME',
+      tdsSection: c.tdsSection || '',
+      tdsRate: c.tdsRate || ''
     }
 
     try {

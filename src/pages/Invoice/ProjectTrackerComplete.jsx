@@ -14,9 +14,10 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
 import { db } from '../../services/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, collection, getDocs } from 'firebase/firestore';
 import { projectService } from '../../services/api';
 import { contactService } from '../../services/contactService';
+import { incomeService } from '../../services/incomeService';
 
 // ==========================================
 // 1. STYLES (Injected CSS)
@@ -435,14 +436,30 @@ const generateInvoicePDF = (milestone, details, taxes) => {
     doc.text("BILL TO:", 14, y);
     doc.setFont(undefined, 'normal');
     doc.text(details.clientName || "Client Name", 14, y + 5);
-    if (details.clientAddress) doc.text(details.clientAddress, 14, y + 9);
+    const billAddress = details.regdAddress || details.clientAddress;
+    if (billAddress) doc.text(billAddress, 14, y + 9);
+
+    let currentY = y + (billAddress ? 13 : 9);
     if (details.clientGstin) {
         doc.setFont(undefined, 'bold');
-        doc.text(`GSTIN: ${details.clientGstin}`, 14, y + (details.clientAddress ? 13 : 9));
+        doc.text(`GSTIN: ${details.clientGstin}`, 14, currentY);
         doc.setFont(undefined, 'normal');
+        currentY += 4;
+    }
+    if (details.clientPan) {
+        doc.setFont(undefined, 'bold');
+        doc.text(`PAN: ${details.clientPan}`, 14, currentY);
+        doc.setFont(undefined, 'normal');
+        currentY += 4;
+    }
+    if (details.clientCin) {
+        doc.setFont(undefined, 'bold');
+        doc.text(`CIN: ${details.clientCin}`, 14, currentY);
+        doc.setFont(undefined, 'normal');
+        currentY += 4;
     }
 
-    const placeY = y + (details.clientAddress ? 17 : 13);
+    const placeY = currentY;
     doc.setFont(undefined, 'bold');
     doc.text("Place of Supply:", 14, placeY);
     doc.setFont(undefined, 'normal');
@@ -810,15 +827,31 @@ const generateTaxInvoicePDF = (milestone, details, taxes) => {
     doc.text("BILL TO:", 14, y);
     doc.setFont(undefined, 'normal'); doc.setFontSize(9);
     doc.text(details.clientName || "Client Name", 14, y + 5);
-    if (details.clientAddress) doc.text(details.clientAddress, 14, y + 9);
+    const billAddress = details.regdAddress || details.clientAddress;
+    if (billAddress) doc.text(billAddress, 14, y + 9);
+
+    let currentY = y + (billAddress ? 13 : 9);
     if (details.clientGstin) {
         doc.setFont(undefined, 'bold');
-        doc.text(`GSTIN: ${details.clientGstin}`, 14, y + (details.clientAddress ? 13 : 9));
+        doc.text(`GSTIN: ${details.clientGstin}`, 14, currentY);
         doc.setFont(undefined, 'normal');
+        currentY += 4;
+    }
+    if (details.clientPan) {
+        doc.setFont(undefined, 'bold');
+        doc.text(`PAN: ${details.clientPan}`, 14, currentY);
+        doc.setFont(undefined, 'normal');
+        currentY += 4;
+    }
+    if (details.clientCin) {
+        doc.setFont(undefined, 'bold');
+        doc.text(`CIN: ${details.clientCin}`, 14, currentY);
+        doc.setFont(undefined, 'normal');
+        currentY += 4;
     }
 
     // Place of Supply
-    const placeY = y + (details.clientAddress ? 17 : 13);
+    const placeY = currentY;
     doc.setFont(undefined, 'bold');
     doc.text("Place of Supply:", 14, placeY);
     doc.setFont(undefined, 'normal');
@@ -2129,15 +2162,20 @@ const ProjectTrackerComplete = () => {
 
     const [view, setView] = useState('dashboard');
     const [activeProjectId, setActiveProjectId] = useState(null);
-    const [projects, setProjects] = useState([
-        {
-            id: 1, projectId: 'ABC123', dateCreated: new Date().toISOString(), clientName: 'ABC Company', clientAddress: '', clientGstin: '', delivery: 'Ambot365', status: 'Active',
-            dealValue: 100000, currency: 'AED', location: 'Dubai',
-            stakeholders: [{ id: 1, name: 'Lead', percentage: 2, payoutTax: 10, payoutStatus: 'Pending', paidDate: '' }],
-            milestones: [{ id: 1, name: 'Initiate Invoice', percentage: 20, status: 'Completed', invoiceDate: new Date().toISOString().split('T')[0], paidDate: '' }],
-            charges: [{ id: 1, name: 'IGST', taxType: 'Inter-State (IGST)', country: 'India', state: '', percentage: 18 }]
-        }
-    ]);
+    const [projects, setProjects] = useState([]);
+
+    useEffect(() => {
+        const fetchProjects = async () => {
+            try {
+                const snapshot = await getDocs(collection(db, 'project_finances'));
+                const fetchedProjects = snapshot.docs.map(doc => doc.data());
+                setProjects(fetchedProjects);
+            } catch (err) {
+                console.error("Error fetching project finances:", err);
+            }
+        };
+        fetchProjects();
+    }, []);
 
     useEffect(() => {
         const initProject = async () => {
@@ -2215,7 +2253,17 @@ const ProjectTrackerComplete = () => {
                             country: retrievedCountry,
                             state: '',
                             percentage: retrievedCountry === 'India' ? 18 : 0
-                        }]
+                        }],
+                        clientEmail: receivedProject.clientEmail || '',
+                        clientPhone: receivedProject.clientPhone || '',
+                        clientAddress: receivedProject.clientAddress || '',
+                        regdAddress: receivedProject.regdAddress || '',
+                        clientGstin: receivedProject.clientGstin || '',
+                        clientPan: receivedProject.clientPan || '',
+                        clientCin: receivedProject.clientCin || '',
+                        msmeStatus: receivedProject.msmeStatus || 'NON MSME',
+                        tdsSection: receivedProject.tdsSection || '',
+                        tdsRate: receivedProject.tdsRate || ''
                     };
 
                     setActiveProjectId(newProject.id);
@@ -2275,7 +2323,31 @@ const ProjectTrackerComplete = () => {
     // Milestones logic
     const addMilestone = () => updateProject(p => ({ ...p, milestones: [...p.milestones, { id: Date.now(), name: 'New Stage', percentage: 0, status: 'Pending', invoiceDate: '', paidDate: '' }] }));
     const removeMilestone = (id) => updateProject(p => ({ ...p, milestones: p.milestones.filter(m => m.id !== id) }));
-    const updateMilestone = (id, f, v) => updateProject(p => ({ ...p, milestones: p.milestones.map(m => m.id === id ? { ...m, [f]: v } : m) }));
+    const updateMilestone = async (id, f, v) => {
+        updateProject(p => ({ ...p, milestones: p.milestones.map(m => m.id === id ? { ...m, [f]: v } : m) }));
+
+        if (f === 'status' && v === 'Paid' && activeProject) {
+            const milestone = activeProject.milestones.find(m => m.id === id);
+            if (milestone) {
+                const raisedAmount = (activeProject.dealValue * milestone.percentage) / 100;
+                const totalTaxRate = activeProject.charges ? activeProject.charges.reduce((sum, c) => sum + (parseFloat(c.percentage) || 0), 0) : 0;
+                const taxAmount = (raisedAmount * totalTaxRate) / 100;
+                const totalAmount = raisedAmount + taxAmount;
+                const incomeData = {
+                    description: `${activeProject.clientName} - ${milestone.name}`,
+                    amount: totalAmount,
+                    date: new Date().toISOString(),
+                    category: 'sales',
+                    notes: `Auto-generated from Project ${activeProject.projectId}`
+                };
+                try {
+                    await incomeService.createIncome(incomeData);
+                } catch (err) {
+                    console.error("Error creating income:", err);
+                }
+            }
+        }
+    };
 
     // Charges logic
     const addCharge = () => updateProject(p => ({ ...p, charges: [...p.charges, { id: Date.now(), name: 'Tax', taxType: 'Other', country: 'India', state: '', percentage: 0 }] }));
