@@ -23,22 +23,22 @@ import { contactService } from '../../services/contactService';
 // ==========================================
 const TrackerStyles = () => (
     <style>{`
-        /* Premium Light Theme (Adapted) */
+        /* ═══ Premium Invoice Theme ═══ */
         .tracker-wrapper {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             color: #333;
             min-height: 100vh;
-            background: #f4f6f9;
+            background: linear-gradient(135deg, #f0f4f8 0%, #e8edf3 100%);
             padding: 2rem;
         }
 
         /* --- Global Utils --- */
-        .text-dark { color: #212529 !important; }
-        .text-muted { color: #6c757d !important; }
-        .text-primary { color: #0d6efd !important; }
-        .text-success { color: #198754 !important; }
-        .text-danger { color: #dc3545 !important; }
-        .text-warning { color: #ffc107 !important; }
+        .text-dark { color: #1a1d21 !important; }
+        .text-muted { color: #7b8794 !important; }
+        .text-primary { color: #2980b9 !important; }
+        .text-success { color: #27ae60 !important; }
+        .text-danger { color: #e74c3c !important; }
+        .text-warning { color: #f39c12 !important; }
         
         .fw-bold { font-weight: 700 !important; }
         .small { font-size: 0.875rem; }
@@ -50,35 +50,37 @@ const TrackerStyles = () => (
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
-            padding: 0.375rem 0.75rem;
-            border-radius: 0.375rem;
-            font-weight: 500;
-            transition: all 0.2s;
+            padding: 0.45rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.25s ease;
             cursor: pointer;
             border: 1px solid transparent;
+            letter-spacing: 0.01em;
         }
-        .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.875rem; }
+        .btn-sm { padding: 0.3rem 0.65rem; font-size: 0.8rem; }
         
-        .btn-primary { background-color: #0d6efd; color: white; border-color: #0d6efd; }
-        .btn-primary:hover { background-color: #0b5ed7; }
+        .btn-primary { background: linear-gradient(135deg, #2980b9, #3498db); color: white; border: none; box-shadow: 0 2px 8px rgba(41,128,185,0.3); }
+        .btn-primary:hover { background: linear-gradient(135deg, #2471a3, #2e86c1); box-shadow: 0 4px 14px rgba(41,128,185,0.4); transform: translateY(-1px); }
         
-        .btn-outline-primary { color: #0d6efd; border-color: #0d6efd; background: transparent; }
-        .btn-outline-primary:hover { color: #fff; background-color: #0d6efd; }
+        .btn-outline-primary { color: #2980b9; border-color: #2980b9; background: transparent; }
+        .btn-outline-primary:hover { color: #fff; background: #2980b9; box-shadow: 0 2px 8px rgba(41,128,185,0.3); }
 
-        .btn-outline-secondary { color: #6c757d; border-color: #6c757d; background: transparent; }
-        .btn-outline-secondary:hover { color: #fff; background-color: #6c757d; }
+        .btn-outline-secondary { color: #7b8794; border-color: #cfd8dc; background: transparent; }
+        .btn-outline-secondary:hover { color: #fff; background-color: #7b8794; }
 
-        .btn-outline-success { color: #198754; border-color: #198754; background: transparent; }
-        .btn-outline-success:hover { color: #fff; background-color: #198754; }
+        .btn-outline-success { color: #27ae60; border-color: #27ae60; background: transparent; }
+        .btn-outline-success:hover { color: #fff; background-color: #27ae60; box-shadow: 0 2px 8px rgba(39,174,96,0.3); }
 
-        .btn-outline-danger { color: #dc3545; border-color: #dc3545; background: transparent; }
-        .btn-outline-danger:hover { color: #fff; background-color: #dc3545; }
+        .btn-outline-danger { color: #e74c3c; border-color: #e74c3c; background: transparent; }
+        .btn-outline-danger:hover { color: #fff; background-color: #e74c3c; }
 
-        .btn-dark { background-color: #212529; color: white; border-color: #212529; }
-        .btn-dark:hover { background-color: #424649; }
+        .btn-dark { background: linear-gradient(135deg, #2c3e50, #34495e); color: white; border: none; }
+        .btn-dark:hover { background: linear-gradient(135deg, #1a252f, #2c3e50); }
 
-        .btn-white { background-color: #fff; color: #000; border-color: #fff; }
-        .btn-white:hover { background-color: #e2e6ea; }
+        .btn-white { background-color: rgba(255,255,255,0.95); color: #2c3e50; border: 1px solid rgba(255,255,255,0.3); backdrop-filter: blur(4px); font-weight: 600; }
+        .btn-white:hover { background-color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
         .btn-link { background: none; border: none; padding: 0; text-decoration: none; }
         .btn-link:hover { text-decoration: underline; }
@@ -90,77 +92,142 @@ const TrackerStyles = () => (
         }
 
         .stage {
-            background: #fff;
-            border: 1px solid #e9ecef;
-            border-radius: 10px;
-            margin: 16px 0;
+            background: #ffffff;
+            border: none;
+            border-radius: 16px;
+            margin: 20px 0;
             overflow: hidden;
-            color: #000;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            color: #1a1d21;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+            transition: box-shadow 0.3s ease;
+        }
+        .stage:hover {
+            box-shadow: 0 8px 32px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
         }
 
         .bar {
             background: #000;
-            border-bottom: 1px solid #e9ecef;
-            padding: 10px 14px;
+            padding: 14px 20px;
             font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 0.02em;
             display: flex;
             justify-content: space-between;
             align-items: center;
             color: #fff;
+            border: none;
         }
 
-        .stage-p { padding: 14px; }
+        .stage-p { padding: 20px 24px; }
 
         .grid-stage {
             display: grid;
-            grid-template-columns: 220px 1fr 180px 1fr;
-            gap: 10px;
+            grid-template-columns: 180px 1fr 180px 1fr;
+            gap: 14px 16px;
             align-items: center;
         }
         @media (max-width: 900px) { .grid-stage { grid-template-columns: 1fr; } }
 
         .stage-input, .stage-select {
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-            background: #fff;
-            color: #212529;
-            transition: border-color 0.2s;
+            padding: 9px 12px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            background: #f8fafc;
+            color: #1a1d21;
+            font-size: 0.875rem;
+            transition: all 0.25s ease;
         }
         .stage-input:focus, .stage-select:focus {
             outline: none;
-            border-color: #86b7fe;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+            border-color: #2980b9;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(41,128,185,0.12);
+        }
+        .stage-input::placeholder { color: #a0aec0; }
+
+        .stage-label { 
+            font-weight: 600; 
+            color: #4a5568; 
+            font-size: 0.85rem;
+            letter-spacing: 0.01em;
         }
 
-        .stage-label { font-weight: 600; color: #495057; }
-
-        .stage-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        .stage-table th, .stage-table td { border: 1px solid #dee2e6; padding: 10px; text-align: left; vertical-align: middle; }
-        .stage-table th { background: #f8f9fa; color: #495057; font-weight: 600; font-size: 0.9rem; }
+        .stage-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 0.75rem; }
+        .stage-table th { 
+            background: linear-gradient(180deg, #f7f9fc 0%, #eef2f7 100%);
+            color: #4a5568; 
+            font-weight: 700; 
+            font-size: 0.78rem; 
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 12px 14px;
+            border-bottom: 2px solid #e2e8f0;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            white-space: nowrap;
+        }
+        .stage-table td { 
+            border: none;
+            border-bottom: 1px solid #f1f5f9; 
+            padding: 12px 14px; 
+            text-align: left; 
+            vertical-align: middle; 
+            font-size: 0.875rem;
+            color: #334155;
+        }
+        .stage-table tbody tr { transition: background 0.15s ease; }
+        .stage-table tbody tr:hover { background: #f8fafc; }
+        .stage-table tbody tr:nth-child(even) { background: #fafbfd; }
+        .stage-table tbody tr:nth-child(even):hover { background: #f0f4f8; }
         
         /* KPIs */
-        .stage-kpi { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 1rem; }
-        .stage-card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px 16px; min-width: 200px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .stage-muted { color: #6c757d; font-size: 0.85rem; margin-bottom: 4px; }
-        .kpi-value { font-weight: 700; font-size: 1.1rem; color: #212529; }
+        .stage-kpi { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+        .stage-card { 
+            background: linear-gradient(135deg, #ffffff, #f8fafc);
+            border: 1.5px solid #e2e8f0; 
+            border-radius: 14px; 
+            padding: 16px 20px; 
+            min-width: 200px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .stage-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, #2980b9, #27ae60);
+            border-radius: 4px 0 0 4px;
+        }
+        .stage-card:hover { 
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+            transform: translateY(-2px);
+        }
+        .stage-muted { color: #7b8794; font-size: 0.8rem; margin-bottom: 6px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+        .kpi-value { font-weight: 800; font-size: 1.2rem; color: #1a1d21; }
 
         /* --- Dashboard Cards (Light Theme) --- */
         .dashboard-card {
             background: #ffffff;
-            border: 1px solid #e9ecef;
-            border-radius: 0.5rem;
+            border: none;
+            border-radius: 16px;
             overflow: hidden;
             height: 100%;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
         }
+        .dashboard-card:hover { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.09); }
         .dashboard-card-body { padding: 1.5rem; }
         .dashboard-card-header {
             padding: 1rem 1.5rem;
             background: #fff;
-            border-bottom: 1px solid #f1f3f5;
+            border-bottom: 1px solid #f1f5f9;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -169,21 +236,23 @@ const TrackerStyles = () => (
          /* --- Tables (Light) --- */
         .table-custom {
             width: 100%;
-            color: #212529;
-            border-collapse: collapse;
+            color: #1a1d21;
+            border-collapse: separate;
+            border-spacing: 0;
         }
         .table-custom th, .table-custom td {
-            padding: 0.75rem;
-            border-bottom: 1px solid #dee2e6;
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid #eef2f7;
         }
         .table-custom th {
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             text-transform: uppercase;
-            color: #6c757d;
-            font-weight: 600;
-            background-color: #f8f9fa;
+            letter-spacing: 0.06em;
+            color: #7b8794;
+            font-weight: 700;
+            background-color: #f7f9fc;
         }
-        .table-custom tr:hover { background-color: #f8f9fa; cursor: pointer; }
+        .table-custom tr:hover { background-color: #f8fafc; cursor: pointer; }
 
         /* Utilities */
         .d-flex { display: flex; }
@@ -202,13 +271,13 @@ const TrackerStyles = () => (
         .p-1 { padding: 0.25rem; }
         .p-2 { padding: 0.5rem; }
         .p-3 { padding: 1rem; }
-        .rounded { border-radius: 0.375rem !important; }
+        .rounded { border-radius: 0.5rem !important; }
         .rounded-circle { border-radius: 50% !important; }
         .bg-opacity-10 { --bs-bg-opacity: 0.1; }
-        .bg-primary { background-color: rgba(13, 110, 253, var(--bs-bg-opacity, 1)) !important; }
-        .bg-success { background-color: rgba(25, 135, 84, var(--bs-bg-opacity, 1)) !important; }
-        .bg-danger { background-color: rgba(220, 53, 69, var(--bs-bg-opacity, 1)) !important; }
-        .bg-warning { background-color: rgba(255, 193, 7, var(--bs-bg-opacity, 1)) !important; }
+        .bg-primary { background-color: rgba(41, 128, 185, var(--bs-bg-opacity, 1)) !important; }
+        .bg-success { background-color: rgba(39, 174, 96, var(--bs-bg-opacity, 1)) !important; }
+        .bg-danger { background-color: rgba(231, 76, 60, var(--bs-bg-opacity, 1)) !important; }
+        .bg-warning { background-color: rgba(243, 156, 18, var(--bs-bg-opacity, 1)) !important; }
         
         .row { display: flex; flex-wrap: wrap; margin-right: -0.75rem; margin-left: -0.75rem; }
         .col-md-3, .col-md-4, .col-md-6, .col-md-8 { padding-right: 0.75rem; padding-left: 0.75rem; width: 100%; }
@@ -219,8 +288,12 @@ const TrackerStyles = () => (
             .col-md-8 { flex: 0 0 66.666667%; max-width: 66.666667%; }
         }
         
-        .btn-icon { background: none; border: none; cursor: pointer; padding: 4px; display: inline-flex; align-items: center; justify-content: center; color: inherit; }
-        .btn-icon:hover { opacity: 0.8; }
+        .btn-icon { 
+            background: none; border: none; cursor: pointer; padding: 6px; 
+            display: inline-flex; align-items: center; justify-content: center; 
+            color: inherit; border-radius: 8px; transition: all 0.2s ease;
+        }
+        .btn-icon:hover { background: #f1f5f9; opacity: 0.9; }
     `}</style>
 );
 
@@ -247,8 +320,8 @@ const addPDFHeader = (doc, title, details) => {
     doc.text("BLOCK A , DOOR NO 105, MOTHERS VILLAGE ,", pageWidth - 14, 23, { align: 'right' });
     doc.text("NESAVALAR COLONY ROAD, ONDIPUDUR, Coimbatore-", pageWidth - 14, 27, { align: 'right' });
     doc.text("641016, Tamil Nadu", pageWidth - 14, 31, { align: 'right' });
-    doc.text("GSTIN: 33AAYCA8731D1ZH", pageWidth - 14, 35, { align: 'right' });
-    doc.text("Email: finance@ambot365.in", pageWidth - 14, 39, { align: 'right' });
+    doc.text("GSTIN: 33AAYCA8731D1ZH | CIN: U72900TZ2021OPC038831", pageWidth - 14, 35, { align: 'right' });
+    doc.text("Email: finance@ambot365.in | Phone: +91 93635 18635", pageWidth - 14, 39, { align: 'right' });
 
     // 3. Decorative Lines (Header)
     doc.setDrawColor(0, 84, 166); // Blue
@@ -274,9 +347,9 @@ const generatePaymentInvoicePDF = (stakeholder, details, dealValue) => {
     const doc = new jsPDF();
     const currency = details.currency || 'AED';
     const payAmt = (dealValue * (parseFloat(stakeholder.percentage) || 0)) / 100;
-    const taxRate = parseFloat(stakeholder.payoutTax) || 18;
+    const taxRate = parseFloat(details.leadGst) || 18;
     const taxAmt = (payAmt * taxRate) / 100;
-    const netPay = payAmt - taxAmt;
+    const netPay = payAmt + taxAmt;
 
     // Use Helper
     addPDFHeader(doc, "PAYMENT VOUCHER", details);
@@ -315,8 +388,8 @@ const generatePaymentInvoicePDF = (stakeholder, details, dealValue) => {
 
     if (taxRate > 0) {
         finalY += 6;
-        doc.text(`Less GST (${taxRate}%):`, 140, finalY);
-        doc.text(`- ${currency} ${taxAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
+        doc.text(`Add GST (${taxRate}%):`, 140, finalY);
+        doc.text(`+ ${currency} ${taxAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
     }
 
     doc.setDrawColor(200); doc.line(140, finalY + 4, 200, finalY + 4);
@@ -353,21 +426,9 @@ const generateInvoicePDF = (milestone, details, taxes) => {
     const finalAmount = baseAmount + totalTaxAmount;
 
     // ═══ HEADER ═══
-    addPDFHeader(doc, "CLIENT INVOICE", details);
+    addPDFHeader(doc, "PROFORMA INVOICE", details);
 
     let y = 72;
-
-    // ═══ COMPANY INFO ═══
-    doc.setFontSize(9); doc.setTextColor(0); doc.setFont(undefined, 'bold');
-    doc.text("AMBOT365 RPA & IT SOLUTIONS (OPC) PVT.LTD", 14, y);
-    doc.setFont(undefined, 'normal'); doc.setFontSize(8); doc.setTextColor(60);
-    doc.text("BLOCK A, DOOR NO 105, MOTHERS VILLAGE, NESAVALAR COLONY ROAD, ONDIPUDUR, Coimbatore-641016, Tamil Nadu", 14, y + 4);
-    doc.text("GSTIN: 33AAYCA8731D1ZH  |  CIN: U72900TZ2021OPC038831", 14, y + 8);
-
-    y += 14;
-    doc.setDrawColor(200); doc.setLineWidth(0.3);
-    doc.line(14, y, pageWidth - 14, y);
-    y += 5;
 
     // ═══ BILL TO & INVOICE INFO ═══
     doc.setFontSize(9); doc.setTextColor(0); doc.setFont(undefined, 'bold');
@@ -412,7 +473,7 @@ const generateInvoicePDF = (milestone, details, taxes) => {
             baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })
         ]],
         theme: 'grid',
-        headStyles: { fillColor: [91, 190, 184], textColor: 255, fontStyle: 'bold', fontSize: 8, halign: 'center' },
+        headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold', fontSize: 8, halign: 'center' },
         styles: { halign: 'center', cellPadding: 3, fontSize: 8, lineColor: [200, 200, 200], lineWidth: 0.2 },
         columnStyles: {
             0: { halign: 'center', cellWidth: 12 },
@@ -450,12 +511,12 @@ const generateInvoicePDF = (milestone, details, taxes) => {
     }
 
     finalY += 4;
-    doc.setDrawColor(91, 190, 184); doc.setLineWidth(0.5);
+    doc.setDrawColor(41, 128, 185); doc.setLineWidth(0.5);
     doc.line(rightX - 2, finalY, pageWidth - 14, finalY);
     finalY += 7;
 
     // Grand Total Box
-    doc.setFillColor(91, 190, 184);
+    doc.setFillColor(39, 174, 96);
     doc.rect(rightX - 4, finalY - 5, pageWidth - rightX + 4 - 10, 11, 'F');
     doc.setTextColor(255); doc.setFont(undefined, 'bold'); doc.setFontSize(10);
     doc.text("TOTAL:", rightX, finalY + 2);
@@ -502,24 +563,11 @@ const generateInvoicePDF = (milestone, details, taxes) => {
     doc.text("MICR: 641240002", 120, finalY);
 
     // Authorized Signatory
-    doc.setFont(undefined, 'normal'); doc.setFontSize(8);
-    doc.text("For AMBOT365 RPA & IT SOLUTIONS", pageWidth - 14, finalY - 8, { align: 'right' });
-    doc.text("(Authorized Signatory)", pageWidth - 14, finalY + 2, { align: 'right' });
-
-    // ═══ NOTE & HSN/SAC ═══
     finalY += 10;
-    doc.setDrawColor(200); doc.setLineWidth(0.3);
-    doc.line(14, finalY, pageWidth - 14, finalY);
-    finalY += 5;
-    doc.setFont(undefined, 'bold'); doc.setFontSize(8); doc.setTextColor(0);
-    doc.text("NOTE:", 14, finalY);
-    finalY += 5;
-    doc.text("HSN/SAC:", 14, finalY);
-    finalY += 5;
-    doc.setFillColor(91, 190, 184);
-    doc.rect(14, finalY - 3, pageWidth - 28, 7, 'F');
-    doc.setTextColor(255); doc.setFont(undefined, 'bold');
-    doc.text("998313  Information technology consulting and support services", pageWidth / 2, finalY + 1, { align: 'center' });
+    doc.setFont(undefined, 'normal'); doc.setFontSize(8);
+    doc.text("For AMBOT365 RPA & IT SOLUTIONS", pageWidth - 14, finalY, { align: 'right' });
+    finalY += 10;
+    doc.text("(Authorized Signatory)", pageWidth - 14, finalY, { align: 'right' });
 
     // ═══ BOTTOM FOOTER ═══
     let bottomY = pageHeight - 10;
@@ -527,9 +575,6 @@ const generateInvoicePDF = (milestone, details, taxes) => {
     doc.line(14, bottomY - 6, pageWidth - 14, bottomY - 6);
     doc.setDrawColor(140, 198, 63); doc.setLineWidth(0.5);
     doc.line(14, bottomY - 5, pageWidth - 14, bottomY - 5);
-    doc.setFontSize(7); doc.setTextColor(80); doc.setFont(undefined, 'normal');
-    doc.text("AMBOT365 RPA & IT SOLUTIONS (OPC) PVT.LTD", pageWidth / 2, bottomY, { align: 'center' });
-    doc.text("BLOCK A , DOOR NO 105, MOTHERS VILLAGE , NESAVALAR COLONY ROAD, ONDIPUDUR , COIMBATORE 641016,TAMILNADU", pageWidth / 2, bottomY + 4, { align: 'center' });
 
     doc.save(`Invoice_${milestone.id}_${(milestone.name || 'milestone').replace(/[^a-z0-9]/gi, '_')}.pdf`);
 };
@@ -542,27 +587,15 @@ const generateInvestorPaymentPDF = (milestone, details, taxes) => {
     const currency = details.currency || 'INR';
     const baseAmount = (details.dealValue * (parseFloat(milestone.percentage) || 0)) / 100;
 
-    // TDS Calculation (Section 194J — Professional/Technical Services @ 10%)
-    const tdsRate = 10;
-    const tdsAmount = (baseAmount * tdsRate) / 100;
-    const netPay = baseAmount - tdsAmount;
+    // GST Calculation instead of TDS deduction
+    const gstRate = parseFloat(details.leadGst) || 18;
+    const gstAmount = (baseAmount * gstRate) / 100;
+    const netPay = baseAmount + gstAmount;
 
     // ═══ HEADER ═══
     addPDFHeader(doc, "PAYMENT TO INVESTOR", details);
 
     let y = 72;
-
-    // ═══ COMPANY INFO ═══
-    doc.setFontSize(9); doc.setTextColor(0); doc.setFont(undefined, 'bold');
-    doc.text("AMBOT365 RPA & IT SOLUTIONS (OPC) PVT.LTD", 14, y);
-    doc.setFont(undefined, 'normal'); doc.setFontSize(8); doc.setTextColor(60);
-    doc.text("BLOCK A, DOOR NO 105, MOTHERS VILLAGE, NESAVALAR COLONY ROAD, ONDIPUDUR, Coimbatore-641016, Tamil Nadu", 14, y + 4);
-    doc.text("GSTIN: 33AAYCA8731D1ZH  |  CIN: U72900TZ2021OPC038831", 14, y + 8);
-
-    y += 14;
-    doc.setDrawColor(200); doc.setLineWidth(0.3);
-    doc.line(14, y, pageWidth - 14, y);
-    y += 5;
 
     // ═══ PAY TO & VOUCHER INFO ═══
     doc.setFontSize(9); doc.setTextColor(0); doc.setFont(undefined, 'bold');
@@ -599,13 +632,13 @@ const generateInvestorPaymentPDF = (milestone, details, taxes) => {
     // ═══ ITEMS TABLE ═══
     autoTable(doc, {
         startY: y,
-        head: [['Sno', 'Description', 'Share %', `Gross Amt (${currency})`, `TDS @ ${tdsRate}%`, `Net Pay (${currency})`]],
+        head: [['Sno', 'Description', 'Share %', `Base Amt (${currency})`, `GST @ ${gstRate}%`, `Total Pay (${currency})`]],
         body: [[
             1,
             `${milestone.name || 'Investor Payout'} — Revenue Share Disbursement`,
             `${milestone.percentage}%`,
             baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }),
-            tdsAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }),
+            gstAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }),
             netPay.toLocaleString(undefined, { minimumFractionDigits: 2 })
         ]],
         theme: 'grid',
@@ -628,12 +661,12 @@ const generateInvestorPaymentPDF = (milestone, details, taxes) => {
     let rightX = pageWidth - 75;
     doc.setFontSize(9); doc.setTextColor(0);
     doc.setFont(undefined, 'normal');
-    doc.text("Gross Payout:", rightX, finalY);
+    doc.text("Base Payout:", rightX, finalY);
     doc.text(`${currency} ${fmt(baseAmount)}`, pageWidth - 14, finalY, { align: 'right' });
 
     finalY += 6;
-    doc.text(`Less: TDS u/s 194J @ ${tdsRate}%:`, rightX, finalY);
-    doc.text(`- ${currency} ${fmt(tdsAmount)}`, pageWidth - 14, finalY, { align: 'right' });
+    doc.text(`Add: GST @ ${gstRate}%:`, rightX, finalY);
+    doc.text(`+ ${currency} ${fmt(gstAmount)}`, pageWidth - 14, finalY, { align: 'right' });
 
     finalY += 4;
     doc.setDrawColor(41, 128, 185); doc.setLineWidth(0.5);
@@ -688,22 +721,11 @@ const generateInvestorPaymentPDF = (milestone, details, taxes) => {
     doc.text("MICR: 641240002", 120, finalY);
 
     // Authorized Signatory
-    doc.setFont(undefined, 'normal'); doc.setFontSize(8);
-    doc.text("For AMBOT365 RPA & IT SOLUTIONS", pageWidth - 14, finalY - 8, { align: 'right' });
-    doc.text("(Authorized Signatory)", pageWidth - 14, finalY + 2, { align: 'right' });
-
-    // ═══ NOTE ═══
     finalY += 10;
-    doc.setDrawColor(200); doc.setLineWidth(0.3);
-    doc.line(14, finalY, pageWidth - 14, finalY);
-    finalY += 5;
-    doc.setFont(undefined, 'bold'); doc.setFontSize(8); doc.setTextColor(0);
-    doc.text("NOTE:", 14, finalY);
-    doc.setFont(undefined, 'normal');
-    finalY += 5;
-    doc.text("TDS deducted under Section 194J of the Income Tax Act, 1961.", 14, finalY);
-    finalY += 5;
-    doc.text("This is a revenue share disbursement, not a supply of goods/services. GST is not applicable.", 14, finalY);
+    doc.setFont(undefined, 'normal'); doc.setFontSize(8);
+    doc.text("For AMBOT365 RPA & IT SOLUTIONS", pageWidth - 14, finalY, { align: 'right' });
+    finalY += 10;
+    doc.text("(Authorized Signatory)", pageWidth - 14, finalY, { align: 'right' });
 
     // ═══ BOTTOM FOOTER ═══
     let bottomY = pageHeight - 10;
@@ -711,9 +733,6 @@ const generateInvestorPaymentPDF = (milestone, details, taxes) => {
     doc.line(14, bottomY - 6, pageWidth - 14, bottomY - 6);
     doc.setDrawColor(140, 198, 63); doc.setLineWidth(0.5);
     doc.line(14, bottomY - 5, pageWidth - 14, bottomY - 5);
-    doc.setFontSize(7); doc.setTextColor(80); doc.setFont(undefined, 'normal');
-    doc.text("AMBOT365 RPA & IT SOLUTIONS (OPC) PVT.LTD", pageWidth / 2, bottomY, { align: 'center' });
-    doc.text("BLOCK A , DOOR NO 105, MOTHERS VILLAGE , NESAVALAR COLONY ROAD, ONDIPUDUR , COIMBATORE 641016,TAMILNADU", pageWidth / 2, bottomY + 4, { align: 'center' });
 
     doc.save(`Investor_Payment_${milestone.id}_${(milestone.name || 'milestone').replace(/[^a-z0-9]/gi, '_')}.pdf`);
 };
@@ -786,22 +805,6 @@ const generateTaxInvoicePDF = (milestone, details, taxes) => {
 
     let y = 72;
 
-    // ═══ COMPANY INFO (Top Left) ═══
-    doc.setFontSize(9); doc.setTextColor(0); doc.setFont(undefined, 'bold');
-    doc.text("AMBOT365 RPA & IT SOLUTIONS (OPC) PVT.LTD", 14, y);
-    doc.setFont(undefined, 'normal'); doc.setFontSize(8); doc.setTextColor(60);
-    doc.text("BLOCK A, DOOR NO 105, MOTHERS VILLAGE,", 14, y + 4);
-    doc.text("NESAVALAR COLONY ROAD, ONDIPUDUR, Coimbatore-641016, Tamil Nadu", 14, y + 8);
-    doc.text("GSTIN: 33AAYCA8731D1ZH", 14, y + 12);
-    doc.text("CIN: U72900TZ2021OPC038831", 14, y + 16);
-
-    y += 22;
-
-    // ═══ BILL TO (Left) & INVOICE INFO (Right) ═══
-    doc.setDrawColor(200); doc.setLineWidth(0.3);
-    doc.line(14, y, pageWidth - 14, y);
-    y += 5;
-
     // Bill To
     doc.setFontSize(9); doc.setTextColor(0); doc.setFont(undefined, 'bold');
     doc.text("BILL TO:", 14, y);
@@ -847,7 +850,7 @@ const generateTaxInvoicePDF = (milestone, details, taxes) => {
         ]],
         theme: 'grid',
         headStyles: {
-            fillColor: [0, 84, 166],
+            fillColor: [41, 128, 185],
             textColor: 255,
             fontStyle: 'bold',
             fontSize: 8,
@@ -903,12 +906,12 @@ const generateTaxInvoicePDF = (milestone, details, taxes) => {
 
     // Divider
     finalY += 4;
-    doc.setDrawColor(0, 84, 166); doc.setLineWidth(0.5);
+    doc.setDrawColor(41, 128, 185); doc.setLineWidth(0.5);
     doc.line(rightX - 2, finalY, pageWidth - 14, finalY);
     finalY += 7;
 
     // TOTAL RS (Grand Total Box)
-    doc.setFillColor(0, 84, 166);
+    doc.setFillColor(39, 174, 96);
     doc.rect(rightX - 4, finalY - 5, pageWidth - rightX + 4 - 10, 11, 'F');
     doc.setTextColor(255); doc.setFont(undefined, 'bold'); doc.setFontSize(10);
     doc.text("TOTAL:", rightX, finalY + 2);
@@ -956,30 +959,11 @@ const generateTaxInvoicePDF = (milestone, details, taxes) => {
     doc.text("MICR: 641240002", 120, finalY);
 
     // Authorized Signatory (Right Side)
-    doc.setFont(undefined, 'normal'); doc.setFontSize(8);
-    doc.text("For AMBOT365 RPA & IT SOLUTIONS", pageWidth - 14, finalY - 8, { align: 'right' });
-    doc.text("(Authorized Signatory)", pageWidth - 14, finalY + 2, { align: 'right' });
-
-    // ═══ NOTE & HSN/SAC SECTION ═══
     finalY += 10;
-    doc.setDrawColor(200); doc.setLineWidth(0.3);
-    doc.line(14, finalY, pageWidth - 14, finalY);
-
-    finalY += 5;
-    doc.setFont(undefined, 'bold'); doc.setFontSize(8); doc.setTextColor(0);
-    doc.text("NOTE:", 14, finalY);
-    doc.setFont(undefined, 'normal');
-
-    finalY += 5;
-    doc.setFont(undefined, 'bold');
-    doc.text("HSN/SAC:", 14, finalY);
-    doc.setFont(undefined, 'normal');
-
-    finalY += 5;
-    doc.setFillColor(0, 84, 166);
-    doc.rect(14, finalY - 3, pageWidth - 28, 7, 'F');
-    doc.setTextColor(255); doc.setFontSize(8); doc.setFont(undefined, 'bold');
-    doc.text("998313  Information technology consulting and support services", pageWidth / 2, finalY + 1, { align: 'center' });
+    doc.setFont(undefined, 'normal'); doc.setFontSize(8);
+    doc.text("For AMBOT365 RPA & IT SOLUTIONS", pageWidth - 14, finalY, { align: 'right' });
+    finalY += 10;
+    doc.text("(Authorized Signatory)", pageWidth - 14, finalY, { align: 'right' });
 
     // ═══ BOTTOM FOOTER ═══
     let bottomY = pageHeight - 10;
@@ -987,9 +971,6 @@ const generateTaxInvoicePDF = (milestone, details, taxes) => {
     doc.line(14, bottomY - 6, pageWidth - 14, bottomY - 6);
     doc.setDrawColor(140, 198, 63); doc.setLineWidth(0.5);
     doc.line(14, bottomY - 5, pageWidth - 14, bottomY - 5);
-    doc.setFontSize(7); doc.setTextColor(80); doc.setFont(undefined, 'normal');
-    doc.text("AMBOT365 RPA & IT SOLUTIONS (OPC) PVT.LTD", pageWidth / 2, bottomY, { align: 'center' });
-    doc.text("BLOCK A , DOOR NO 105, MOTHERS VILLAGE , NESAVALAR COLONY ROAD, ONDIPUDUR , COIMBATORE 641016,TAMILNADU", pageWidth / 2, bottomY + 4, { align: 'center' });
 
     doc.save(`Tax_Invoice_${milestone.id}_${(milestone.name || 'milestone').replace(/[^a-z0-9]/gi, '_')}.pdf`);
 };
@@ -1501,34 +1482,6 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject, onStatusChange })
     );
 };
 
-const BusinessDetails = ({ details, updateDetails }) => (
-    <div className="stage">
-        <div className="bar">Stage 1 — Business Details</div>
-        <div className="stage-p">
-            <div className="grid-stage">
-                <label className="stage-label">Project ID</label>
-                <input className="stage-input" value={details.projectId} onChange={(e) => updateDetails('projectId', e.target.value)} />
-                <label className="stage-label">Client Name</label>
-                <input className="stage-input" value={details.clientName} onChange={(e) => updateDetails('clientName', e.target.value)} />
-                <label className="stage-label">Client Address</label>
-                <input className="stage-input" value={details.clientAddress || ''} onChange={(e) => updateDetails('clientAddress', e.target.value)} placeholder="Client billing address" />
-                <label className="stage-label">Client GSTIN</label>
-                <input className="stage-input" value={details.clientGstin || ''} onChange={(e) => updateDetails('clientGstin', e.target.value)} placeholder="e.g. 29ABCDE1234F1Z5" />
-                <label className="stage-label">Delivery</label>
-                <input className="stage-input" value={details.delivery || ''} onChange={(e) => updateDetails('delivery', e.target.value)} placeholder="Ambot365" />
-                <label className="stage-label">Billing Location</label>
-                <input className="stage-input" value={details.location} onChange={(e) => updateDetails('location', e.target.value)} />
-                <label className="stage-label">Deal Value</label>
-                <input type="number" className="stage-input" value={details.dealValue} onChange={(e) => updateDetails('dealValue', e.target.value)} />
-                <label className="stage-label">Currency</label>
-                <select className="stage-select" value={details.currency} onChange={(e) => updateDetails('currency', e.target.value)}>
-                    <option value="AED">AED</option><option value="USD">USD</option><option value="INR">INR</option>
-                </select>
-            </div>
-        </div>
-    </div>
-);
-
 const STAKEHOLDERS_CONSTANTS = {
     COUNTRIES: ['India', 'Other'],
     INDIAN_STATES: [
@@ -1541,10 +1494,9 @@ const STAKEHOLDERS_CONSTANTS = {
     ]
 };
 
-const StageTwoCombined = ({ stakeholders, addStakeholder, removeStakeholder, updateStakeholder, charges, addCharge, removeCharge, updateCharge, dealValue, currency }) => {
-    const totalPct = stakeholders.reduce((sum, s) => sum + (parseFloat(s.percentage) || 0), 0);
-    const totalAmt = stakeholders.reduce((sum, s) => sum + ((dealValue * (parseFloat(s.percentage) || 0)) / 100), 0);
-
+const BusinessDetails = ({ details, updateDetails, charges, addCharge, removeCharge, updateCharge }) => {
+    const currency = details.currency || 'AED';
+    const dealValue = parseFloat(details.dealValue) || 0;
     const totalChargePct = charges ? charges.reduce((sum, c) => sum + (parseFloat(c.percentage) || 0), 0) : 0;
     const totalChargeAmt = charges ? charges.reduce((sum, c) => sum + ((dealValue * (parseFloat(c.percentage) || 0)) / 100), 0) : 0;
 
@@ -1658,21 +1610,182 @@ const StageTwoCombined = ({ stakeholders, addStakeholder, removeStakeholder, upd
 
     return (
         <div className="stage">
+            <div className="bar">Stage 1 — Business Details & Finance Charges</div>
+            <div className="stage-p">
+                <div className="grid-stage mb-4">
+                    <label className="stage-label">Project ID</label>
+                    <input className="stage-input" value={details.projectId} onChange={(e) => updateDetails('projectId', e.target.value)} />
+                    <label className="stage-label">Client Name</label>
+                    <input className="stage-input" value={details.clientName} onChange={(e) => updateDetails('clientName', e.target.value)} />
+                    <label className="stage-label">Client Address</label>
+                    <input className="stage-input" value={details.clientAddress || ''} onChange={(e) => updateDetails('clientAddress', e.target.value)} placeholder="Client billing address" />
+                    <label className="stage-label">Client GSTIN</label>
+                    <input className="stage-input" value={details.clientGstin || ''} onChange={(e) => updateDetails('clientGstin', e.target.value)} placeholder="e.g. 29ABCDE1234F1Z5" />
+                    <label className="stage-label">Delivery</label>
+                    <input className="stage-input" value={details.delivery || ''} onChange={(e) => updateDetails('delivery', e.target.value)} placeholder="Ambot365" />
+                    <label className="stage-label">Billing Location</label>
+                    <input className="stage-input" value={details.location} onChange={(e) => updateDetails('location', e.target.value)} />
+                    <label className="stage-label">Deal Value</label>
+                    <input type="number" className="stage-input" value={details.dealValue} onChange={(e) => updateDetails('dealValue', e.target.value)} />
+                    <label className="stage-label">Currency</label>
+                    <select className="stage-select" value={details.currency} onChange={(e) => updateDetails('currency', e.target.value)}>
+                        <option value="AED">AED</option><option value="USD">USD</option><option value="INR">INR</option>
+                    </select>
+                    <label className="stage-label">Lead GST (%)</label>
+                    <input type="number" className="stage-input" value={details.leadGst || ''} onChange={(e) => updateDetails('leadGst', e.target.value)} placeholder="e.g. 18" />
+                </div>
+
+                {/* Finance Charges Section */}
+                <div className="d-flex justify-content-between align-items-center mb-3 border-top pt-4">
+                    <h6 className="fw-bold m-0 text-muted">Finance Charges (GST / Tax)</h6>
+                    <button className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" onClick={addCharge}>
+                        <Plus size={14} /> Add Tax
+                    </button>
+                </div>
+                <div className="table-responsive">
+                    <table className="stage-table">
+                        <thead>
+                            <tr>
+                                <th style={{ width: '200px' }}>Tax Type</th>
+                                <th>Country</th>
+                                <th>State</th>
+                                <th style={{ width: '100px' }}>%</th>
+                                <th>Amount ({currency})</th>
+                                <th style={{ width: '50px' }}></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {charges && charges.map(c => (
+                                <tr key={c.id}>
+                                    <td>
+                                        {c.taxType === 'Other' ? (
+                                            <div className="d-flex gap-1 align-items-center">
+                                                <input
+                                                    className="stage-input"
+                                                    value={c.name}
+                                                    onChange={(e) => updateCharge(c.id, 'name', e.target.value)}
+                                                    placeholder="Tax Name"
+                                                    autoFocus
+                                                />
+                                                <button
+                                                    className="btn btn-sm btn-light border d-flex align-items-center justify-content-center"
+                                                    onClick={() => handleTaxChange(c.id, 'taxType', '', c)}
+                                                    title="Reset"
+                                                    style={{ width: '30px', height: '30px', padding: 0 }}
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <select
+                                                className="stage-select"
+                                                value={c.taxType || ''}
+                                                onChange={(e) => handleTaxChange(c.id, 'taxType', e.target.value, c)}
+                                            >
+                                                <option value="">Select Type</option>
+                                                <option value="Intra-State (CGST + SGST)">Intra-State (CGST + SGST)</option>
+                                                <option value="Inter-State (IGST)">Inter-State (IGST)</option>
+                                                <option value="Export (Nil Rate)">Export (Nil Rate)</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        )}
+                                    </td>
+                                    <td>
+                                        {c.country !== 'India' && c.country !== undefined ? (
+                                            <div className="d-flex gap-1 align-items-center">
+                                                <input
+                                                    className="stage-input"
+                                                    value={c.country}
+                                                    onChange={(e) => handleTaxChange(c.id, 'country', e.target.value, c)}
+                                                    placeholder="Country Name"
+                                                    autoFocus
+                                                />
+                                                <button
+                                                    className="btn btn-sm btn-light border d-flex align-items-center justify-content-center"
+                                                    onClick={() => handleTaxChange(c.id, 'country', 'India', c)}
+                                                    title="Reset to India"
+                                                    style={{ width: '30px', height: '30px', padding: 0 }}
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <select
+                                                className="stage-select"
+                                                value={c.country || 'India'}
+                                                onChange={(e) => {
+                                                    if (e.target.value === 'Other') {
+                                                        handleTaxChange(c.id, 'country', 'Other', c);
+                                                    } else {
+                                                        handleTaxChange(c.id, 'country', e.target.value, c);
+                                                    }
+                                                }}
+                                                disabled={c.taxType === 'Other'}
+                                            >
+                                                {STAKEHOLDERS_CONSTANTS.COUNTRIES.map(country => (
+                                                    <option key={country} value={country}>{country}</option>
+                                                ))}
+                                            </select>
+                                        )}
+                                    </td>
+                                    <td>
+                                        <select
+                                            className="stage-select"
+                                            value={c.state || ''}
+                                            onChange={(e) => handleTaxChange(c.id, 'state', e.target.value, c)}
+                                            disabled={(c.country || 'India') !== 'India' || c.taxType === 'Other'}
+                                        >
+                                            <option value="">Select State</option>
+                                            {STAKEHOLDERS_CONSTANTS.INDIAN_STATES.map(state => (
+                                                <option key={state} value={state}>{state}</option>
+                                            ))}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input
+                                            type="number"
+                                            className="stage-input"
+                                            value={c.percentage}
+                                            onChange={(e) => handleTaxChange(c.id, 'percentage', e.target.value, c)}
+                                            disabled={c.taxType !== 'Other'}
+                                        />
+                                    </td>
+                                    <td className="font-monospace">{currency} {(dealValue * c.percentage / 100).toLocaleString()}</td>
+                                    <td><button className="btn-link text-danger" onClick={() => removeCharge(c.id)}><Trash2 size={16} /></button></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colSpan="3">Total Tax Liability</th>
+                                <th>{totalChargePct.toFixed(2)}%</th>
+                                <th>{currency} {totalChargeAmt.toLocaleString()}</th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const StageTwoCombined = ({ stakeholders, addStakeholder, removeStakeholder, updateStakeholder, dealValue, currency }) => {
+    const totalPct = stakeholders.reduce((sum, s) => sum + (parseFloat(s.percentage) || 0), 0);
+    const totalAmt = stakeholders.reduce((sum, s) => sum + ((dealValue * (parseFloat(s.percentage) || 0)) / 100), 0);
+
+    return (
+        <div className="stage">
             <div className="bar">
-                <span>Stage 2 — Project Splits & Finance Charges</span>
+                <span>Stage 2 — Project Splits</span>
                 <div className="d-flex gap-2">
                     <button className="btn btn-sm btn-white d-flex align-items-center gap-1" onClick={addStakeholder}>
                         <Plus size={14} />Splits
                     </button>
-                    <button className="btn btn-sm btn-white d-flex align-items-center gap-1" onClick={addCharge}>
-                        <Plus size={14} /> Tax
-                    </button>
                 </div>
             </div>
             <div className="stage-p">
-                {/* Share Percentage Section */}
-                <h6 className="fw-bold mb-3 text-muted">Share Percentage</h6>
-                <table className="stage-table mb-4">
+                <table className="stage-table">
                     <thead>
                         <tr>
                             <th>Party</th><th style={{ width: '150px' }}>%</th><th>Amount ({currency})</th><th style={{ width: '50px' }}></th>
@@ -1701,130 +1814,6 @@ const StageTwoCombined = ({ stakeholders, addStakeholder, removeStakeholder, upd
                     <tfoot>
                         <tr>
                             <th>Total</th><th>{totalPct.toFixed(2)}%</th><th>{currency} {totalAmt.toLocaleString()}</th><th></th>
-                        </tr>
-                    </tfoot>
-                </table>
-
-                {/* Finance Charges Section */}
-                <h6 className="fw-bold mb-3 text-muted border-top pt-4">Finance Charges (GST / Tax)</h6>
-                <table className="stage-table">
-                    <thead>
-                        <tr>
-                            <th style={{ width: '200px' }}>Tax Type</th>
-                            <th>Country</th>
-                            <th>State</th>
-                            <th style={{ width: '100px' }}>%</th>
-                            <th>Amount ({currency})</th>
-                            <th style={{ width: '50px' }}></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {charges && charges.map(c => (
-                            <tr key={c.id}>
-                                <td>
-                                    {c.taxType === 'Other' ? (
-                                        <div className="d-flex gap-1 align-items-center">
-                                            <input
-                                                className="stage-input"
-                                                value={c.name}
-                                                onChange={(e) => updateCharge(c.id, 'name', e.target.value)}
-                                                placeholder="Tax Name"
-                                                autoFocus
-                                            />
-                                            <button
-                                                className="btn btn-sm btn-light border d-flex align-items-center justify-content-center"
-                                                onClick={() => handleTaxChange(c.id, 'taxType', '', c)}
-                                                title="Reset"
-                                                style={{ width: '30px', height: '30px', padding: 0 }}
-                                            >
-                                                <X size={14} />
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <select
-                                            className="stage-select"
-                                            value={c.taxType || ''}
-                                            onChange={(e) => handleTaxChange(c.id, 'taxType', e.target.value, c)}
-                                        >
-                                            <option value="">Select Type</option>
-                                            <option value="Intra-State (CGST + SGST)">Intra-State (CGST + SGST)</option>
-                                            <option value="Inter-State (IGST)">Inter-State (IGST)</option>
-                                            <option value="Export (Nil Rate)">Export (Nil Rate)</option>
-                                            <option value="Other">Other</option>
-                                        </select>
-                                    )}
-                                </td>
-                                <td>
-                                    {c.country !== 'India' && c.country !== undefined ? (
-                                        <div className="d-flex gap-1 align-items-center">
-                                            <input
-                                                className="stage-input"
-                                                value={c.country}
-                                                onChange={(e) => handleTaxChange(c.id, 'country', e.target.value, c)}
-                                                placeholder="Country Name"
-                                                autoFocus
-                                            />
-                                            <button
-                                                className="btn btn-sm btn-light border d-flex align-items-center justify-content-center"
-                                                onClick={() => handleTaxChange(c.id, 'country', 'India', c)}
-                                                title="Reset to India"
-                                                style={{ width: '30px', height: '30px', padding: 0 }}
-                                            >
-                                                <X size={14} />
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <select
-                                            className="stage-select"
-                                            value={c.country || 'India'}
-                                            onChange={(e) => {
-                                                if (e.target.value === 'Other') {
-                                                    handleTaxChange(c.id, 'country', 'Other', c);
-                                                } else {
-                                                    handleTaxChange(c.id, 'country', e.target.value, c);
-                                                }
-                                            }}
-                                            disabled={c.taxType === 'Other'}
-                                        >
-                                            {STAKEHOLDERS_CONSTANTS.COUNTRIES.map(country => (
-                                                <option key={country} value={country}>{country}</option>
-                                            ))}
-                                        </select>
-                                    )}
-                                </td>
-                                <td>
-                                    <select
-                                        className="stage-select"
-                                        value={c.state || ''}
-                                        onChange={(e) => handleTaxChange(c.id, 'state', e.target.value, c)}
-                                        disabled={(c.country || 'India') !== 'India' || c.taxType === 'Other'}
-                                    >
-                                        <option value="">Select State</option>
-                                        {STAKEHOLDERS_CONSTANTS.INDIAN_STATES.map(state => (
-                                            <option key={state} value={state}>{state}</option>
-                                        ))}
-                                    </select>
-                                </td>
-                                <td>
-                                    <input
-                                        type="number"
-                                        className="stage-input"
-                                        value={c.percentage}
-                                        onChange={(e) => handleTaxChange(c.id, 'percentage', e.target.value, c)}
-                                        disabled={c.taxType !== 'Other'}
-                                    />
-                                </td>
-                                <td className="font-monospace">{currency} {(dealValue * c.percentage / 100).toLocaleString()}</td>
-                                <td><button className="btn-link text-danger" onClick={() => removeCharge(c.id)}><Trash2 size={16} /></button></td>
-                            </tr>
-                        ))}
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <th colSpan="3">Total Tax Liability</th>
-                            <th>{totalChargePct.toFixed(2)}%</th>
-                            <th>{currency} {totalChargeAmt.toLocaleString()}</th>
-                            <th></th>
                         </tr>
                     </tfoot>
                 </table>
@@ -1888,30 +1877,31 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
                     </div>
                 </div>
 
-                <div className="table-responsive">
-                    <table className="stage-table" style={{ tableLayout: 'fixed', width: '100%' }}>
+                <div className="table-responsive" style={{ overflowX: 'auto' }}>
+                    <table className="stage-table" style={{ minWidth: '1300px', width: '100%' }}>
                         <thead>
                             <tr>
-                                <th>#</th>
-                                <th style={{ width: '180px' }}>Payment</th>
-                                <th>Value %</th>
-                                <th style={{ width: '140px' }}>Inv Date</th>
-                                <th>Base ({details.currency})</th>
+                                <th style={{ width: '200px' }}>Payment</th>
+                                <th style={{ width: '80px' }}>Value %</th>
+                                <th style={{ width: '150px' }}>Inv Date</th>
+                                <th style={{ width: '120px' }}>Base ({details.currency})</th>
 
                                 {isIntraState ? (
                                     <>
-                                        <th>CGST</th>
-                                        <th>SGST</th>
+                                        <th style={{ width: '100px' }}>CGST</th>
+                                        <th style={{ width: '100px' }}>SGST</th>
                                     </>
                                 ) : (
-                                    <th>GST</th>
+                                    <th style={{ width: '100px' }}>GST</th>
                                 )}
 
-                                <th>Total ({details.currency})</th>
-                                <th style={{ width: '140px' }}>Paid Date</th>
-                                <th>Paid ({details.currency})</th>
-                                <th>Ageing</th>
-                                <th style={{ width: '120px' }}>Status</th>
+                                <th style={{ width: '130px' }}>Total ({details.currency})</th>
+                                <th style={{ width: '150px' }}>Paid Date</th>
+                                <th style={{ width: '120px' }}>Paid ({details.currency})</th>
+                                <th style={{ width: '80px' }}>Ageing</th>
+                                <th style={{ width: '90px' }}>TDS %</th>
+                                <th style={{ width: '120px' }}>TDS Amt</th>
+                                <th style={{ width: '130px' }}>Status</th>
                                 <th style={{ width: '200px' }}>Action</th>
                             </tr>
                         </thead>
@@ -1923,7 +1913,6 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
 
                                 return (
                                     <tr key={milestone.id}>
-                                        <td>{index + 1}</td>
                                         <td>
                                             <input className="stage-input" value={milestone.name} onChange={(e) => updateMilestone(milestone.id, 'name', e.target.value)} placeholder="Description" />
                                         </td>
@@ -1952,6 +1941,12 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
                                         <td className="text-end">{raisedAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                                         <td className="text-center">
                                             {calculateAgeing(milestone.invoiceDate, milestone.paidDate)}
+                                        </td>
+                                        <td>
+                                            <input type="number" className="stage-input p-1 text-center" style={{ width: '70px' }} value={milestone.tdsPercent || ''} onChange={(e) => updateMilestone(milestone.id, 'tdsPercent', e.target.value)} placeholder="10" />
+                                        </td>
+                                        <td className="text-end">
+                                            {((raisedAmount * (parseFloat(milestone.tdsPercent) || 0)) / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                         </td>
                                         <td>
                                             <select
@@ -1985,7 +1980,7 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
                                                 >
                                                     <option value="">Download</option>
                                                     <option value="investor">Payment to Investor</option>
-                                                    <option value="client">Client Invoice</option>
+                                                    <option value="client">Proforma Invoice</option>
                                                     <option value="tax">Tax Invoice</option>
                                                 </select>
                                                 <button className="btn-icon text-danger" onClick={() => removeMilestone(milestone.id)} title="Delete Item">
@@ -1996,7 +1991,7 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
                                     </tr>
                                 );
                             })}
-                            {milestones.length === 0 && <tr><td colSpan={isIntraState ? "13" : "12"} className="text-center text-muted p-3">No payments added.</td></tr>}
+                            {milestones.length === 0 && <tr><td colSpan={isIntraState ? "12" : "11"} className="text-center text-muted p-3">No payments added.</td></tr>}
                         </tbody>
                     </table>
                 </div>
@@ -2029,18 +2024,21 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
             </div>
 
             {/* Stage 1 */}
-            <BusinessDetails details={details} updateDetails={updateDetails} />
+            <BusinessDetails
+                details={details}
+                updateDetails={updateDetails}
+                charges={charges}
+                addCharge={addCharge}
+                removeCharge={removeCharge}
+                updateCharge={updateCharge}
+            />
 
-            {/* Stage 2: Project Splits & Finance Charges */}
+            {/* Stage 2: Project Splits */}
             <StageTwoCombined
                 stakeholders={stakeholders}
                 addStakeholder={addStakeholder}
                 removeStakeholder={removeStakeholder}
                 updateStakeholder={updateStakeholder}
-                charges={charges}
-                addCharge={addCharge}
-                removeCharge={removeCharge}
-                updateCharge={updateCharge}
                 dealValue={dVal}
                 currency={details.currency}
             />
@@ -2052,39 +2050,37 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
             <div className="stage">
                 <div className="bar">Stage 4 — Payment Process</div>
                 <div className="stage-p">
-                    <div className="table-responsive">
-                        <table className="stage-table" style={{ tableLayout: 'fixed', width: '100%' }}>
+                    <div className="table-responsive" style={{ overflowX: 'auto' }}>
+                        <table className="stage-table" style={{ minWidth: '1200px', width: '100%' }}>
                             <thead>
                                 <tr>
-                                    <th>#</th>
-                                    <th>Party</th>
-                                    <th>Value %</th>
-                                    <th>Pay ({details.currency})</th>
-                                    <th>GST %</th>
-                                    <th>GST Amt</th>
-                                    <th>Net Pay</th>
-                                    <th>Paid Date</th>
-                                    <th style={{ width: '120px' }}>Status</th>
-                                    <th>Action</th>
+                                    <th style={{ width: '180px' }}>Party</th>
+                                    <th style={{ width: '90px' }}>Value %</th>
+                                    <th style={{ width: '140px' }}>Pay ({details.currency})</th>
+                                    <th style={{ width: '100px' }}>GST %</th>
+                                    <th style={{ width: '120px' }}>GST Amt</th>
+                                    <th style={{ width: '140px' }}>Total Pay</th>
+                                    <th style={{ width: '150px' }}>Paid Date</th>
+                                    <th style={{ width: '140px' }}>Status</th>
+                                    <th style={{ width: '100px' }}>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {stakeholders && stakeholders.map((s, idx) => {
                                     const payAmt = (dVal * s.percentage) / 100;
-                                    const taxRate = parseFloat(s.payoutTax) || 18;
+                                    const taxRate = parseFloat(details.leadGst) || 18;
                                     const taxAmt = (payAmt * taxRate) / 100;
-                                    const netPay = payAmt - taxAmt;
+                                    const netPay = payAmt + taxAmt;
 
                                     return (
                                         <tr key={s.id}>
-                                            <td>{idx + 1}</td>
                                             <td>{s.name}</td>
                                             <td>
                                                 <input type="number" className="stage-input text-center p-1" style={{ width: '80px' }} value={s.percentage} onChange={(e) => updateStakeholder(s.id, 'percentage', e.target.value)} />
                                             </td>
                                             <td>{details.currency} {payAmt.toLocaleString()}</td>
                                             <td>
-                                                <input type="number" className="stage-input p-1 text-center" style={{ width: '60px' }} value={s.payoutTax ?? 18} onChange={(e) => updateStakeholder(s.id, 'payoutTax', e.target.value)} />
+                                                <input type="number" className="stage-input p-1 text-center" style={{ width: '60px' }} value={parseFloat(details.leadGst) || 18} disabled />
                                             </td>
                                             <td>{details.currency} {taxAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                                             <td>{details.currency} {netPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
@@ -2114,7 +2110,7 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
                                         </tr>
                                     );
                                 })}
-                                {(!stakeholders || stakeholders.length === 0) && <tr><td colSpan="10" className="text-center text-muted p-3">No stakeholders added.</td></tr>}
+                                {(!stakeholders || stakeholders.length === 0) && <tr><td colSpan="9" className="text-center text-muted p-3">No stakeholders added.</td></tr>}
                             </tbody>
                         </table>
                     </div>
