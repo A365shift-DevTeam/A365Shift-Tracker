@@ -18,6 +18,7 @@ import { doc, setDoc, collection, getDocs } from 'firebase/firestore';
 import { projectService } from '../../services/api';
 import { contactService } from '../../services/contactService';
 import { incomeService } from '../../services/incomeService';
+import { expenseService } from '../../services/expenseService';
 
 // ==========================================
 // 1. STYLES (Injected CSS)
@@ -2368,7 +2369,36 @@ const ProjectTrackerComplete = () => {
     // Stakeholders logic
     const addStakeholder = () => updateProject(p => ({ ...p, stakeholders: [...p.stakeholders, { id: Date.now(), name: 'New', percentage: 0, payoutTax: 18, payoutStatus: 'Pending', paidDate: '' }] }));
     const removeStakeholder = (id) => updateProject(p => ({ ...p, stakeholders: p.stakeholders.filter(s => s.id !== id) }));
-    const updateStakeholder = (id, f, v) => updateProject(p => ({ ...p, stakeholders: p.stakeholders.map(s => s.id === id ? { ...s, [f]: v } : s) }));
+    const updateStakeholder = async (id, f, v) => {
+        updateProject(p => ({ ...p, stakeholders: p.stakeholders.map(s => s.id === id ? { ...s, [f]: v } : s) }));
+
+        // Auto-log Expense when status becomes 'Paid'
+        if (f === 'status' && v === 'Paid' && activeProject) {
+            const stakeholder = activeProject.stakeholders.find(s => s.id === id);
+            if (stakeholder) {
+                // Calculate Payout Amount safely converting strings to floats
+                const basePayout = ((parseFloat(activeProject.dealValue) || 0) * (parseFloat(stakeholder.percentage) || 0)) / 100;
+                // Tax deduction uses the leadGst applied to the project as seen in Stage 4 UI
+                const taxRate = parseFloat(activeProject.leadGst) || 18;
+                const taxAmt = (basePayout * taxRate) / 100;
+                const netPayout = basePayout + taxAmt; // From UI: "Total Pay" equals Pay (INR) + GST Amt
+
+                const expenseData = {
+                    description: `Payout: ${stakeholder.name} - ${activeProject.projectId}`,
+                    amount: netPayout,
+                    date: new Date().toISOString(),
+                    category: 'allowances', // Map to a default category in Finance
+                    notes: `Auto-generated Stakeholder Payout from Project ${activeProject.projectId}`
+                };
+
+                try {
+                    await expenseService.createExpense(expenseData);
+                } catch (err) {
+                    console.error("Error creating expense:", err);
+                }
+            }
+        }
+    };
 
     // Milestones logic
     const addMilestone = () => updateProject(p => ({ ...p, milestones: [...p.milestones, { id: Date.now(), name: 'New Stage', percentage: 0, status: 'Pending', invoiceDate: '', paidDate: '' }] }));
