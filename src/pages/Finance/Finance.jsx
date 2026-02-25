@@ -6,6 +6,7 @@ import { incomeService } from '../../services/incomeService'
 import { ExpenseModal } from './ExpenseModal'
 import { IncomeModal } from './IncomeModal'
 import FinanceSettingsModal, { DEFAULT_EXPENSE_FIELDS, DEFAULT_INCOME_FIELDS } from './FinanceSettingsModal'
+import { formatGlobalCurrency } from '../../utils/currencyUtils'
 import './Finance.css'
 
 const EXPENSE_CATEGORIES = [
@@ -209,10 +210,7 @@ const Finance = () => {
 
   // ... (handlers remain mostly same)
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-IN', { // Changed locale to en-IN for INR symbol
-      style: 'currency',
-      currency: 'INR'
-    }).format(amount || 0)
+    return formatGlobalCurrency(amount, 'INR')
   }
 
   // Expense handlers

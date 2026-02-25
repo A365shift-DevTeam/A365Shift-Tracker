@@ -22,6 +22,19 @@ const JOB_TITLES = [
 
 
 
+const COUNTRIES = [
+  'India',
+  'United States',
+  'United Kingdom',
+  'Canada',
+  'Germany',
+  'Australia',
+  'Japan',
+  'Singapore',
+  'United Arab Emirates',
+  'France'
+];
+
 const LOCATIONS = [
   'New York, USA',
   'London, UK',
@@ -45,16 +58,18 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
     phone: '',
     company: '',
     Billinglocation: '', // New field
-    clientAddress: '', // Added back per user request
+    clientAddress: '',
+    clientCountry: 'India', // Default to India
     gstin: '',
     pan: '',
     cin: '',
+    internationalTaxId: '', // For foreign clients (VAT/EIN)
     msmeStatus: 'NON MSME',
     tdsSection: '',
     tdsRate: '',
-    linkedin: '', // New field
+    linkedin: '',
     status: 'Active',
-    entityType: 'Individual', // New field
+    entityType: 'Individual',
     notes: ''
   })
   const [errors, setErrors] = useState({})
@@ -71,9 +86,11 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
           company: contact.company || '',
           location: contact.location || '',
           clientAddress: contact.clientAddress || '',
+          clientCountry: contact.clientCountry || 'India',
           gstin: contact.gstin || '',
           pan: contact.pan || '',
           cin: contact.cin || '',
+          internationalTaxId: contact.internationalTaxId || '',
           msmeStatus: contact.msmeStatus || 'NON MSME',
           tdsSection: contact.tdsSection || '',
           tdsRate: contact.tdsRate || '',
@@ -91,9 +108,11 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
           company: '',
           location: '',
           clientAddress: '',
+          clientCountry: 'India',
           gstin: '',
           pan: '',
           cin: '',
+          internationalTaxId: '',
           msmeStatus: 'NON MSME',
           tdsSection: '',
           tdsRate: '',
@@ -308,83 +327,117 @@ export const ContactModal = ({ show, onHide, contact, onSave, onDelete }) => {
 
             <Col md={4}>
               <Form.Group>
-                <Form.Label className="small fw-bold mb-1">GSTIN</Form.Label>
-                <Form.Control
-                  size="sm"
-                  type="text"
-                  value={formData.gstin}
-                  onChange={(e) => handleChange('gstin', e.target.value)}
-                  placeholder="Enter GSTIN"
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label className="small fw-bold mb-1">PAN</Form.Label>
-                <Form.Control
-                  size="sm"
-                  type="text"
-                  value={formData.pan}
-                  onChange={(e) => handleChange('pan', e.target.value)}
-                  placeholder="Enter PAN"
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label className="small fw-bold mb-1">CIN</Form.Label>
-                <Form.Control
-                  size="sm"
-                  type="text"
-                  value={formData.cin}
-                  onChange={(e) => handleChange('cin', e.target.value)}
-                  placeholder="Enter CIN"
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label className="small fw-bold mb-1">MSME Status</Form.Label>
+                <Form.Label className="small fw-bold mb-1">Country</Form.Label>
                 <Form.Select
                   size="sm"
-                  value={formData.msmeStatus}
-                  onChange={(e) => handleChange('msmeStatus', e.target.value)}
+                  value={formData.clientCountry}
+                  onChange={(e) => handleChange('clientCountry', e.target.value)}
                 >
-                  <option value="NON MSME">NON MSME</option>
-                  <option value="MSME">MSME</option>
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label className="small fw-bold mb-1">TDS Section</Form.Label>
-                <Form.Select
-                  size="sm"
-                  value={formData.tdsSection}
-                  onChange={(e) => handleChange('tdsSection', e.target.value)}
-                >
-                  <option value="">Select Section</option>
-                  <option value="194J">194J (Professional Services)</option>
-                  <option value="194C">194C (Contracts)</option>
-                  <option value="194H">194H (Commission/Brokerage)</option>
-                  <option value="194I">194I (Rent)</option>
+                  {COUNTRIES.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
                   <option value="Other">Other</option>
                 </Form.Select>
               </Form.Group>
             </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label className="small fw-bold mb-1">TDS Rate (%)</Form.Label>
-                <Form.Control
-                  size="sm"
-                  type="number"
-                  step="0.01"
-                  value={formData.tdsRate}
-                  onChange={(e) => handleChange('tdsRate', e.target.value)}
-                  placeholder="e.g. 10"
-                />
-              </Form.Group>
-            </Col>
+
+            {/* --- Conditional Rendering for Taxes --- */}
+            {formData.clientCountry === 'India' ? (
+              <>
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label className="small fw-bold mb-1">GSTIN</Form.Label>
+                    <Form.Control
+                      size="sm"
+                      type="text"
+                      value={formData.gstin}
+                      onChange={(e) => handleChange('gstin', e.target.value)}
+                      placeholder="Enter GSTIN"
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label className="small fw-bold mb-1">PAN</Form.Label>
+                    <Form.Control
+                      size="sm"
+                      type="text"
+                      value={formData.pan}
+                      onChange={(e) => handleChange('pan', e.target.value)}
+                      placeholder="Enter PAN"
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label className="small fw-bold mb-1">CIN</Form.Label>
+                    <Form.Control
+                      size="sm"
+                      type="text"
+                      value={formData.cin}
+                      onChange={(e) => handleChange('cin', e.target.value)}
+                      placeholder="Enter CIN"
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label className="small fw-bold mb-1">MSME Status</Form.Label>
+                    <Form.Select
+                      size="sm"
+                      value={formData.msmeStatus}
+                      onChange={(e) => handleChange('msmeStatus', e.target.value)}
+                    >
+                      <option value="NON MSME">NON MSME</option>
+                      <option value="MSME">MSME</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label className="small fw-bold mb-1">TDS Section</Form.Label>
+                    <Form.Select
+                      size="sm"
+                      value={formData.tdsSection}
+                      onChange={(e) => handleChange('tdsSection', e.target.value)}
+                    >
+                      <option value="">Select Section</option>
+                      <option value="194J">194J (Professional Services)</option>
+                      <option value="194C">194C (Contracts)</option>
+                      <option value="194H">194H (Commission/Brokerage)</option>
+                      <option value="194I">194I (Rent)</option>
+                      <option value="Other">Other</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label className="small fw-bold mb-1">TDS Rate (%)</Form.Label>
+                    <Form.Control
+                      size="sm"
+                      type="number"
+                      step="0.01"
+                      value={formData.tdsRate}
+                      onChange={(e) => handleChange('tdsRate', e.target.value)}
+                      placeholder="e.g. 10"
+                    />
+                  </Form.Group>
+                </Col>
+              </>
+            ) : (
+              <Col md={4}>
+                <Form.Group>
+                  <Form.Label className="small fw-bold mb-1">International Tax ID (VAT/EIN)</Form.Label>
+                  <Form.Control
+                    size="sm"
+                    type="text"
+                    value={formData.internationalTaxId}
+                    onChange={(e) => handleChange('internationalTaxId', e.target.value)}
+                    placeholder="Enter VAT or EIN"
+                  />
+                </Form.Group>
+              </Col>
+            )}
 
             <Col xs={12}>
               <Form.Group>

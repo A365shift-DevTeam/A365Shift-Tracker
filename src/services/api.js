@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc } from 'firebase/firestore';
 
 const PROJECTS_COLLECTION = 'projects';
 
@@ -24,6 +24,16 @@ export const projectService = {
         const docRef = doc(db, PROJECTS_COLLECTION, id);
         await deleteDoc(docRef);
         return id;
+    },
+
+    getById: async (id) => {
+        const docRef = doc(db, PROJECTS_COLLECTION, id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            return { id: docSnap.id, ...docSnap.data() };
+        } else {
+            return null;
+        }
     }
 };
 

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { FaFilePdf } from "react-icons/fa6";
 import { PiMicrosoftExcelLogoFill } from "react-icons/pi";
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import {
-    LayoutDashboard, FileDown, Briefcase, MapPin, Globe, CreditCard, Building, Users,
+    Eye, LayoutDashboard, FileDown, Briefcase, MapPin, Globe, CreditCard, Building, Users,
     Plus, Trash2, ArrowLeft, DollarSign, FileText, ArrowRight, Filter, Wallet, CheckCircle, X, Save
 } from 'lucide-react';
 import ambotLogo from '../../assets/images/ambot logo.png';
@@ -14,11 +14,13 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
 import { db } from '../../services/firebase';
-import { doc, setDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
 import { projectService } from '../../services/api';
 import { contactService } from '../../services/contactService';
 import { incomeService } from '../../services/incomeService';
 import { expenseService } from '../../services/expenseService';
+import { addPDFHeader, generateInvoicePDF, generateTaxInvoicePDF, generateInvestorPaymentPDF, generatePaymentInvoicePDF } from '../../utils/pdfGenerator';
+import { numberToWords } from '../../utils/currencyUtils';
 
 // ==========================================
 // 1. STYLES (Injected CSS)
@@ -303,711 +305,7 @@ const TrackerStyles = () => (
 // 2. UTILITY SERVICES (PDF & Excel)
 // ==========================================
 
-// Helper to add the standard AmBot 365 Header
-const addPDFHeader = (doc, title, details) => {
-    const pageWidth = doc.internal.pageSize.width;
-
-    // 1. Add Logo (Top Left)
-    try {
-        doc.addImage(ambotLogo, 'PNG', 14, 10, 50, 12); // Adjusted aspect ratio (approx 4:1)
-    } catch (e) {
-        doc.setFontSize(20); doc.setTextColor(0, 84, 166); doc.text("AmBot 365", 14, 25);
-    }
-
-    // 2. Add Company Details (Top Right)
-    doc.setFontSize(10); doc.setTextColor(0); doc.setFont(undefined, 'bold');
-    doc.text("AMBOT365 RPA & IT SOLUTIONS (OPC) PVT.LTD", pageWidth - 14, 18, { align: 'right' });
-
-    doc.setFontSize(8); doc.setFont(undefined, 'normal'); doc.setTextColor(60);
-    doc.text("BLOCK A , DOOR NO 105, MOTHERS VILLAGE ,", pageWidth - 14, 23, { align: 'right' });
-    doc.text("NESAVALAR COLONY ROAD, ONDIPUDUR, Coimbatore-", pageWidth - 14, 27, { align: 'right' });
-    doc.text("641016, Tamil Nadu", pageWidth - 14, 31, { align: 'right' });
-    doc.text("GSTIN: 33AAYCA8731D1ZH | CIN: U72900TZ2021OPC038831", pageWidth - 14, 35, { align: 'right' });
-    doc.text("Email: finance@ambot365.in | Phone: +91 93635 18635", pageWidth - 14, 39, { align: 'right' });
-
-    // 3. Decorative Lines (Header)
-    doc.setDrawColor(0, 84, 166); // Blue
-    doc.setLineWidth(1.5);
-    doc.line(14, 45, pageWidth - 14, 45);
-
-    doc.setDrawColor(140, 198, 63); // Green
-    doc.setLineWidth(1.5);
-    doc.line(40, 47, pageWidth - 14, 47); // Slightly offset start as per style
-
-    // 4. Title (Centered)
-    doc.setFontSize(24); doc.setTextColor(15, 36, 86); // Dark Navy Blue
-    doc.setFont(undefined, 'bold');
-    doc.text(title, pageWidth / 2, 60, { align: 'center' });
-
-    // 5. Title Underline (Green)
-    doc.setDrawColor(140, 198, 63);
-    doc.setLineWidth(1);
-    doc.line(pageWidth / 2 - 30, 62, pageWidth / 2 + 30, 62);
-};
-
-const generatePaymentInvoicePDF = (stakeholder, details, dealValue) => {
-    const doc = new jsPDF();
-    const currency = details.currency || 'AED';
-    const payAmt = (dealValue * (parseFloat(stakeholder.percentage) || 0)) / 100;
-    const taxRate = parseFloat(details.leadGst) || 18;
-    const taxAmt = (payAmt * taxRate) / 100;
-    const netPay = payAmt + taxAmt;
-
-    // Use Helper
-    addPDFHeader(doc, "PAYMENT VOUCHER", details);
-
-    // Invoice Details
-    doc.setFontSize(10); doc.setTextColor(0); doc.setFont(undefined, 'bold');
-    doc.text("To:", 14, 85);
-    doc.setFont(undefined, 'normal');
-    doc.text(stakeholder.name || "Stakeholder", 14, 90);
-    doc.text(`Project: ${details.projectId}`, 14, 95);
-
-    doc.setFont(undefined, 'bold');
-    doc.text("Voucher No:", 140, 85);
-    doc.text("Date:", 140, 90);
-
-    doc.setFont(undefined, 'normal');
-    doc.text(`PAY-${stakeholder.id}-${Date.now().toString().slice(-4)}`, 170, 85);
-    doc.text(new Date().toLocaleDateString(), 170, 90);
-
-    autoTable(doc, {
-        startY: 105,
-        head: [['#', 'Item & Description', 'Share %', `Amount (${currency})`]],
-        body: [[1, `Payment Disbursement - ${stakeholder.name}`, `${stakeholder.percentage}%`, `${currency} ${payAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}`]],
-        theme: 'striped',
-        headStyles: { fillColor: [41, 128, 185] }, // Blue Header
-        styles: { halign: 'left' },
-        columnStyles: { 0: { halign: 'center', width: 10 }, 3: { halign: 'right' } }
-    });
-
-    let finalY = doc.lastAutoTable.finalY + 10;
-
-    // Summary
-    doc.setFontSize(10);
-    doc.text(`Subtotal:`, 140, finalY);
-    doc.text(`${currency} ${payAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
-
-    if (taxRate > 0) {
-        finalY += 6;
-        doc.text(`Add GST (${taxRate}%):`, 140, finalY);
-        doc.text(`+ ${currency} ${taxAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
-    }
-
-    doc.setDrawColor(200); doc.line(140, finalY + 4, 200, finalY + 4);
-    finalY += 10;
-
-    // Green Background for Net Amount (mimicking the Excel/Image style)
-    doc.setFillColor(39, 174, 96);
-    doc.rect(135, finalY - 6, 65, 10, 'F');
-    doc.setTextColor(255); doc.setFont(undefined, 'bold');
-    doc.text(`Net Pay:`, 140, finalY);
-    doc.text(`${currency} ${netPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 195, finalY, { align: 'right' });
-
-    // Footer Signatures
-    doc.setTextColor(0); doc.setFont(undefined, 'normal');
-    finalY += 30;
-    doc.text("For AMBOT365 RPA & IT SOLUTIONS", 195, finalY, { align: 'right' });
-    doc.text("(Authorized Signatory)", 195, finalY + 15, { align: 'right' });
-
-    doc.save(`Payment_Voucher_${(stakeholder.name || 'stakeholder').replace(/[^a-z0-9]/gi, '_')}.pdf`);
-};
-
-const generateInvoicePDF = (milestone, details, taxes) => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.width;
-    const pageHeight = doc.internal.pageSize.height;
-    const currency = details.currency || 'INR';
-    const baseAmount = (details.dealValue * (parseFloat(milestone.percentage) || 0)) / 100;
-
-    // Tax Calculation
-    const chargesList = Array.isArray(taxes) && taxes.length > 0 ? taxes : [{ name: 'GST', percentage: 18, taxType: 'Standard' }];
-    const isIntraState = chargesList.some(t => t.taxType === 'Intra-State (CGST + SGST)');
-    const totalTaxRate = chargesList.reduce((sum, c) => sum + (parseFloat(c.percentage) || 0), 0);
-    const totalTaxAmount = (baseAmount * totalTaxRate) / 100;
-    const finalAmount = baseAmount + totalTaxAmount;
-
-    // ═══ HEADER ═══
-    addPDFHeader(doc, "PROFORMA INVOICE", details);
-
-    let y = 72;
-
-    // ═══ BILL TO & INVOICE INFO ═══
-    doc.setFontSize(9); doc.setTextColor(0); doc.setFont(undefined, 'bold');
-    doc.text("BILL TO:", 14, y);
-    doc.setFont(undefined, 'normal');
-    doc.text(details.clientName || "Client Name", 14, y + 5);
-    const billAddress = details.clientAddress;
-    if (billAddress) doc.text(billAddress, 14, y + 9);
-
-    let currentY = y + (billAddress ? 13 : 9);
-    if (details.clientGstin) {
-        doc.setFont(undefined, 'bold');
-        doc.text(`GSTIN: ${details.clientGstin}`, 14, currentY);
-        doc.setFont(undefined, 'normal');
-        currentY += 4;
-    }
-    if (details.clientPan) {
-        doc.setFont(undefined, 'bold');
-        doc.text(`PAN: ${details.clientPan}`, 14, currentY);
-        doc.setFont(undefined, 'normal');
-        currentY += 4;
-    }
-    if (details.clientCin) {
-        doc.setFont(undefined, 'bold');
-        doc.text(`CIN: ${details.clientCin}`, 14, currentY);
-        doc.setFont(undefined, 'normal');
-        currentY += 4;
-    }
-
-    const placeY = currentY;
-    doc.setFont(undefined, 'bold');
-    doc.text("Place of Supply:", 14, placeY);
-    doc.setFont(undefined, 'normal');
-    doc.text(details.location || 'Tamil Nadu', 50, placeY);
-
-    // Right Side
-    doc.setFont(undefined, 'bold');
-    doc.text("Invoice No:", 130, y);
-    doc.text("Invoice Date:", 130, y + 6);
-    doc.setFont(undefined, 'normal');
-    doc.text(`INV-${milestone.id}-${Date.now().toString().slice(-4)}`, 160, y);
-    doc.text(milestone.invoiceDate ? new Date(milestone.invoiceDate).toLocaleDateString() : new Date().toLocaleDateString(), 160, y + 6);
-
-    y = placeY + 5;
-    doc.setDrawColor(200); doc.line(14, y, pageWidth - 14, y);
-    y += 3;
-
-    // ═══ ITEMS TABLE ═══
-    autoTable(doc, {
-        startY: y,
-        head: [['Sno', 'Item & Description', 'HSN/SAC', 'Qty', `Rate (${currency})`, `Amount (${currency})`]],
-        body: [[
-            1,
-            milestone.name || 'IT Consulting & Support Services',
-            '998313',
-            '1',
-            baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }),
-            baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })
-        ]],
-        theme: 'grid',
-        headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold', fontSize: 8, halign: 'center' },
-        styles: { halign: 'center', cellPadding: 3, fontSize: 8, lineColor: [200, 200, 200], lineWidth: 0.2 },
-        columnStyles: {
-            0: { halign: 'center', cellWidth: 12 },
-            1: { halign: 'left', cellWidth: 65 },
-            2: { halign: 'center', cellWidth: 22 },
-            3: { halign: 'center', cellWidth: 15 },
-            4: { halign: 'right', cellWidth: 35 },
-            5: { halign: 'right', cellWidth: 35 }
-        }
-    });
-
-    let finalY = doc.lastAutoTable.finalY + 5;
-    const fmt = (n) => n.toLocaleString(undefined, { minimumFractionDigits: 2 });
-
-    // ═══ TOTALS ═══
-    let rightX = pageWidth - 75;
-    doc.setFontSize(9); doc.setTextColor(0);
-    doc.setFont(undefined, 'normal');
-    doc.text("SubTotal:", rightX, finalY);
-    doc.text(`${currency} ${fmt(baseAmount)}`, pageWidth - 14, finalY, { align: 'right' });
-
-    if (isIntraState) {
-        const halfRate = totalTaxRate / 2;
-        const halfTax = totalTaxAmount / 2;
-        finalY += 6;
-        doc.text(`CGST @ ${halfRate}%:`, rightX, finalY);
-        doc.text(`${currency} ${fmt(halfTax)}`, pageWidth - 14, finalY, { align: 'right' });
-        finalY += 6;
-        doc.text(`SGST @ ${halfRate}%:`, rightX, finalY);
-        doc.text(`${currency} ${fmt(halfTax)}`, pageWidth - 14, finalY, { align: 'right' });
-    } else {
-        finalY += 6;
-        doc.text(`IGST @ ${totalTaxRate}%:`, rightX, finalY);
-        doc.text(`${currency} ${fmt(totalTaxAmount)}`, pageWidth - 14, finalY, { align: 'right' });
-    }
-
-    finalY += 4;
-    doc.setDrawColor(41, 128, 185); doc.setLineWidth(0.5);
-    doc.line(rightX - 2, finalY, pageWidth - 14, finalY);
-    finalY += 7;
-
-    // Grand Total Box
-    doc.setFillColor(39, 174, 96);
-    doc.rect(rightX - 4, finalY - 5, pageWidth - rightX + 4 - 10, 11, 'F');
-    doc.setTextColor(255); doc.setFont(undefined, 'bold'); doc.setFontSize(10);
-    doc.text("TOTAL:", rightX, finalY + 2);
-    doc.text(`${currency} ${fmt(finalAmount)}`, pageWidth - 14, finalY + 2, { align: 'right' });
-
-    // Total in Words
-    finalY += 12;
-    doc.setTextColor(0); doc.setFontSize(8); doc.setFont(undefined, 'bold');
-    doc.text("Total in Words:", 14, finalY);
-    doc.setFont(undefined, 'normal');
-    const currLabel = currency === 'INR' ? 'Rupees' : currency === 'AED' ? 'Dirhams' : currency === 'USD' ? 'Dollars' : currency;
-    doc.text(`${currLabel} ${numberToWords(finalAmount)}`, 14, finalY + 5);
-
-    // ═══ COMPANY DETAILS FOOTER ═══
-    finalY += 15;
-    doc.setDrawColor(0, 84, 166); doc.setLineWidth(0.5);
-    doc.line(14, finalY, pageWidth - 14, finalY);
-
-    finalY += 6;
-    doc.setFontSize(8); doc.setTextColor(0); doc.setFont(undefined, 'bold');
-    doc.text("Ambot PAN:", 14, finalY);
-    doc.setFont(undefined, 'normal');
-    doc.text("AAYCA8731D", 42, finalY);
-
-    finalY += 5;
-    doc.setFont(undefined, 'bold');
-    doc.text("CIN:", 14, finalY);
-    doc.setFont(undefined, 'normal');
-    doc.text("U72900TZ2021OPC038831", 27, finalY);
-
-    // Bank Details
-    finalY += 7;
-    doc.setFont(undefined, 'bold'); doc.setFontSize(9);
-    doc.text("Bank Details:", 14, finalY);
-    doc.setFont(undefined, 'normal'); doc.setFontSize(8);
-    finalY += 5;
-    doc.text("Bank Name: HDFC BANK LTD", 14, finalY);
-    doc.text("IFSC Code: HDFC0000031", 120, finalY);
-    finalY += 4;
-    doc.text("Account Name: AMBOT365 RPA AND IT SOLUTIONS OPC P LTD", 14, finalY);
-    doc.text("Branch code: 000031", 120, finalY);
-    finalY += 4;
-    doc.text("Account Number: 50200084112410", 14, finalY);
-    doc.text("MICR: 641240002", 120, finalY);
-
-    // Authorized Signatory
-    finalY += 10;
-    doc.setFont(undefined, 'normal'); doc.setFontSize(8);
-    doc.text("For AMBOT365 RPA & IT SOLUTIONS", pageWidth - 14, finalY, { align: 'right' });
-    finalY += 10;
-    doc.text("(Authorized Signatory)", pageWidth - 14, finalY, { align: 'right' });
-
-    // ═══ BOTTOM FOOTER ═══
-    let bottomY = pageHeight - 10;
-    doc.setDrawColor(0, 84, 166); doc.setLineWidth(0.5);
-    doc.line(14, bottomY - 6, pageWidth - 14, bottomY - 6);
-    doc.setDrawColor(140, 198, 63); doc.setLineWidth(0.5);
-    doc.line(14, bottomY - 5, pageWidth - 14, bottomY - 5);
-
-    doc.save(`Invoice_${milestone.id}_${(milestone.name || 'milestone').replace(/[^a-z0-9]/gi, '_')}.pdf`);
-};
-
-// ── Invoice Format 2: Payment to Investor ──
-const generateInvestorPaymentPDF = (milestone, details, taxes) => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.width;
-    const pageHeight = doc.internal.pageSize.height;
-    const currency = details.currency || 'INR';
-    const baseAmount = (details.dealValue * (parseFloat(milestone.percentage) || 0)) / 100;
-
-    // GST Calculation instead of TDS deduction
-    const gstRate = parseFloat(details.leadGst) || 18;
-    const gstAmount = (baseAmount * gstRate) / 100;
-    const netPay = baseAmount + gstAmount;
-
-    // ═══ HEADER ═══
-    addPDFHeader(doc, "PAYMENT TO INVESTOR", details);
-
-    let y = 72;
-
-    // ═══ PAY TO & VOUCHER INFO ═══
-    doc.setFontSize(9); doc.setTextColor(0); doc.setFont(undefined, 'bold');
-    doc.text("PAY TO:", 14, y);
-    doc.setFont(undefined, 'normal');
-    doc.text(details.clientName || "Investor / Lead", 14, y + 5);
-    if (details.clientAddress) doc.text(details.clientAddress, 14, y + 9);
-    if (details.clientGstin) {
-        doc.setFont(undefined, 'bold');
-        doc.text(`PAN/GSTIN: ${details.clientGstin}`, 14, y + (details.clientAddress ? 13 : 9));
-        doc.setFont(undefined, 'normal');
-    }
-
-    const placeY = y + (details.clientAddress ? 17 : 13);
-    doc.setFont(undefined, 'bold');
-    doc.text("Place of Supply:", 14, placeY);
-    doc.setFont(undefined, 'normal');
-    doc.text(details.location || 'Tamil Nadu', 50, placeY);
-
-    // Right Side: Voucher Info
-    doc.setFont(undefined, 'bold');
-    doc.text("Voucher No:", 130, y);
-    doc.text("Date:", 130, y + 6);
-    doc.text("Payment For:", 130, y + 12);
-    doc.setFont(undefined, 'normal');
-    doc.text(`PV-${milestone.id}-${Date.now().toString().slice(-4)}`, 160, y);
-    doc.text(milestone.invoiceDate ? new Date(milestone.invoiceDate).toLocaleDateString() : new Date().toLocaleDateString(), 160, y + 6);
-    doc.text(milestone.name || 'Milestone', 160, y + 12);
-
-    y = placeY + 5;
-    doc.setDrawColor(200); doc.line(14, y, pageWidth - 14, y);
-    y += 3;
-
-    // ═══ ITEMS TABLE ═══
-    autoTable(doc, {
-        startY: y,
-        head: [['Sno', 'Description', 'Share %', `Base Amt (${currency})`, `GST @ ${gstRate}%`, `Total Pay (${currency})`]],
-        body: [[
-            1,
-            `${milestone.name || 'Investor Payout'} — Revenue Share Disbursement`,
-            `${milestone.percentage}%`,
-            baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }),
-            gstAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }),
-            netPay.toLocaleString(undefined, { minimumFractionDigits: 2 })
-        ]],
-        theme: 'grid',
-        headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold', fontSize: 8, halign: 'center' },
-        styles: { halign: 'center', cellPadding: 3, fontSize: 8, lineColor: [200, 200, 200], lineWidth: 0.2 },
-        columnStyles: {
-            0: { halign: 'center', cellWidth: 12 },
-            1: { halign: 'left', cellWidth: 65 },
-            2: { halign: 'center', cellWidth: 18 },
-            3: { halign: 'right', cellWidth: 30 },
-            4: { halign: 'right', cellWidth: 28 },
-            5: { halign: 'right', cellWidth: 30 }
-        }
-    });
-
-    let finalY = doc.lastAutoTable.finalY + 5;
-    const fmt = (n) => n.toLocaleString(undefined, { minimumFractionDigits: 2 });
-
-    // ═══ TOTALS ═══
-    let rightX = pageWidth - 75;
-    doc.setFontSize(9); doc.setTextColor(0);
-    doc.setFont(undefined, 'normal');
-    doc.text("Base Payout:", rightX, finalY);
-    doc.text(`${currency} ${fmt(baseAmount)}`, pageWidth - 14, finalY, { align: 'right' });
-
-    finalY += 6;
-    doc.text(`Add: GST @ ${gstRate}%:`, rightX, finalY);
-    doc.text(`+ ${currency} ${fmt(gstAmount)}`, pageWidth - 14, finalY, { align: 'right' });
-
-    finalY += 4;
-    doc.setDrawColor(41, 128, 185); doc.setLineWidth(0.5);
-    doc.line(rightX - 2, finalY, pageWidth - 14, finalY);
-    finalY += 7;
-
-    // Net Pay Box (Green)
-    doc.setFillColor(39, 174, 96);
-    doc.rect(rightX - 4, finalY - 5, pageWidth - rightX + 4 - 10, 11, 'F');
-    doc.setTextColor(255); doc.setFont(undefined, 'bold'); doc.setFontSize(10);
-    doc.text("NET PAY:", rightX, finalY + 2);
-    doc.text(`${currency} ${fmt(netPay)}`, pageWidth - 14, finalY + 2, { align: 'right' });
-
-    // Total in Words
-    finalY += 12;
-    doc.setTextColor(0); doc.setFontSize(8); doc.setFont(undefined, 'bold');
-    doc.text("Net Pay in Words:", 14, finalY);
-    doc.setFont(undefined, 'normal');
-    const currLabel = currency === 'INR' ? 'Rupees' : currency === 'AED' ? 'Dirhams' : currency === 'USD' ? 'Dollars' : currency;
-    doc.text(`${currLabel} ${numberToWords(netPay)}`, 14, finalY + 5);
-
-    // ═══ COMPANY DETAILS FOOTER ═══
-    finalY += 15;
-    doc.setDrawColor(0, 84, 166); doc.setLineWidth(0.5);
-    doc.line(14, finalY, pageWidth - 14, finalY);
-
-    finalY += 6;
-    doc.setFontSize(8); doc.setTextColor(0); doc.setFont(undefined, 'bold');
-    doc.text("Ambot PAN:", 14, finalY);
-    doc.setFont(undefined, 'normal');
-    doc.text("AAYCA8731D", 42, finalY);
-
-    finalY += 5;
-    doc.setFont(undefined, 'bold');
-    doc.text("CIN:", 14, finalY);
-    doc.setFont(undefined, 'normal');
-    doc.text("U72900TZ2021OPC038831", 27, finalY);
-
-    // Bank Details
-    finalY += 7;
-    doc.setFont(undefined, 'bold'); doc.setFontSize(9);
-    doc.text("Bank Details:", 14, finalY);
-    doc.setFont(undefined, 'normal'); doc.setFontSize(8);
-    finalY += 5;
-    doc.text("Bank Name: HDFC BANK LTD", 14, finalY);
-    doc.text("IFSC Code: HDFC0000031", 120, finalY);
-    finalY += 4;
-    doc.text("Account Name: AMBOT365 RPA AND IT SOLUTIONS OPC P LTD", 14, finalY);
-    doc.text("Branch code: 000031", 120, finalY);
-    finalY += 4;
-    doc.text("Account Number: 50200084112410", 14, finalY);
-    doc.text("MICR: 641240002", 120, finalY);
-
-    // Authorized Signatory
-    finalY += 10;
-    doc.setFont(undefined, 'normal'); doc.setFontSize(8);
-    doc.text("For AMBOT365 RPA & IT SOLUTIONS", pageWidth - 14, finalY, { align: 'right' });
-    finalY += 10;
-    doc.text("(Authorized Signatory)", pageWidth - 14, finalY, { align: 'right' });
-
-    // ═══ BOTTOM FOOTER ═══
-    let bottomY = pageHeight - 10;
-    doc.setDrawColor(0, 84, 166); doc.setLineWidth(0.5);
-    doc.line(14, bottomY - 6, pageWidth - 14, bottomY - 6);
-    doc.setDrawColor(140, 198, 63); doc.setLineWidth(0.5);
-    doc.line(14, bottomY - 5, pageWidth - 14, bottomY - 5);
-
-    doc.save(`Investor_Payment_${milestone.id}_${(milestone.name || 'milestone').replace(/[^a-z0-9]/gi, '_')}.pdf`);
-};
-
-// ── Number to Words Helper ──
-const numberToWords = (num) => {
-    if (num === 0) return 'Zero';
-    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
-        'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
-    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-
-    const convertLessThanThousand = (n) => {
-        if (n === 0) return '';
-        if (n < 20) return ones[n];
-        if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
-        return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' and ' + convertLessThanThousand(n % 100) : '');
-    };
-
-    const absNum = Math.abs(Math.round(num * 100) / 100);
-    const intPart = Math.floor(absNum);
-    const decPart = Math.round((absNum - intPart) * 100);
-
-    // Indian numbering: Crore, Lakh, Thousand, Hundred
-    let result = '';
-    if (intPart >= 10000000) {
-        result += convertLessThanThousand(Math.floor(intPart / 10000000)) + ' Crore ';
-        const rem = intPart % 10000000;
-        if (rem >= 100000) result += convertLessThanThousand(Math.floor(rem / 100000)) + ' Lakh ';
-        const rem2 = rem % 100000;
-        if (rem2 >= 1000) result += convertLessThanThousand(Math.floor(rem2 / 1000)) + ' Thousand ';
-        const rem3 = rem2 % 1000;
-        if (rem3 > 0) result += convertLessThanThousand(rem3);
-    } else if (intPart >= 100000) {
-        result += convertLessThanThousand(Math.floor(intPart / 100000)) + ' Lakh ';
-        const rem = intPart % 100000;
-        if (rem >= 1000) result += convertLessThanThousand(Math.floor(rem / 1000)) + ' Thousand ';
-        const rem2 = rem % 1000;
-        if (rem2 > 0) result += convertLessThanThousand(rem2);
-    } else if (intPart >= 1000) {
-        result += convertLessThanThousand(Math.floor(intPart / 1000)) + ' Thousand ';
-        const rem = intPart % 1000;
-        if (rem > 0) result += convertLessThanThousand(rem);
-    } else {
-        result = convertLessThanThousand(intPart);
-    }
-
-    result = result.trim();
-    if (decPart > 0) {
-        result += ' and ' + convertLessThanThousand(decPart) + ' Paise';
-    }
-    return result + ' Only';
-};
-
-// ── Invoice Format 3: Tax Invoice (with all mandatory fields) ──
-const generateTaxInvoicePDF = (milestone, details, taxes) => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.width;
-    const pageHeight = doc.internal.pageSize.height;
-    const currency = details.currency || 'INR';
-    const baseAmount = (details.dealValue * (parseFloat(milestone.percentage) || 0)) / 100;
-
-    const chargesList = Array.isArray(taxes) && taxes.length > 0 ? taxes : [{ name: 'GST', percentage: 18, taxType: 'Standard' }];
-    const isIntraState = chargesList.some(t => t.taxType === 'Intra-State (CGST + SGST)');
-    const totalTaxRate = chargesList.reduce((sum, c) => sum + (parseFloat(c.percentage) || 0), 0);
-    const totalTaxAmount = (baseAmount * totalTaxRate) / 100;
-    const finalAmount = baseAmount + totalTaxAmount;
-
-    // ═══ HEADER: Company Details ═══
-    addPDFHeader(doc, "TAX INVOICE", details);
-
-    let y = 72;
-
-    // Bill To
-    doc.setFontSize(9); doc.setTextColor(0); doc.setFont(undefined, 'bold');
-    doc.text("BILL TO:", 14, y);
-    doc.setFont(undefined, 'normal'); doc.setFontSize(9);
-    doc.text(details.clientName || "Client Name", 14, y + 5);
-    const billAddress = details.clientAddress;
-    if (billAddress) doc.text(billAddress, 14, y + 9);
-
-    let currentY = y + (billAddress ? 13 : 9);
-    if (details.clientGstin) {
-        doc.setFont(undefined, 'bold');
-        doc.text(`GSTIN: ${details.clientGstin}`, 14, currentY);
-        doc.setFont(undefined, 'normal');
-        currentY += 4;
-    }
-    if (details.clientPan) {
-        doc.setFont(undefined, 'bold');
-        doc.text(`PAN: ${details.clientPan}`, 14, currentY);
-        doc.setFont(undefined, 'normal');
-        currentY += 4;
-    }
-    if (details.clientCin) {
-        doc.setFont(undefined, 'bold');
-        doc.text(`CIN: ${details.clientCin}`, 14, currentY);
-        doc.setFont(undefined, 'normal');
-        currentY += 4;
-    }
-
-    // Place of Supply
-    const placeY = currentY;
-    doc.setFont(undefined, 'bold');
-    doc.text("Place of Supply:", 14, placeY);
-    doc.setFont(undefined, 'normal');
-    doc.text(details.location || 'Tamil Nadu', 50, placeY);
-
-    // Right Side: Invoice Details
-    doc.setFont(undefined, 'bold');
-    doc.text("Invoice No:", 130, y);
-    doc.text("Invoice Date:", 130, y + 6);
-    doc.setFont(undefined, 'normal');
-    doc.text(`TAX-INV-${milestone.id}-${Date.now().toString().slice(-4)}`, 160, y);
-    doc.text(milestone.invoiceDate ? new Date(milestone.invoiceDate).toLocaleDateString() : new Date().toLocaleDateString(), 160, y + 6);
-
-    y = placeY + 5;
-    doc.setDrawColor(200); doc.line(14, y, pageWidth - 14, y);
-    y += 3;
-
-    // ═══ ITEMS TABLE (Sno, Item & Description, HSN/SAC, Qty, Rate, Amount) ═══
-    autoTable(doc, {
-        startY: y,
-        head: [['Sno', 'Item & Description', 'HSN/SAC', 'Qty', `Rate (${currency})`, `Amount (${currency})`]],
-        body: [[
-            1,
-            milestone.name || 'IT Consulting & Support Services',
-            '998313',
-            '1',
-            baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }),
-            baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })
-        ]],
-        theme: 'grid',
-        headStyles: {
-            fillColor: [41, 128, 185],
-            textColor: 255,
-            fontStyle: 'bold',
-            fontSize: 8,
-            halign: 'center'
-        },
-        styles: {
-            halign: 'center',
-            cellPadding: 3,
-            fontSize: 8,
-            lineColor: [200, 200, 200],
-            lineWidth: 0.2
-        },
-        columnStyles: {
-            0: { halign: 'center', cellWidth: 12 },
-            1: { halign: 'left', cellWidth: 65 },
-            2: { halign: 'center', cellWidth: 22 },
-            3: { halign: 'center', cellWidth: 15 },
-            4: { halign: 'right', cellWidth: 35 },
-            5: { halign: 'right', cellWidth: 35 }
-        }
-    });
-
-    let finalY = doc.lastAutoTable.finalY + 5;
-
-    // ═══ TOTALS SECTION (Right Side) ═══
-    let rightX = pageWidth - 75;
-    const fmt = (n) => n.toLocaleString(undefined, { minimumFractionDigits: 2 });
-
-    doc.setFontSize(9); doc.setTextColor(0);
-
-    // SubTotal
-    doc.setFont(undefined, 'normal');
-    doc.text("SubTotal:", rightX, finalY);
-    doc.text(`${currency} ${fmt(baseAmount)}`, pageWidth - 14, finalY, { align: 'right' });
-
-    // Tax breakdown
-    if (isIntraState) {
-        const halfRate = totalTaxRate / 2;
-        const halfTax = totalTaxAmount / 2;
-
-        finalY += 6;
-        doc.text(`CGST @ ${halfRate}%:`, rightX, finalY);
-        doc.text(`${currency} ${fmt(halfTax)}`, pageWidth - 14, finalY, { align: 'right' });
-
-        finalY += 6;
-        doc.text(`SGST @ ${halfRate}%:`, rightX, finalY);
-        doc.text(`${currency} ${fmt(halfTax)}`, pageWidth - 14, finalY, { align: 'right' });
-    } else {
-        finalY += 6;
-        doc.text(`IGST @ ${totalTaxRate}%:`, rightX, finalY);
-        doc.text(`${currency} ${fmt(totalTaxAmount)}`, pageWidth - 14, finalY, { align: 'right' });
-    }
-
-    // Divider
-    finalY += 4;
-    doc.setDrawColor(41, 128, 185); doc.setLineWidth(0.5);
-    doc.line(rightX - 2, finalY, pageWidth - 14, finalY);
-    finalY += 7;
-
-    // TOTAL RS (Grand Total Box)
-    doc.setFillColor(39, 174, 96);
-    doc.rect(rightX - 4, finalY - 5, pageWidth - rightX + 4 - 10, 11, 'F');
-    doc.setTextColor(255); doc.setFont(undefined, 'bold'); doc.setFontSize(10);
-    doc.text("TOTAL:", rightX, finalY + 2);
-    doc.text(`${currency} ${fmt(finalAmount)}`, pageWidth - 14, finalY + 2, { align: 'right' });
-
-    // TOTAL IN WORDS
-    finalY += 12;
-    doc.setTextColor(0); doc.setFontSize(8); doc.setFont(undefined, 'bold');
-    doc.text("Total in Words:", 14, finalY);
-    doc.setFont(undefined, 'normal');
-    const currLabel = currency === 'INR' ? 'Rupees' : currency === 'AED' ? 'Dirhams' : currency === 'USD' ? 'Dollars' : currency;
-    doc.text(`${currLabel} ${numberToWords(finalAmount)}`, 14, finalY + 5);
-
-    // ═══ COMPANY DETAILS FOOTER ═══
-    finalY += 15;
-    doc.setDrawColor(0, 84, 166); doc.setLineWidth(0.5);
-    doc.line(14, finalY, pageWidth - 14, finalY);
-
-    finalY += 6;
-    doc.setFontSize(8); doc.setTextColor(0); doc.setFont(undefined, 'bold');
-    doc.text("Ambot PAN:", 14, finalY);
-    doc.setFont(undefined, 'normal');
-    doc.text("AAYCA8731D", 42, finalY);
-
-    finalY += 5;
-    doc.setFont(undefined, 'bold');
-    doc.text("CIN:", 14, finalY);
-    doc.setFont(undefined, 'normal');
-    doc.text("U72900TZ2021OPC038831", 27, finalY);
-
-    // Bank Details
-    finalY += 7;
-    doc.setFont(undefined, 'bold'); doc.setFontSize(9);
-    doc.text("Bank Details:", 14, finalY);
-    doc.setFont(undefined, 'normal'); doc.setFontSize(8);
-
-    finalY += 5;
-    doc.text("Bank Name: HDFC BANK LTD", 14, finalY);
-    doc.text("IFSC Code: HDFC0000031", 120, finalY);
-    finalY += 4;
-    doc.text("Account Name: AMBOT365 RPA AND IT SOLUTIONS OPC P LTD", 14, finalY);
-    doc.text("Branch code: 000031", 120, finalY);
-    finalY += 4;
-    doc.text("Account Number: 50200084112410", 14, finalY);
-    doc.text("MICR: 641240002", 120, finalY);
-
-    // Authorized Signatory (Right Side)
-    finalY += 10;
-    doc.setFont(undefined, 'normal'); doc.setFontSize(8);
-    doc.text("For AMBOT365 RPA & IT SOLUTIONS", pageWidth - 14, finalY, { align: 'right' });
-    finalY += 10;
-    doc.text("(Authorized Signatory)", pageWidth - 14, finalY, { align: 'right' });
-
-    // ═══ BOTTOM FOOTER ═══
-    let bottomY = pageHeight - 10;
-    doc.setDrawColor(0, 84, 166); doc.setLineWidth(0.5);
-    doc.line(14, bottomY - 6, pageWidth - 14, bottomY - 6);
-    doc.setDrawColor(140, 198, 63); doc.setLineWidth(0.5);
-    doc.line(14, bottomY - 5, pageWidth - 14, bottomY - 5);
-
-    doc.save(`Tax_Invoice_${milestone.id}_${(milestone.name || 'milestone').replace(/[^a-z0-9]/gi, '_')}.pdf`);
-};
+// PDF generation logic extracted to src/utils/pdfGenerator.js
 
 const generateProjectReportPDF = (details, stakeholders, milestones, taxes) => {
     const doc = new jsPDF();
@@ -1207,7 +505,7 @@ const exportDashboardExcel = (projects, filter) => {
 // 3. SUB COMPONENTS (Dashboard & Invoice)
 // ==========================================
 
-const Dashboard = ({ projects, onOpenProject, onCreateProject, onStatusChange }) => {
+const Dashboard = ({ projects, onOpenProject, onCreateProject, onStatusChange, onDeleteProject }) => {
     const [filter, setFilter] = useState('All');
     const [chartMetric, setChartMetric] = useState('Revenue');
     const [displayCurrency, setDisplayCurrency] = useState('AED');
@@ -1504,7 +802,14 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject, onStatusChange })
                                             </select>
                                         </td>
                                         <td>
-                                            <button className="btn btn-sm btn-primary" style={{ padding: '4px 14px', fontSize: '0.78rem' }} onClick={(e) => { e.stopPropagation(); onOpenProject(project.id); }}>View</button>
+                                            <div className="d-flex align-items-center gap-2">
+                                                <button className="btn btn-sm btn-light border" style={{ padding: '4px 8px', fontSize: '0.78rem' }} onClick={(e) => { e.stopPropagation(); onOpenProject(project.id); }} title="View Details">
+                                                    <Eye size={16} className="text-primary" />
+                                                </button>
+                                                <button className="btn btn-sm btn-light border" style={{ padding: '4px 8px', fontSize: '0.78rem' }} onClick={(e) => { e.stopPropagation(); onDeleteProject(project.id); }} title="Delete Project">
+                                                    <Trash2 size={16} className="text-danger" />
+                                                </button>
+                                            </div>
                                         </td>
 
                                     </tr>
@@ -2188,6 +1493,7 @@ const detectTaxFromAddress = (address) => {
 
 const ProjectTrackerComplete = () => {
     const location = useLocation();
+    const [searchParams] = useSearchParams();
 
     const [view, setView] = useState('dashboard');
     const [activeProjectId, setActiveProjectId] = useState(null);
@@ -2208,9 +1514,18 @@ const ProjectTrackerComplete = () => {
 
     useEffect(() => {
         const initProject = async () => {
-            if (location.state && location.state.project) {
-                const receivedProject = location.state.project;
+            let receivedProject = location.state?.project;
+            const projectIdParam = searchParams.get('projectId');
 
+            if (!receivedProject && projectIdParam) {
+                try {
+                    receivedProject = await projectService.getById(projectIdParam);
+                } catch (err) {
+                    console.error("Failed to fetch project by ID:", err);
+                }
+            }
+
+            if (receivedProject) {
                 // Fetch contacts to find address/country
                 let retrievedAddress = '';
                 let retrievedCountry = 'India'; // Default fallback
@@ -2304,7 +1619,7 @@ const ProjectTrackerComplete = () => {
         };
 
         initProject();
-    }, [location.state]);
+    }, [location.state, searchParams]);
 
     const activeProject = projects.find(p => p.id === activeProjectId);
 
@@ -2317,6 +1632,26 @@ const ProjectTrackerComplete = () => {
         setProjects([...projects, newProj]);
         setActiveProjectId(newProj.id);
         setView('invoice');
+    };
+
+    const handleDeleteProject = async (id) => {
+        if (window.confirm('Are you sure you want to delete this project?')) {
+            try {
+                // Delete from project_finances collection
+                const docRef = doc(db, 'project_finances', String(id));
+                await deleteDoc(docRef);
+
+                // Update state
+                setProjects(prev => prev.filter(p => p.id !== id));
+                if (activeProjectId === id) {
+                    setActiveProjectId(null);
+                    setView('dashboard');
+                }
+            } catch (err) {
+                console.error("Error deleting project:", err);
+                alert('Failed to delete project.');
+            }
+        }
     };
 
     const handleSaveProject = async () => {
@@ -2453,6 +1788,7 @@ const ProjectTrackerComplete = () => {
                     projects={projects}
                     onOpenProject={(id) => { setActiveProjectId(id); setView('invoice'); }}
                     onCreateProject={handleCreateProject}
+                    onDeleteProject={handleDeleteProject}
                     onStatusChange={(id, status) => {
                         setProjects(prev => prev.map(p => p.id === id ? { ...p, status: status, isArchived: status === 'Archived' } : p));
                     }}

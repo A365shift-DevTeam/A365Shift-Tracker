@@ -2,6 +2,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Card, Button } from 'react-bootstrap'
 import { Edit, Trash2, Receipt } from 'lucide-react'
+import { formatGlobalCurrency } from '../../utils/currencyUtils'
 
 const SortableExpenseCard = ({ expense, onEdit, onDelete }) => {
   const {
@@ -21,10 +22,7 @@ const SortableExpenseCard = ({ expense, onEdit, onDelete }) => {
   }
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'INR'
-    }).format(amount || 0)
+    return formatGlobalCurrency(amount, 'INR');
   }
 
   const formatDate = (dateString) => {

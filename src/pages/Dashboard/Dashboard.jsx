@@ -13,6 +13,7 @@ import {
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
+import { formatGlobalCurrency } from '../../utils/currencyUtils';
 import './Dashboard.css';
 
 // Clean SaaS Tooltip
@@ -309,9 +310,9 @@ export default function Dashboard() {
       </div>
 
       <div className="stats-row" style={{ marginTop: '1.5rem' }}>
-        <StatCard icon={<FaMoneyBillWave />} label="Total Income" value={new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(financeStats.totalIncome)} color="green" loading={loadingFinance} progress={100} progressLabel="income" progressType="positive" />
-        <StatCard icon={<FaFileInvoiceDollar />} label="Total Expenses" value={new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(financeStats.totalExpense)} color="red" loading={loadingFinance} progress={financeStats.expenseRatio} progressLabel="of income" progressType="negative" />
-        <StatCard icon={<FaDollarSign />} label="Net Profit" value={new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(financeStats.netProfit)} color={financeStats.netProfit >= 0 ? 'green' : 'red'} loading={loadingFinance} progress={financeStats.profitMargin} progressLabel="margin" progressType="positive" />
+        <StatCard icon={<FaMoneyBillWave />} label="Total Income" value={formatGlobalCurrency(financeStats.totalIncome, 'INR', { maximumFractionDigits: 0 })} color="green" loading={loadingFinance} progress={100} progressLabel="income" progressType="positive" />
+        <StatCard icon={<FaFileInvoiceDollar />} label="Total Expenses" value={formatGlobalCurrency(financeStats.totalExpense, 'INR', { maximumFractionDigits: 0 })} color="red" loading={loadingFinance} progress={financeStats.expenseRatio} progressLabel="of income" progressType="negative" />
+        <StatCard icon={<FaDollarSign />} label="Net Profit" value={formatGlobalCurrency(financeStats.netProfit, 'INR', { maximumFractionDigits: 0 })} color={financeStats.netProfit >= 0 ? 'green' : 'red'} loading={loadingFinance} progress={financeStats.profitMargin} progressLabel="margin" progressType="positive" />
       </div>
 
       <div className="dashboard-grid">
@@ -358,7 +359,7 @@ export default function Dashboard() {
               <>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #f1f5f9' }}>
                   <span style={{ fontSize: '1.5rem', fontWeight: '700', color: '#0f172a' }}>
-                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(pipelineSummary.totalPipelineValue)}
+                    {formatGlobalCurrency(pipelineSummary.totalPipelineValue, 'INR', { maximumFractionDigits: 0 })}
                   </span>
                   <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '500' }}>total pipeline</span>
                 </div>
@@ -375,7 +376,7 @@ export default function Dashboard() {
                       <div style={{ textAlign: 'right', minWidth: '90px' }}>
                         <span className="pipeline-count">{stage.count}</span>
                         <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
-                          {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(stage.value)}
+                          {formatGlobalCurrency(stage.value, 'INR', { maximumFractionDigits: 0 })}
                         </div>
                       </div>
                     </div>
@@ -433,7 +434,7 @@ export default function Dashboard() {
                       </div>
                       <div style={{ textAlign: 'right', minWidth: '90px' }}>
                         <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#0f172a' }}>
-                          {dv > 0 ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: p.currency || 'INR', maximumFractionDigits: 0 }).format(dv) : '—'}
+                          {dv > 0 ? formatGlobalCurrency(dv, p.currency || 'INR', { maximumFractionDigits: 0 }) : '—'}
                         </div>
                         <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{p.type || 'Service'}</div>
                       </div>

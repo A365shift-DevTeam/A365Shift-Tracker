@@ -365,7 +365,20 @@ export const ExpenseModal = ({ show, onHide, expense, onSave, onDelete, fields }
                 onChange={(e) => handleChange('date', e.target.value)}
               />
             </Form.Group>
-            <Form.Group className="mb-3 col-md-6">
+            <Form.Group className="mb-3 col-md-4">
+              <Form.Label>Currency</Form.Label>
+              <Form.Select
+                value={formData.currency || 'INR'}
+                onChange={(e) => handleChange('currency', e.target.value)}
+              >
+                <option value="INR">INR (₹)</option>
+                <option value="USD">USD ($)</option>
+                <option value="AED">AED (د.إ)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="GBP">GBP (£)</option>
+              </Form.Select>
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-4">
               <Form.Label>Total Amount</Form.Label>
               <Form.Control
                 type="number"

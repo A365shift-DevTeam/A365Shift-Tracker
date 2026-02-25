@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { arrayUnion } from 'firebase/firestore'
 import { User, Mail, Contact, Settings, Plus, CheckCircle, Trash2, Briefcase, DollarSign, Timer, Flag, AlertTriangle, ArrowUpRight, Search, Monitor, Phone, FileText, MessageSquare, Edit, Clock } from 'lucide-react'
 import { Button, Modal, Form, Dropdown } from 'react-bootstrap'
 import './Sales.css'
@@ -219,9 +220,9 @@ const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onD
                             let isOverdue = false;
                             if (isActive) {
                                 // Find the latest entry in history that matches this stage start
-                                // For now, we take the most recent history entry as the start of this stage
-                                // improved logic could allow finding the exact transition
-                                const lastUpdate = history.length > 0 ? new Date(history[0].timestamp) : new Date(); // Fallback to now if no history
+                                // Since we use arrayUnion, history might not be strictly newest-first. Find by timestamp.
+                                const sortedHistory = history && history.length > 0 ? [...history].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)) : [];
+                                const lastUpdate = sortedHistory.length > 0 ? new Date(sortedHistory[0].timestamp) : new Date(); // Fallback to now if no history
                                 const diffTime = Math.abs(new Date() - lastUpdate);
                                 const daysInStage = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
@@ -409,20 +410,26 @@ function Sales() {
             revisedDate: logData?.revisedDate
         }
 
-        const updates = {
+        const uiUpdates = {
             activeStage: newStageIndex,
+            // UI expects newest first, prepending for immediate visual update
             history: [newEntry, ...(p.history || [])]
+        };
+
+        const apiUpdates = {
+            activeStage: newStageIndex,
+            history: arrayUnion(newEntry)
         };
 
         // Optimistic UI update
         // We do this AFTER modal confirmation now
         setProjects(prev => prev.map(proj =>
-            proj.id === projectId ? { ...proj, ...updates } : proj
+            proj.id === projectId ? { ...proj, ...uiUpdates } : proj
         ));
 
         try {
             // Call API
-            await projectService.update(projectId, updates);
+            await projectService.update(projectId, apiUpdates);
             console.log(`✅ Project ${projectId} updated: ${transitionStr}`);
         } catch (error) {
             console.error('Failed to update project stage:', error);
@@ -520,7 +527,7 @@ function Sales() {
     }
 
     const handleInvoice = (project) => {
-        navigate('/invoice', { state: { project } });
+        navigate(`/invoice?projectId=${project.id}`, { state: { project } });
     };
 
     // Configure Global Stages for the ACTIVE TAB
