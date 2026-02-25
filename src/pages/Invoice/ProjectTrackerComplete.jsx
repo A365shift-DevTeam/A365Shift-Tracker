@@ -1670,6 +1670,8 @@ const BusinessDetails = ({ details, updateDetails, charges, addCharge, removeCha
                     </select>
                     <label className="stage-label">Lead GST (%)</label>
                     <input type="number" className="stage-input" value={details.leadGst || ''} onChange={(e) => updateDetails('leadGst', e.target.value)} placeholder="e.g. 18" />
+                    <label className="stage-label">Currency Value</label>
+                    <input type="number" className="stage-input" value={details.currencyValue || ''} onChange={(e) => updateDetails('currencyValue', e.target.value)} placeholder="e.g. 83.50" />
                 </div>
 
                 {/* Finance Charges Section */}
