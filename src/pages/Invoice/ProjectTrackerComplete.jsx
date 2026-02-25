@@ -1869,9 +1869,6 @@ const ProjectTrackerComplete = () => {
                     onStatusChange={(id, status) => {
                         setProjects(prev => prev.map(p => p.id === id ? { ...p, status: status, isArchived: status === 'Archived' } : p));
                     }}
-                    onDeleteProject={(id) => {
-                        setProjects(prev => prev.filter(p => p.id !== id));
-                    }}
                 />
             ) : activeProject ? (
                 <InvoiceMain
