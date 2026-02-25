@@ -12,6 +12,7 @@ import Timesheet from './pages/Timesheet/Timesheet';
 import Finance from './pages/Finance/Finance';
 import TodoList from './pages/TodoList/TodoList';
 import Invoice from './pages/Invoice/Invoice';
+import AIFollowup from './pages/AIFollowup/AIFollowup';
 import './index.css';
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
             <Route path="finance" element={<Finance />} />
             <Route path="todolist" element={<TodoList />} />
             <Route path="invoice" element={<Invoice />} />
+            <Route path="ai-followup" element={<AIFollowup />} />
           </Route>
         </Routes>
       </AuthProvider>

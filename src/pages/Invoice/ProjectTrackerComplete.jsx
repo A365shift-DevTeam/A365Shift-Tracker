@@ -104,6 +104,18 @@ const TrackerStyles = () => (
             color: #1a1d21;
             box-shadow: 0 4px 20px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
             transition: box-shadow 0.3s ease;
+            position: relative;
+        }
+        .stage::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(180deg, #2980b9, #27ae60);
+            border-radius: 16px 0 0 16px;
+            z-index: 1;
         }
         .stage:hover {
             box-shadow: 0 8px 32px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
@@ -120,6 +132,8 @@ const TrackerStyles = () => (
             align-items: center;
             color: #fff;
             border: none;
+            position: relative;
+            z-index: 2;
         }
 
         .stage-p { padding: 20px 24px; }
@@ -802,12 +816,12 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject, onStatusChange, o
                                             </select>
                                         </td>
                                         <td>
-                                            <div className="d-flex align-items-center gap-2">
-                                                <button className="btn btn-sm btn-light border" style={{ padding: '4px 8px', fontSize: '0.78rem' }} onClick={(e) => { e.stopPropagation(); onOpenProject(project.id); }} title="View Details">
-                                                    <Eye size={16} className="text-primary" />
+                                            <div className="d-flex gap-1 justify-content-center">
+                                                <button className="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px', padding: 0, borderRadius: '6px' }} onClick={(e) => { e.stopPropagation(); onOpenProject(project.id); }} title="View Project">
+                                                    <Eye size={16} />
                                                 </button>
-                                                <button className="btn btn-sm btn-light border" style={{ padding: '4px 8px', fontSize: '0.78rem' }} onClick={(e) => { e.stopPropagation(); onDeleteProject(project.id); }} title="Delete Project">
-                                                    <Trash2 size={16} className="text-danger" />
+                                                <button className="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px', padding: 0, borderRadius: '6px' }} onClick={(e) => { e.stopPropagation(); onDeleteProject(project.id); }} title="Delete Project">
+                                                    <Trash2 size={16} />
                                                 </button>
                                             </div>
                                         </td>
@@ -975,6 +989,8 @@ const BusinessDetails = ({ details, updateDetails, charges, addCharge, removeCha
                     </select>
                     <label className="stage-label">Lead GST (%)</label>
                     <input type="number" className="stage-input" value={details.leadGst || ''} onChange={(e) => updateDetails('leadGst', e.target.value)} placeholder="e.g. 18" />
+                    <label className="stage-label">Currency Value</label>
+                    <input type="number" className="stage-input" value={details.currencyValue || ''} onChange={(e) => updateDetails('currencyValue', e.target.value)} placeholder="e.g. 83.50" />
                 </div>
 
                 {/* Finance Charges Section */}
@@ -1164,7 +1180,7 @@ const StageTwoCombined = ({ stakeholders, addStakeholder, removeStakeholder, upd
     );
 };
 
-const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMilestone, dealValue, details, taxes }) => {
+const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMilestone, dealValue, details, taxes, projectType }) => {
     const paidMilestones = milestones.filter(m => m.status === 'Paid');
     const totalPaid = paidMilestones.reduce((sum, m) => sum + ((dealValue * m.percentage) / 100), 0);
     const paidPct = dealValue ? ((totalPaid / dealValue) * 100) : 0;
@@ -1176,16 +1192,37 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
     const [activeTypeIndex, setActiveTypeIndex] = useState(0);
     const [openInvoiceMenu, setOpenInvoiceMenu] = useState(null);
 
+    // Load sales pipeline stages from localStorage based on project type
+    const getDefaultStages = () => [
+        { id: 0, label: 'Demo' }, { id: 1, label: 'Proposal' }, { id: 2, label: 'Negotiation' },
+        { id: 3, label: 'Approval' }, { id: 4, label: 'Won' }, { id: 5, label: 'Closed' }, { id: 6, label: 'Lost' }
+    ];
+    const getStagesForType = (type) => {
+        try {
+            const storageKey = type === 'Service' ? 'sales_stages_service' : 'sales_stages_product';
+            const stored = localStorage.getItem(storageKey);
+            return stored ? JSON.parse(stored) : getDefaultStages();
+        } catch { return getDefaultStages(); }
+    };
+    const [salesStages, setSalesStages] = useState(() => getStagesForType(projectType));
+
+    // Re-load stages when projectType changes
+    useEffect(() => {
+        setSalesStages(getStagesForType(projectType));
+    }, [projectType]);
+
     useEffect(() => {
         const handleStorageChange = () => {
             setProjectTypes([
                 localStorage.getItem('app_product_label') || 'Products',
                 localStorage.getItem('app_service_label') || 'Services'
             ]);
+            // Refresh sales stages for current project type
+            setSalesStages(getStagesForType(projectType));
         };
         window.addEventListener('storage', handleStorageChange);
         return () => window.removeEventListener('storage', handleStorageChange);
-    }, []);
+    }, [projectType]);
 
     const calculateAgeing = (invoiceDate, paidDate) => {
         if (!invoiceDate) return '-';
@@ -1220,31 +1257,29 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
                 </div>
 
                 <div className="table-responsive" style={{ overflowX: 'auto' }}>
-                    <table className="stage-table" style={{ minWidth: '1300px', width: '100%' }}>
+                    <table className="stage-table" style={{ minWidth: '1100px', width: '100%' }}>
                         <thead>
                             <tr>
-                                <th style={{ width: '200px' }}>Payment</th>
-                                <th style={{ width: '80px' }}>Value %</th>
-                                <th style={{ width: '150px' }}>Inv Date</th>
-                                <th style={{ width: '120px' }}>Base ({details.currency})</th>
+                                <th style={{ width: '160px' }}>Payment</th>
+                                <th style={{ width: '80px', textAlign: 'center' }}>Value %</th>
+                                <th style={{ width: '130px' }}>Inv Date</th>
+                                <th style={{ width: '110px', textAlign: 'right' }}>Base ({details.currency})</th>
 
                                 {isIntraState ? (
                                     <>
-                                        <th style={{ width: '100px' }}>CGST</th>
-                                        <th style={{ width: '100px' }}>SGST</th>
+                                        <th style={{ width: '90px', textAlign: 'right' }}>CGST</th>
+                                        <th style={{ width: '90px', textAlign: 'right' }}>SGST</th>
                                     </>
                                 ) : (
-                                    <th style={{ width: '100px' }}>GST</th>
+                                    <th style={{ width: '90px', textAlign: 'right' }}>GST</th>
                                 )}
 
-                                <th style={{ width: '130px' }}>Total ({details.currency})</th>
-                                <th style={{ width: '150px' }}>Paid Date</th>
-                                <th style={{ width: '120px' }}>Paid ({details.currency})</th>
-                                <th style={{ width: '80px' }}>Ageing</th>
-                                <th style={{ width: '90px' }}>TDS %</th>
-                                <th style={{ width: '120px' }}>TDS Amt</th>
-                                <th style={{ width: '130px' }}>Status</th>
-                                <th style={{ width: '200px' }}>Action</th>
+                                <th style={{ width: '120px', textAlign: 'right' }}>Total ({details.currency})</th>
+                                <th style={{ width: '130px' }}>Paid Date</th>
+                                <th style={{ width: '110px', textAlign: 'right' }}>Paid ({details.currency})</th>
+                                <th style={{ width: '70px', textAlign: 'center' }}>Ageing</th>
+                                <th style={{ width: '110px' }}>Status</th>
+                                <th style={{ width: '160px' }}>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1256,7 +1291,37 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
                                 return (
                                     <tr key={milestone.id}>
                                         <td>
-                                            <input className="stage-input" value={milestone.name} onChange={(e) => updateMilestone(milestone.id, 'name', e.target.value)} placeholder="Description" />
+                                            {milestone.isCustomName ? (
+                                                <div className="d-flex gap-1 align-items-center">
+                                                    <input className="stage-input" value={milestone.name} onChange={(e) => updateMilestone(milestone.id, 'name', e.target.value)} placeholder="Custom name" autoFocus />
+                                                    <button
+                                                        className="btn btn-sm btn-light border d-flex align-items-center justify-content-center"
+                                                        onClick={() => updateMilestone(milestone.id, { isCustomName: false, name: salesStages[0]?.label || 'New Stage' })}
+                                                        title="Switch to dropdown"
+                                                        style={{ width: '28px', height: '28px', padding: 0, flexShrink: 0 }}
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <select
+                                                    className="stage-select"
+                                                    value={salesStages.some(s => s.label === milestone.name) ? milestone.name : ''}
+                                                    onChange={(e) => {
+                                                        if (e.target.value === '__custom__') {
+                                                            updateMilestone(milestone.id, { isCustomName: true, name: '' });
+                                                        } else {
+                                                            updateMilestone(milestone.id, 'name', e.target.value);
+                                                        }
+                                                    }}
+                                                >
+                                                    <option value="" disabled>Select Stage</option>
+                                                    {salesStages.map(s => (
+                                                        <option key={s.id} value={s.label}>{s.label}</option>
+                                                    ))}
+                                                    <option value="__custom__">✏️ Custom</option>
+                                                </select>
+                                            )}
                                         </td>
                                         <td>
                                             <input type="number" className="stage-input text-end" value={milestone.percentage} onChange={(e) => updateMilestone(milestone.id, 'percentage', e.target.value)} />
@@ -1284,12 +1349,7 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
                                         <td className="text-center">
                                             {calculateAgeing(milestone.invoiceDate, milestone.paidDate)}
                                         </td>
-                                        <td>
-                                            <input type="number" className="stage-input p-1 text-center" style={{ width: '70px' }} value={milestone.tdsPercent || ''} onChange={(e) => updateMilestone(milestone.id, 'tdsPercent', e.target.value)} placeholder="10" />
-                                        </td>
-                                        <td className="text-end">
-                                            {((raisedAmount * (parseFloat(milestone.tdsPercent) || 0)) / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                        </td>
+
                                         <td>
                                             <select
                                                 className="stage-select p-1"
@@ -1333,7 +1393,7 @@ const PaymentMilestones = ({ milestones, addMilestone, removeMilestone, updateMi
                                     </tr>
                                 );
                             })}
-                            {milestones.length === 0 && <tr><td colSpan={isIntraState ? "12" : "11"} className="text-center text-muted p-3">No payments added.</td></tr>}
+                            {milestones.length === 0 && <tr><td colSpan={isIntraState ? "10" : "9"} className="text-center text-muted p-3">No payments added.</td></tr>}
                         </tbody>
                     </table>
                 </div>
@@ -1386,7 +1446,7 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
             />
 
             {/* Stage 3: Invoice Cycle */}
-            <PaymentMilestones milestones={milestones} addMilestone={addMilestone} removeMilestone={removeMilestone} updateMilestone={updateMilestone} dealValue={dVal} details={details} taxes={charges} />
+            <PaymentMilestones milestones={milestones} addMilestone={addMilestone} removeMilestone={removeMilestone} updateMilestone={updateMilestone} dealValue={dVal} details={details} taxes={charges} projectType={details.type} />
 
             {/* Stage 4: Payment Process */}
             <div className="stage">
@@ -1582,6 +1642,7 @@ const ProjectTrackerComplete = () => {
                     const taxConfig = detectTaxFromAddress(receivedProject.clientAddress || retrievedAddress);
 
                     const newProject = {
+                        type: receivedProject.type || 'Product',
                         id: receivedProject.id,
                         projectId: receivedProject.customId || `PROJ-${receivedProject.id}`,
                         dateCreated: new Date().toISOString(),
@@ -1627,6 +1688,7 @@ const ProjectTrackerComplete = () => {
         const newProj = {
             id: Date.now(), projectId: `PROJ-${Math.floor(Math.random() * 999)}`, dateCreated: new Date().toISOString(),
             clientName: 'New Client', clientAddress: '', clientGstin: '', delivery: '', dealValue: 0, currency: 'AED', location: '', status: 'Active',
+            type: 'Product',
             stakeholders: [], milestones: [], charges: [{ id: 1, name: 'GST', taxType: 'Inter-State (IGST)', country: 'India', state: '', percentage: 18 }]
         };
         setProjects([...projects, newProj]);
@@ -1736,10 +1798,19 @@ const ProjectTrackerComplete = () => {
     };
 
     // Milestones logic
-    const addMilestone = () => updateProject(p => ({ ...p, milestones: [...p.milestones, { id: Date.now(), name: 'New Stage', percentage: 0, status: 'Pending', invoiceDate: '', paidDate: '' }] }));
+    const addMilestone = () => {
+        let defaultName = 'New Stage';
+        try {
+            const storageKey = activeProject?.type === 'Service' ? 'sales_stages_service' : 'sales_stages_product';
+            const stored = localStorage.getItem(storageKey);
+            const stages = stored ? JSON.parse(stored) : null;
+            if (stages && stages.length > 0) defaultName = stages[0].label;
+        } catch { /* fallback */ }
+        updateProject(p => ({ ...p, milestones: [...p.milestones, { id: Date.now(), name: defaultName, percentage: 0, status: 'Pending', invoiceDate: '', paidDate: '' }] }));
+    };
     const removeMilestone = (id) => updateProject(p => ({ ...p, milestones: p.milestones.filter(m => m.id !== id) }));
     const updateMilestone = async (id, f, v) => {
-        updateProject(p => ({ ...p, milestones: p.milestones.map(m => m.id === id ? { ...m, [f]: v } : m) }));
+        updateProject(p => ({ ...p, milestones: p.milestones.map(m => m.id === id ? { ...m, ...(typeof f === 'object' ? f : { [f]: v }) } : m) }));
 
         if (f === 'status' && v === 'Paid' && activeProject) {
             const milestone = activeProject.milestones.find(m => m.id === id);
@@ -1791,6 +1862,9 @@ const ProjectTrackerComplete = () => {
                     onDeleteProject={handleDeleteProject}
                     onStatusChange={(id, status) => {
                         setProjects(prev => prev.map(p => p.id === id ? { ...p, status: status, isArchived: status === 'Archived' } : p));
+                    }}
+                    onDeleteProject={(id) => {
+                        setProjects(prev => prev.filter(p => p.id !== id));
                     }}
                 />
             ) : activeProject ? (

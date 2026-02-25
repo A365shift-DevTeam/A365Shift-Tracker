@@ -95,7 +95,7 @@ export default function Dashboard() {
   const fetchTimesheet = async () => {
     try {
       setLoadingTimesheet(true);
-      const data = await timesheetService.getUserEntries(currentUser.uid);
+      const data = await timesheetService.getEntries();
       setTimesheetEntries(data || []);
     } catch (err) {
       console.error('Dashboard error:', err);

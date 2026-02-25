@@ -913,25 +913,25 @@
 /* WebKit calendar picker indicator - hide native and use custom background */
 .modal input[type="date"]::-webkit-calendar-picker-indicator,
 .form-control[type="date"]::-webkit-calendar-picker-indicator {
-  opacity: 1 !important;
+  opacity: 0;
   cursor: pointer;
   position: absolute;
-  right: 12px;
-  width: 18px;
-  height: 18px;
-  background: transparent;
+  right: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
   z-index: 1;
 }
 
 .modal input[type="date"]::-webkit-calendar-picker-indicator:hover,
 .form-control[type="date"]::-webkit-calendar-picker-indicator:hover {
-  opacity: 0.8;
+  opacity: 0;
 }
 
 /* Firefox date input calendar icon */
 .modal input[type="date"]::-moz-calendar-picker-indicator,
 .form-control[type="date"]::-moz-calendar-picker-indicator {
-  opacity: 1 !important;
+  opacity: 0;
   cursor: pointer;
   width: 18px;
   height: 18px;
@@ -940,7 +940,7 @@
 
 /* Override any global styles that might hide the calendar icon */
 .modal-body input[type="date"]::-webkit-calendar-picker-indicator {
-  opacity: 1 !important;
+  opacity: 0 !important;
   display: block !important;
   visibility: visible !important;
 }
