@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { Modal, Form, Button } from 'react-bootstrap'
 
 const CATEGORIES = [
-  { value: 'transport', label: 'Transport', color: '#3b82f6' },
   { value: 'food', label: 'Food', color: '#f59e0b' },
   { value: 'accommodation', label: 'Accommodation', color: '#8b5cf6' },
   { value: 'allowances', label: 'Allowances', color: '#10b981' },
@@ -41,7 +40,7 @@ export const ExpenseModal = ({ show, onHide, expense, onSave, onDelete, fields }
       }
       // System defaults that might not be in config (if corrupted) or are objects
       initialData.date = new Date().toISOString().split('T')[0]
-      initialData.category = 'transport'
+      initialData.category = 'travel'
 
       if (expense) {
         // Merge expense data
@@ -54,7 +53,7 @@ export const ExpenseModal = ({ show, onHide, expense, onSave, onDelete, fields }
         })
         // Ensure defaults if missing in expense
         if (!initialData.date) initialData.date = new Date().toISOString().split('T')[0]
-        if (!initialData.category) initialData.category = 'transport'
+        if (!initialData.category) initialData.category = 'travel'
 
         setFilePreview(expense.receiptUrl || null)
       } else {
@@ -182,52 +181,7 @@ export const ExpenseModal = ({ show, onHide, expense, onSave, onDelete, fields }
         <h6 className="mb-3 text-muted" style={{ fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase' }}>
           {CATEGORIES.find(c => c.value === category)?.label || category} Details
         </h6>
-        {category === 'transport' && (
-          <div className="row">
-            <Form.Group className="mb-3 col-md-6">
-              <Form.Label>Origin</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="From"
-                value={formData.details?.origin || ''}
-                onChange={(e) => handleDetailChange('origin', e.target.value)}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3 col-md-6">
-              <Form.Label>Destination</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="To"
-                value={formData.details?.destination || ''}
-                onChange={(e) => handleDetailChange('destination', e.target.value)}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3 col-md-6">
-              <Form.Label>Mode</Form.Label>
-              <Form.Select
-                value={formData.details?.mode || ''}
-                onChange={(e) => handleDetailChange('mode', e.target.value)}
-              >
-                <option value="">Select Mode</option>
-                <option value="taxi">Taxi/Uber</option>
-                <option value="bus">Bus</option>
-                <option value="train">Train</option>
-                <option value="flight">Flight</option>
-                <option value="personal">Personal Car</option>
-              </Form.Select>
-            </Form.Group>
-            {formData.details?.mode === 'personal' && (
-              <Form.Group className="mb-3 col-md-6">
-                <Form.Label>Distance (km)</Form.Label>
-                <Form.Control
-                  type="number"
-                  value={formData.details?.distance || ''}
-                  onChange={(e) => handleDetailChange('distance', e.target.value)}
-                />
-              </Form.Group>
-            )}
-          </div>
-        )}
+
         {category === 'food' && (
           <div className="row">
             <Form.Group className="mb-3 col-md-6">
@@ -322,7 +276,7 @@ export const ExpenseModal = ({ show, onHide, expense, onSave, onDelete, fields }
         )}
         {category === 'silicon_server' && (
           <div className="row">
-            <Form.Group className="mb-3 col-md-6">
+            <Form.Group className="mb-3 col-md-12">
               <Form.Label>Server Name / ID</Form.Label>
               <Form.Control
                 type="text"
@@ -335,14 +289,41 @@ export const ExpenseModal = ({ show, onHide, expense, onSave, onDelete, fields }
               <Form.Label>Billing Date</Form.Label>
               <Form.Control
                 type="date"
-                value={formData.details?.billingDate || ''}
-                onChange={(e) => handleDetailChange('billingDate', e.target.value)}
+                value={formData.date || ''}
+                onChange={(e) => handleChange('date', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Amount</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Amount"
+                value={formData.amount || ''}
+                onChange={(e) => handleChange('amount', e.target.value)}
               />
             </Form.Group>
           </div>
         )}
         {category === 'travel' && (
           <div className="row">
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Origin</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="From"
+                value={formData.details?.origin || ''}
+                onChange={(e) => handleDetailChange('origin', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Destination</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="To / Location"
+                value={formData.details?.location || ''}
+                onChange={(e) => handleDetailChange('location', e.target.value)}
+              />
+            </Form.Group>
             <Form.Group className="mb-3 col-md-6">
               <Form.Label>Travel Purpose</Form.Label>
               <Form.Control
@@ -353,12 +334,44 @@ export const ExpenseModal = ({ show, onHide, expense, onSave, onDelete, fields }
               />
             </Form.Group>
             <Form.Group className="mb-3 col-md-6">
-              <Form.Label>Location</Form.Label>
+              <Form.Label>Mode</Form.Label>
+              <Form.Select
+                value={formData.details?.mode || ''}
+                onChange={(e) => handleDetailChange('mode', e.target.value)}
+              >
+                <option value="">Select Mode</option>
+                <option value="taxi">Taxi/Uber</option>
+                <option value="bus">Bus</option>
+                <option value="train">Train</option>
+                <option value="flight">Flight</option>
+                <option value="personal">Personal Car</option>
+              </Form.Select>
+            </Form.Group>
+            {formData.details?.mode === 'personal' && (
+              <Form.Group className="mb-3 col-md-6">
+                <Form.Label>Distance (km)</Form.Label>
+                <Form.Control
+                  type="number"
+                  value={formData.details?.distance || ''}
+                  onChange={(e) => handleDetailChange('distance', e.target.value)}
+                />
+              </Form.Group>
+            )}
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Transaction Date</Form.Label>
               <Form.Control
-                type="text"
-                placeholder="City / Country"
-                value={formData.details?.location || ''}
-                onChange={(e) => handleDetailChange('location', e.target.value)}
+                type="date"
+                value={formData.date || ''}
+                onChange={(e) => handleChange('date', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Total Amount</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Amount"
+                value={formData.amount || ''}
+                onChange={(e) => handleChange('amount', e.target.value)}
               />
             </Form.Group>
             <Form.Group className="mb-3 col-md-6">
@@ -387,7 +400,10 @@ export const ExpenseModal = ({ show, onHide, expense, onSave, onDelete, fields }
                 type="text"
                 placeholder="Employee Name"
                 value={formData.details?.personName || ''}
-                onChange={(e) => handleDetailChange('personName', e.target.value)}
+                onChange={(e) => {
+                  handleDetailChange('personName', e.target.value)
+                  handleChange('employeeName', e.target.value)
+                }}
               />
             </Form.Group>
             <Form.Group className="mb-3 col-md-6">
@@ -404,22 +420,39 @@ export const ExpenseModal = ({ show, onHide, expense, onSave, onDelete, fields }
               <Form.Control
                 type="number"
                 placeholder="Amount"
-                value={formData.details?.salaryAmount || ''}
-                onChange={(e) => handleDetailChange('salaryAmount', e.target.value)}
+                value={formData.amount || ''}
+                onChange={(e) => handleChange('amount', e.target.value)}
               />
             </Form.Group>
             <Form.Group className="mb-3 col-md-6">
               <Form.Label>Salary Date</Form.Label>
               <Form.Control
                 type="date"
-                value={formData.details?.salaryDate || ''}
-                onChange={(e) => handleDetailChange('salaryDate', e.target.value)}
+                value={formData.date || ''}
+                onChange={(e) => handleChange('date', e.target.value)}
               />
             </Form.Group>
           </div>
         )}
         {category === 'bank_charges' && (
           <div className="row">
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Charge Date</Form.Label>
+              <Form.Control
+                type="date"
+                value={formData.date || ''}
+                onChange={(e) => handleChange('date', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Amount</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Amount"
+                value={formData.amount || ''}
+                onChange={(e) => handleChange('amount', e.target.value)}
+              />
+            </Form.Group>
             <Form.Group className="mb-3 col-md-6">
               <Form.Label>Bank Name</Form.Label>
               <Form.Control
@@ -442,13 +475,33 @@ export const ExpenseModal = ({ show, onHide, expense, onSave, onDelete, fields }
         )}
         {category === 'printing_stationery' && (
           <div className="row">
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Purchase Date</Form.Label>
+              <Form.Control
+                type="date"
+                value={formData.date || ''}
+                onChange={(e) => handleChange('date', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Amount</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Amount"
+                value={formData.amount || ''}
+                onChange={(e) => handleChange('amount', e.target.value)}
+              />
+            </Form.Group>
             <Form.Group className="mb-3 col-md-8">
               <Form.Label>Item Description</Form.Label>
               <Form.Control
                 type="text"
                 placeholder="e.g. Printer Ink, Paper reams"
                 value={formData.details?.itemDescription || ''}
-                onChange={(e) => handleDetailChange('itemDescription', e.target.value)}
+                onChange={(e) => {
+                  handleDetailChange('itemDescription', e.target.value)
+                  handleChange('description', e.target.value)
+                }}
               />
             </Form.Group>
             <Form.Group className="mb-3 col-md-4">
@@ -464,7 +517,7 @@ export const ExpenseModal = ({ show, onHide, expense, onSave, onDelete, fields }
         )}
         {category === 'rent' && (
           <div className="row">
-            <Form.Group className="mb-3 col-md-6">
+            <Form.Group className="mb-3 col-md-12">
               <Form.Label>Property / Space Name</Form.Label>
               <Form.Control
                 type="text"
@@ -477,14 +530,40 @@ export const ExpenseModal = ({ show, onHide, expense, onSave, onDelete, fields }
               <Form.Label>Rent Period Date</Form.Label>
               <Form.Control
                 type="date"
-                value={formData.details?.rentDate || ''}
-                onChange={(e) => handleDetailChange('rentDate', e.target.value)}
+                value={formData.date || ''}
+                onChange={(e) => handleChange('date', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Rent Amount</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Amount"
+                value={formData.amount || ''}
+                onChange={(e) => handleChange('amount', e.target.value)}
               />
             </Form.Group>
           </div>
         )}
         {category === 'professional_fees' && (
           <div className="row">
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Date</Form.Label>
+              <Form.Control
+                type="date"
+                value={formData.date || ''}
+                onChange={(e) => handleChange('date', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Fee Amount</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Amount"
+                value={formData.amount || ''}
+                onChange={(e) => handleChange('amount', e.target.value)}
+              />
+            </Form.Group>
             <Form.Group className="mb-3 col-md-6">
               <Form.Label>Professional / Firm Name</Form.Label>
               <Form.Control
@@ -508,6 +587,23 @@ export const ExpenseModal = ({ show, onHide, expense, onSave, onDelete, fields }
         {category === 'consultancy_charges' && (
           <div className="row">
             <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Date</Form.Label>
+              <Form.Control
+                type="date"
+                value={formData.date || ''}
+                onChange={(e) => handleChange('date', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Amount</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Amount"
+                value={formData.amount || ''}
+                onChange={(e) => handleChange('amount', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
               <Form.Label>Consultant Name</Form.Label>
               <Form.Control
                 type="text"
@@ -530,6 +626,23 @@ export const ExpenseModal = ({ show, onHide, expense, onSave, onDelete, fields }
         {category === 'telephone_internet' && (
           <div className="row">
             <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Bill Date</Form.Label>
+              <Form.Control
+                type="date"
+                value={formData.date || ''}
+                onChange={(e) => handleChange('date', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Amount</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Amount"
+                value={formData.amount || ''}
+                onChange={(e) => handleChange('amount', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
               <Form.Label>Provider</Form.Label>
               <Form.Control
                 type="text"
@@ -547,18 +660,27 @@ export const ExpenseModal = ({ show, onHide, expense, onSave, onDelete, fields }
                 onChange={(e) => handleDetailChange('accountNumber', e.target.value)}
               />
             </Form.Group>
-            <Form.Group className="mb-3 col-md-12">
-              <Form.Label>Bill Date</Form.Label>
-              <Form.Control
-                type="date"
-                value={formData.details?.billDate || ''}
-                onChange={(e) => handleDetailChange('billDate', e.target.value)}
-              />
-            </Form.Group>
           </div>
         )}
         {category === 'software_expenses' && (
           <div className="row">
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Purchase Date</Form.Label>
+              <Form.Control
+                type="date"
+                value={formData.date || ''}
+                onChange={(e) => handleChange('date', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Amount</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Amount"
+                value={formData.amount || ''}
+                onChange={(e) => handleChange('amount', e.target.value)}
+              />
+            </Form.Group>
             <Form.Group className="mb-3 col-md-6">
               <Form.Label>Software / Tool Name</Form.Label>
               <Form.Control
@@ -581,14 +703,34 @@ export const ExpenseModal = ({ show, onHide, expense, onSave, onDelete, fields }
         )}
         {category === 'general_expenses' && (
           <div className="row">
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Date</Form.Label>
+              <Form.Control
+                type="date"
+                value={formData.date || ''}
+                onChange={(e) => handleChange('date', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Amount</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Amount"
+                value={formData.amount || ''}
+                onChange={(e) => handleChange('amount', e.target.value)}
+              />
+            </Form.Group>
             <Form.Group className="mb-3 col-md-12">
               <Form.Label>Description</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={2}
                 placeholder="Enter details of the expense"
-                value={formData.details?.description || ''}
-                onChange={(e) => handleDetailChange('description', e.target.value)}
+                value={formData.description || ''}
+                onChange={(e) => {
+                  handleDetailChange('description', e.target.value)
+                  handleChange('description', e.target.value)
+                }}
               />
             </Form.Group>
           </div>
@@ -680,6 +822,13 @@ export const ExpenseModal = ({ show, onHide, expense, onSave, onDelete, fields }
             if (field.id === 'receipt') return null
             // Hide employeeName if category is Food (handled in details)
             if (field.id === 'employeeName' && formData.category === 'food') return null
+
+            const customCategories = ['silicon_server', 'travel', 'salary', 'bank_charges', 'printing_stationery', 'rent', 'professional_fees', 'consultancy_charges', 'telephone_internet', 'software_expenses', 'general_expenses']
+            if (customCategories.includes(formData.category)) {
+              if (['date', 'amount', 'description', 'employeeName', 'projectDepartment'].includes(field.id)) {
+                return null
+              }
+            }
 
             return renderField(field)
           })}
