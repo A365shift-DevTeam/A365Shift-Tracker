@@ -782,21 +782,21 @@ const Dashboard = ({ projects, onOpenProject, onCreateProject, onStatusChange, o
                     <table className="table-custom">
                         <thead>
                             <tr>
-                                <th>Project Name</th><th>Client</th><th>Deal Value</th><th>Tax Paid</th><th>Collected</th><th>Status</th><th>Action</th>
+                                <th>Project Name</th><th>Client</th><th>Deal Value</th><th>Project Tax</th><th>Collected</th><th>Status</th><th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredProjects.map(project => {
                                 const collected = project.milestones.reduce((sum, m) => m.status === 'Paid' ? sum + ((project.dealValue * m.percentage) / 100) : sum, 0);
                                 const totalTaxRate = project.charges ? project.charges.reduce((cSum, c) => cSum + (parseFloat(c.percentage) || 0), 0) : 0;
-                                const taxPaid = project.milestones.reduce((sum, m) => m.status === 'Paid' ? sum + (((project.dealValue * m.percentage) / 100) * totalTaxRate / 100) : sum, 0);
+                                const totalProjectTax = (parseFloat(project.dealValue) || 0) * totalTaxRate / 100;
 
                                 return (
                                     <tr key={project.id} onClick={() => onOpenProject(project.id)}>
                                         <td><div className="fw-bold text-dark">{project.projectId}</div></td>
                                         <td>{project.clientName}</td>
                                         <td className="font-monospace text-dark fw-bold">{project.currency} {parseFloat(project.dealValue).toLocaleString()}</td>
-                                        <td className="font-monospace text-muted">{project.currency} {taxPaid.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                                        <td className="font-monospace text-muted">{project.currency} {totalProjectTax.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
                                         <td className="font-monospace text-warning">{project.currency} {collected.toLocaleString()}</td>
                                         <td>
                                             <select
@@ -1799,6 +1799,12 @@ const ProjectTrackerComplete = () => {
 
     // Milestones logic
     const addMilestone = () => {
+        const currentTotalPct = (activeProject?.milestones || []).reduce((sum, m) => sum + (parseFloat(m.percentage) || 0), 0);
+        if (currentTotalPct >= 100) {
+            alert('Cannot add more payment stages: Total percentage is already 100%.');
+            return;
+        }
+
         let defaultName = 'New Stage';
         try {
             const storageKey = activeProject?.type === 'Service' ? 'sales_stages_service' : 'sales_stages_product';
