@@ -15,6 +15,7 @@ const CATEGORIES = [
   { value: 'consultancy_charges', label: 'Consultancy Charges', color: '#eab308' },
   { value: 'telephone_internet', label: 'Telephone Internet', color: '#06b6d4' },
   { value: 'software_expenses', label: 'Software Expenses', color: '#a855f7' },
+  { value: 'project_tax', label: 'Project Tax & Charges', color: '#ea580c' },
   { value: 'general_expenses', label: 'General Expenses', color: '#64748b' }
 ]
 
@@ -714,6 +715,58 @@ export const ExpenseModal = ({ show, onHide, expense, onSave, onDelete, fields }
             </Form.Group>
           </div>
         )}
+        {category === 'project_tax' && (
+          <div className="row">
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Project ID</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="e.g. PROJ-123"
+                value={formData.details?.projectId || ''}
+                onChange={(e) => handleDetailChange('projectId', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Client Name</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Client Name"
+                value={formData.details?.clientName || ''}
+                onChange={(e) => handleDetailChange('clientName', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-12">
+              <Form.Label>Tax Details / Description</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={2}
+                placeholder="Details of taxes or project charges..."
+                value={formData.details?.taxDetails || ''}
+                onChange={(e) => {
+                  handleDetailChange('taxDetails', e.target.value)
+                  handleChange('description', e.target.value)
+                }}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Date</Form.Label>
+              <Form.Control
+                type="date"
+                value={formData.date || ''}
+                onChange={(e) => handleChange('date', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Amount</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Amount"
+                value={formData.amount || ''}
+                onChange={(e) => handleChange('amount', e.target.value)}
+              />
+            </Form.Group>
+          </div>
+        )}
         {category === 'general_expenses' && (
           <div className="row">
             <Form.Group className="mb-3 col-md-6">
@@ -836,7 +889,7 @@ export const ExpenseModal = ({ show, onHide, expense, onSave, onDelete, fields }
             // Hide employeeName if category is Food (handled in details)
             if (field.id === 'employeeName' && formData.category === 'food') return null
 
-            const customCategories = ['silicon_server', 'travel', 'salary', 'bank_charges', 'printing_stationery', 'rent', 'professional_fees', 'consultancy_charges', 'telephone_internet', 'software_expenses', 'general_expenses']
+            const customCategories = ['silicon_server', 'travel', 'salary', 'bank_charges', 'printing_stationery', 'rent', 'professional_fees', 'consultancy_charges', 'telephone_internet', 'software_expenses', 'project_tax', 'general_expenses']
             if (customCategories.includes(formData.category)) {
               if (['date', 'amount', 'description', 'employeeName', 'projectDepartment'].includes(field.id)) {
                 return null
