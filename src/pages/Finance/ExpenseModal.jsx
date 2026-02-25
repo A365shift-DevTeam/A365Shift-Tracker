@@ -5,7 +5,18 @@ const CATEGORIES = [
   { value: 'transport', label: 'Transport', color: '#3b82f6' },
   { value: 'food', label: 'Food', color: '#f59e0b' },
   { value: 'accommodation', label: 'Accommodation', color: '#8b5cf6' },
-  { value: 'allowances', label: 'Allowances', color: '#10b981' }
+  { value: 'allowances', label: 'Allowances', color: '#10b981' },
+  { value: 'silicon_server', label: 'Silicon - Server', color: '#6366f1' },
+  { value: 'travel', label: 'Travel', color: '#8b5cf6' },
+  { value: 'salary', label: 'Salary', color: '#14b8a6' },
+  { value: 'bank_charges', label: 'Bank Charges', color: '#f43f5e' },
+  { value: 'printing_stationery', label: 'Printing & Stationery', color: '#d946ef' },
+  { value: 'rent', label: 'Rent', color: '#0ea5e9' },
+  { value: 'professional_fees', label: 'Professional Fees', color: '#84cc16' },
+  { value: 'consultancy_charges', label: 'Consultancy Charges', color: '#eab308' },
+  { value: 'telephone_internet', label: 'Telephone Internet', color: '#06b6d4' },
+  { value: 'software_expenses', label: 'Software Expenses', color: '#a855f7' },
+  { value: 'general_expenses', label: 'General Expenses', color: '#64748b' }
 ]
 
 export const ExpenseModal = ({ show, onHide, expense, onSave, onDelete, fields }) => {
@@ -305,6 +316,279 @@ export const ExpenseModal = ({ show, onHide, expense, onSave, onDelete, fields }
                 placeholder="e.g. 5"
                 value={formData.details?.units || ''}
                 onChange={(e) => handleDetailChange('units', e.target.value)}
+              />
+            </Form.Group>
+          </div>
+        )}
+        {category === 'silicon_server' && (
+          <div className="row">
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Server Name / ID</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="e.g. AWS EC2 Instance 1"
+                value={formData.details?.serverName || ''}
+                onChange={(e) => handleDetailChange('serverName', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Billing Date</Form.Label>
+              <Form.Control
+                type="date"
+                value={formData.details?.billingDate || ''}
+                onChange={(e) => handleDetailChange('billingDate', e.target.value)}
+              />
+            </Form.Group>
+          </div>
+        )}
+        {category === 'travel' && (
+          <div className="row">
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Travel Purpose</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="e.g. Client Meeting"
+                value={formData.details?.purpose || ''}
+                onChange={(e) => handleDetailChange('purpose', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Location</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="City / Country"
+                value={formData.details?.location || ''}
+                onChange={(e) => handleDetailChange('location', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Start Date</Form.Label>
+              <Form.Control
+                type="date"
+                value={formData.details?.startDate || ''}
+                onChange={(e) => handleDetailChange('startDate', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>End Date</Form.Label>
+              <Form.Control
+                type="date"
+                value={formData.details?.endDate || ''}
+                onChange={(e) => handleDetailChange('endDate', e.target.value)}
+              />
+            </Form.Group>
+          </div>
+        )}
+        {category === 'salary' && (
+          <div className="row">
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Person Name</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Employee Name"
+                value={formData.details?.personName || ''}
+                onChange={(e) => handleDetailChange('personName', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Email ID</Form.Label>
+              <Form.Control
+                type="email"
+                placeholder="Employee Email"
+                value={formData.details?.email || ''}
+                onChange={(e) => handleDetailChange('email', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Salary Amount</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Amount"
+                value={formData.details?.salaryAmount || ''}
+                onChange={(e) => handleDetailChange('salaryAmount', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Salary Date</Form.Label>
+              <Form.Control
+                type="date"
+                value={formData.details?.salaryDate || ''}
+                onChange={(e) => handleDetailChange('salaryDate', e.target.value)}
+              />
+            </Form.Group>
+          </div>
+        )}
+        {category === 'bank_charges' && (
+          <div className="row">
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Bank Name</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="e.g. HDFC, Chase"
+                value={formData.details?.bankName || ''}
+                onChange={(e) => handleDetailChange('bankName', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Charge Type</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="e.g. Monthly Maintenance, Transfer Fee"
+                value={formData.details?.chargeType || ''}
+                onChange={(e) => handleDetailChange('chargeType', e.target.value)}
+              />
+            </Form.Group>
+          </div>
+        )}
+        {category === 'printing_stationery' && (
+          <div className="row">
+            <Form.Group className="mb-3 col-md-8">
+              <Form.Label>Item Description</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="e.g. Printer Ink, Paper reams"
+                value={formData.details?.itemDescription || ''}
+                onChange={(e) => handleDetailChange('itemDescription', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-4">
+              <Form.Label>Quantity</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="e.g. 5"
+                value={formData.details?.quantity || ''}
+                onChange={(e) => handleDetailChange('quantity', e.target.value)}
+              />
+            </Form.Group>
+          </div>
+        )}
+        {category === 'rent' && (
+          <div className="row">
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Property / Space Name</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="e.g. Main Office"
+                value={formData.details?.propertyName || ''}
+                onChange={(e) => handleDetailChange('propertyName', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Rent Period Date</Form.Label>
+              <Form.Control
+                type="date"
+                value={formData.details?.rentDate || ''}
+                onChange={(e) => handleDetailChange('rentDate', e.target.value)}
+              />
+            </Form.Group>
+          </div>
+        )}
+        {category === 'professional_fees' && (
+          <div className="row">
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Professional / Firm Name</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="e.g. ABC Legal Services"
+                value={formData.details?.professionalName || ''}
+                onChange={(e) => handleDetailChange('professionalName', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Service Provided</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="e.g. Audit, Legal Consultation"
+                value={formData.details?.service || ''}
+                onChange={(e) => handleDetailChange('service', e.target.value)}
+              />
+            </Form.Group>
+          </div>
+        )}
+        {category === 'consultancy_charges' && (
+          <div className="row">
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Consultant Name</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="e.g. John Doe Consulting"
+                value={formData.details?.consultantName || ''}
+                onChange={(e) => handleDetailChange('consultantName', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Project / Engagement</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="e.g. Q3 Strategy Review"
+                value={formData.details?.engagement || ''}
+                onChange={(e) => handleDetailChange('engagement', e.target.value)}
+              />
+            </Form.Group>
+          </div>
+        )}
+        {category === 'telephone_internet' && (
+          <div className="row">
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Provider</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="e.g. Airtel, Jio"
+                value={formData.details?.provider || ''}
+                onChange={(e) => handleDetailChange('provider', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Account / Number</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="e.g. 9876543210"
+                value={formData.details?.accountNumber || ''}
+                onChange={(e) => handleDetailChange('accountNumber', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-12">
+              <Form.Label>Bill Date</Form.Label>
+              <Form.Control
+                type="date"
+                value={formData.details?.billDate || ''}
+                onChange={(e) => handleDetailChange('billDate', e.target.value)}
+              />
+            </Form.Group>
+          </div>
+        )}
+        {category === 'software_expenses' && (
+          <div className="row">
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Software / Tool Name</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="e.g. Adobe CC, GitHub"
+                value={formData.details?.softwareName || ''}
+                onChange={(e) => handleDetailChange('softwareName', e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3 col-md-6">
+              <Form.Label>Subscription Period</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="e.g. Oct 2023 - Oct 2024"
+                value={formData.details?.subscriptionPeriod || ''}
+                onChange={(e) => handleDetailChange('subscriptionPeriod', e.target.value)}
+              />
+            </Form.Group>
+          </div>
+        )}
+        {category === 'general_expenses' && (
+          <div className="row">
+            <Form.Group className="mb-3 col-md-12">
+              <Form.Label>Description</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={2}
+                placeholder="Enter details of the expense"
+                value={formData.details?.description || ''}
+                onChange={(e) => handleDetailChange('description', e.target.value)}
               />
             </Form.Group>
           </div>
