@@ -291,10 +291,13 @@ export default function MainLayout() {
                         overflow: 'hidden'
                     }}
                 >
-                    {/* Top Header Bar with Menu Button */}
+                    {/* Top Header Bar with Menu Button & Title */}
                     <div style={{
                         padding: '10px 16px',
-                        flexShrink: 0
+                        flexShrink: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '16px'
                     }}>
                         <button
                             onClick={() => setSidebarOpen(true)}
@@ -314,6 +317,9 @@ export default function MainLayout() {
                         >
                             <FaBars size={18} />
                         </button>
+                        <h5 className="m-0 fw-bold" style={{ color: '#475569', letterSpacing: '-0.3px' }}>
+                            {navItems.find(item => item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path))?.label || 'A365 Tracker'}
+                        </h5>
                     </div>
                     {/* Scrollable Content */}
                     <div className="flex-grow-1 overflow-auto">
