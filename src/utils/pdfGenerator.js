@@ -549,7 +549,7 @@ export const generateInvestorPaymentPDF = (milestone, details) => {
     let y = 72;
 
     const baseAmount = (details.dealValue * (parseFloat(milestone.percentage) || 0)) / 100;
-    const gstRate = 18; // Default GST on Investor payments
+    const gstRate = parseFloat(details.leadGst) || 0; // Default GST on Investor payments
     const gstAmount = (baseAmount * gstRate) / 100;
     const netPay = baseAmount + gstAmount;
 
@@ -697,7 +697,7 @@ export const generatePaymentInvoicePDF = (stakeholder, details, dealValue) => {
     const doc = new jsPDF();
     const currency = details.currency || 'AED';
     const payAmt = (dealValue * (parseFloat(stakeholder.percentage) || 0)) / 100;
-    const taxRate = parseFloat(details.leadGst) || 18;
+    const taxRate = parseFloat(details.leadGst) || 0;
     const taxAmt = (payAmt * taxRate) / 100;
     const netPay = payAmt + taxAmt;
 

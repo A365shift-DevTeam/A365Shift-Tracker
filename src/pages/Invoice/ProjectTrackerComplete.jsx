@@ -1470,7 +1470,7 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
                             <tbody>
                                 {stakeholders && stakeholders.map((s, idx) => {
                                     const payAmt = (dVal * s.percentage) / 100;
-                                    const taxRate = parseFloat(details.leadGst) || 18;
+                                    const taxRate = parseFloat(details.leadGst) || 0;
                                     const taxAmt = (payAmt * taxRate) / 100;
                                     const netPay = payAmt + taxAmt;
 
@@ -1482,7 +1482,7 @@ const InvoiceMain = ({ details, updateDetails, stakeholders, addStakeholder, rem
                                             </td>
                                             <td>{details.currency} {payAmt.toLocaleString()}</td>
                                             <td>
-                                                <input type="number" className="stage-input p-1 text-center" style={{ width: '60px' }} value={parseFloat(details.leadGst) || 18} disabled />
+                                                <input type="number" className="stage-input p-1 text-center" style={{ width: '60px' }} value={parseFloat(details.leadGst) || 0} disabled />
                                             </td>
                                             <td>{details.currency} {taxAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                                             <td>{details.currency} {netPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
@@ -1776,7 +1776,7 @@ const ProjectTrackerComplete = () => {
                 // Calculate Payout Amount safely converting strings to floats
                 const basePayout = ((parseFloat(activeProject.dealValue) || 0) * (parseFloat(stakeholder.percentage) || 0)) / 100;
                 // Tax deduction uses the leadGst applied to the project as seen in Stage 4 UI
-                const taxRate = parseFloat(activeProject.leadGst) || 18;
+                const taxRate = parseFloat(activeProject.leadGst) || 0;
                 const taxAmt = (basePayout * taxRate) / 100;
                 const netPayout = basePayout + taxAmt; // From UI: "Total Pay" equals Pay (INR) + GST Amt
 
