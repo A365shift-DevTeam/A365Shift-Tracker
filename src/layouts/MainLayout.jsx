@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FaChartColumn, FaUserGroup, FaClock, FaRightFromBracket, FaHouse, FaMoneyBillWave, FaListCheck, FaFileInvoice, FaBars, FaXmark, FaRobot } from 'react-icons/fa6';
+import { FaChartColumn, FaUserGroup, FaClock, FaRightFromBracket, FaHouse, FaMoneyBillWave, FaListCheck, FaFileInvoice, FaBars, FaXmark, FaRobot, FaBrain } from 'react-icons/fa6';
 
 function useIsMobile(breakpoint = 768) {
     const [isMobile, setIsMobile] = React.useState(window.innerWidth <= breakpoint);
@@ -40,7 +40,7 @@ export default function MainLayout() {
         { path: '/timesheet', icon: <FaClock size={20} />, label: 'Time' },
         { path: '/finance', icon: <FaMoneyBillWave size={20} />, label: 'Finance' },
         { path: '/invoice', icon: <FaFileInvoice size={20} />, label: 'Invoice' },
-        { path: '/ai-followup', icon: <FaRobot size={20} />, label: 'AI Followup' },
+        { path: '/ai-agents', icon: <FaBrain size={20} />, label: 'AI Agents' },
     ];
 
     /* ───── MOBILE LAYOUT ───── */

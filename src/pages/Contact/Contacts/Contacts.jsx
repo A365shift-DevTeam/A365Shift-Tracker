@@ -54,13 +54,16 @@ const Contacts = () => {
     { id: 'msmeStatus', name: 'MSME Status', type: 'text', visible: false },
     { id: 'tdsSection', name: 'TDS Section', type: 'text', visible: false },
     { id: 'tdsRate', name: 'TDS Rate', type: 'number', visible: false },
-    { id: 'type', name: 'Entity Type', type: 'choice', visible: true, config: { options: [{ label: 'Company', color: '#3b82f6' }, { label: 'Individual', color: '#8b5cf6' }] } },
+    { id: 'type', name: 'Entity Type', type: 'choice', visible: true, config: { options: [{ label: 'Company', color: '#3b82f6' }, { label: 'Individual', color: '#8b5cf6' }, { label: 'Vendor', color: '#10b981' }] } },
     { id: 'status', name: 'Status', type: 'choice', visible: true, config: { options: [{ label: 'Active', color: '#10b981' }, { label: 'Inactive', color: '#94a3b8' }, { label: 'Lead', color: '#3b82f6' }, { label: 'Customer', color: '#06b6d4' }] } }
   ])
+  const [columnsLoaded, setColumnsLoaded] = useState(false)
   const [showColumnManager, setShowColumnManager] = useState(false)
   const [draggingColumnId, setDraggingColumnId] = useState(null)
   const [showAddColForm, setShowAddColForm] = useState(false)
   const [addColData, setAddColData] = useState({ name: '', type: 'text', required: false, visible: true, config: {} })
+  const [showEditColForm, setShowEditColForm] = useState(false)
+  const [editColData, setEditColData] = useState({ id: '', name: '', type: 'text', required: false, visible: true, config: {} })
 
   // Preview Modal
   const [showPreviewModal, setShowPreviewModal] = useState(false)
@@ -83,7 +86,27 @@ const Contacts = () => {
 
   useEffect(() => {
     loadContacts()
+    loadColumns()
   }, [])
+
+  const loadColumns = async () => {
+    try {
+      const cols = await contactService.getColumns()
+      if (cols && cols.length > 0) {
+        setContactColumns(cols)
+      }
+    } catch (error) {
+      console.error('Error loading columns:', error)
+    } finally {
+      setColumnsLoaded(true)
+    }
+  }
+
+  useEffect(() => {
+    if (columnsLoaded) {
+      contactService.saveColumns(contactColumns).catch(console.error)
+    }
+  }, [contactColumns, columnsLoaded])
 
   const loadContacts = async () => {
     try {
@@ -247,10 +270,41 @@ const Contacts = () => {
 
   const handleSaveContact = async (contactData) => {
     try {
+      // Ensure both 'type' and 'entityType' are saved for compatibility
+      // Also ensure category field is explicitly included (even if empty)
+      const dataToSave = {
+        ...contactData,
+        type: contactData.entityType || contactData.type, // Save as 'type' for column compatibility
+        entityType: contactData.entityType || contactData.type, // Also save as 'entityType'
+        // Explicitly include category field - Firestore updateDoc might skip undefined fields
+        category: contactData.category !== undefined ? contactData.category : null
+      }
+
+      // Remove undefined values but keep null and empty strings for category
+      const cleanedData = {}
+      Object.keys(dataToSave).forEach(key => {
+        if (dataToSave[key] !== undefined) {
+          cleanedData[key] = dataToSave[key]
+        }
+      })
+
+      // Debug: Log all fields being saved, especially category
+      console.log('Saving contact data:', {
+        originalCategory: contactData.category,
+        categoryType: typeof contactData.category,
+        allFields: Object.keys(contactData),
+        cleanedData: cleanedData,
+        categoryInCleaned: cleanedData.category
+      })
+
       if (editingContact) {
-        await contactService.updateContact(editingContact.id, contactData)
+        console.log('Updating contact:', editingContact.id, 'with data:', cleanedData)
+        await contactService.updateContact(editingContact.id, cleanedData)
+        console.log('Contact updated successfully')
       } else {
-        await contactService.createContact(contactData)
+        console.log('Creating new contact with data:', cleanedData)
+        await contactService.createContact(cleanedData)
+        console.log('Contact created successfully')
       }
       await loadContacts()
       setShowContactModal(false)
@@ -596,6 +650,7 @@ const Contacts = () => {
         show={showContactModal}
         onHide={() => { setShowContactModal(false); setEditingContact(null); }}
         contact={editingContact}
+        columns={contactColumns}
         onSave={handleSaveContact}
         onDelete={handleDeleteContact}
       />
@@ -857,6 +912,18 @@ const Contacts = () => {
                           variant="link"
                           size="sm"
                           onClick={() => {
+                            setEditColData(JSON.parse(JSON.stringify(column)));
+                            setShowEditColForm(true);
+                          }}
+                          title="Edit column"
+                          className="action-btn edit-btn"
+                        >
+                          <Edit size={18} />
+                        </Button>
+                        <Button
+                          variant="link"
+                          size="sm"
+                          onClick={() => {
                             setContactColumns(prev => prev.map(c =>
                               c.id === column.id ? { ...c, visible: !c.visible } : c
                             ));
@@ -983,7 +1050,11 @@ const Contacts = () => {
                     value={opt.color || '#3b82f6'}
                     onChange={(e) => {
                       const newOpts = [...addColData.config.options];
-                      newOpts[oi] = { ...newOpts[oi], color: e.target.value };
+                      if (typeof newOpts[oi] === 'string') {
+                        newOpts[oi] = { label: newOpts[oi], color: e.target.value };
+                      } else {
+                        newOpts[oi] = { ...newOpts[oi], color: e.target.value };
+                      }
                       setAddColData({ ...addColData, config: { ...addColData.config, options: newOpts } });
                     }}
                     style={{ width: 32, height: 32, border: 'none', borderRadius: 6, cursor: 'pointer', padding: 0 }}
@@ -992,10 +1063,14 @@ const Contacts = () => {
                     size="sm"
                     type="text"
                     placeholder={`Option ${oi + 1}`}
-                    value={opt.label || ''}
+                    value={typeof opt === 'string' ? opt : (opt.label || '')}
                     onChange={(e) => {
                       const newOpts = [...addColData.config.options];
-                      newOpts[oi] = { ...newOpts[oi], label: e.target.value };
+                      if (typeof newOpts[oi] === 'string') {
+                        newOpts[oi] = { label: e.target.value, color: '#3b82f6' };
+                      } else {
+                        newOpts[oi] = { ...newOpts[oi], label: e.target.value };
+                      }
                       setAddColData({ ...addColData, config: { ...addColData.config, options: newOpts } });
                     }}
                     style={{ borderRadius: '6px' }}
@@ -1040,6 +1115,160 @@ const Contacts = () => {
             style={{ borderRadius: '8px', fontWeight: 600, padding: '8px 20px' }}
           >
             Add Column
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* EDIT COLUMN SUB-MODAL */}
+      <Modal show={showEditColForm} onHide={() => setShowEditColForm(false)} centered size="md" className="add-column-modal">
+        <Modal.Header closeButton className="border-0 pb-0">
+          <Modal.Title className="h5 fw-bold">Edit Column</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="pt-3 px-4">
+          <Form.Group className="mb-3">
+            <Form.Label className="fw-semibold small">Column Name *</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter column name"
+              value={editColData.name}
+              onChange={(e) => setEditColData({ ...editColData, name: e.target.value })}
+              style={{ borderRadius: '8px', padding: '10px 14px' }}
+            />
+          </Form.Group>
+
+          <Form.Group className="mb-3">
+            <Form.Label className="fw-semibold small">Field Type *</Form.Label>
+            <Form.Select
+              value={editColData.type}
+              onChange={(e) => {
+                const newType = e.target.value;
+                const newConfig = (newType === 'choice' || newType === 'dropdown')
+                  ? { options: [{ label: '', color: '#3b82f6' }] }
+                  : {};
+                setEditColData({ ...editColData, type: newType, config: newConfig });
+              }}
+              style={{ borderRadius: '8px', padding: '10px 14px' }}
+              disabled={editColData.id === 'name' || editColData.id === 'type' || editColData.id === 'status'}
+            >
+              <option value="text">Text</option>
+              <option value="email">Email</option>
+              <option value="choice">Choice</option>
+              <option value="dropdown">Dropdown</option>
+              <option value="currency">Currency</option>
+              <option value="location">Location</option>
+              <option value="datetime">Date and Time</option>
+            </Form.Select>
+          </Form.Group>
+
+          <Form.Check
+            type="checkbox"
+            label="Required"
+            checked={editColData.required}
+            onChange={(e) => setEditColData({ ...editColData, required: e.target.checked })}
+            className="mb-2"
+            disabled={editColData.id === 'name'}
+          />
+
+          <Form.Check
+            type="checkbox"
+            label="Visible by default"
+            checked={editColData.visible}
+            onChange={(e) => setEditColData({ ...editColData, visible: e.target.checked })}
+            className="mb-3"
+          />
+
+          {editColData.type === 'text' && (
+            <Form.Group className="mb-3">
+              <Form.Label className="fw-semibold small">Max Length</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="No limit"
+                value={editColData.config?.maxLength || ''}
+                onChange={(e) => setEditColData({ ...editColData, config: { ...editColData.config, maxLength: e.target.value ? Number(e.target.value) : undefined } })}
+                style={{ borderRadius: '8px', padding: '10px 14px' }}
+              />
+            </Form.Group>
+          )}
+
+          {(editColData.type === 'choice' || editColData.type === 'dropdown') && (
+            <Form.Group className="mb-3">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <Form.Label className="fw-semibold small mb-0">Options *</Form.Label>
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  onClick={() => setEditColData({
+                    ...editColData,
+                    config: { ...editColData.config, options: [...(editColData.config?.options || []), { label: '', color: '#3b82f6' }] }
+                  })}
+                  style={{ fontSize: '0.75rem', borderRadius: '6px' }}
+                >
+                  + Add Option
+                </Button>
+              </div>
+              {(editColData.config?.options || []).map((opt, oi) => (
+                <div key={oi} className="d-flex align-items-center gap-2 mb-2">
+                  <input
+                    type="color"
+                    value={opt.color || '#3b82f6'}
+                    onChange={(e) => {
+                      const newOpts = [...editColData.config.options];
+                      if (typeof newOpts[oi] === 'string') {
+                        newOpts[oi] = { label: newOpts[oi], color: e.target.value };
+                      } else {
+                        newOpts[oi] = { ...newOpts[oi], color: e.target.value };
+                      }
+                      setEditColData({ ...editColData, config: { ...editColData.config, options: newOpts } });
+                    }}
+                    style={{ width: 32, height: 32, border: 'none', borderRadius: 6, cursor: 'pointer', padding: 0 }}
+                  />
+                  <Form.Control
+                    size="sm"
+                    type="text"
+                    placeholder={`Option ${oi + 1}`}
+                    value={typeof opt === 'string' ? opt : (opt.label || '')}
+                    onChange={(e) => {
+                      const newOpts = [...editColData.config.options];
+                      if (typeof newOpts[oi] === 'string') {
+                        newOpts[oi] = { label: e.target.value, color: '#3b82f6' };
+                      } else {
+                        newOpts[oi] = { ...newOpts[oi], label: e.target.value };
+                      }
+                      setEditColData({ ...editColData, config: { ...editColData.config, options: newOpts } });
+                    }}
+                    style={{ borderRadius: '6px' }}
+                  />
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="text-danger p-0"
+                    onClick={() => {
+                      const newOpts = editColData.config.options.filter((_, i) => i !== oi);
+                      setEditColData({ ...editColData, config: { ...editColData.config, options: newOpts } });
+                    }}
+                  >
+                    <X size={16} />
+                  </Button>
+                </div>
+              ))}
+            </Form.Group>
+          )}
+        </Modal.Body>
+        <Modal.Footer style={{ background: '#f8fafc' }} className="border-0">
+          <Button variant="secondary" onClick={() => setShowEditColForm(false)} style={{ borderRadius: '8px', fontWeight: 600, padding: '8px 20px' }}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => {
+              if (!editColData.name.trim()) return;
+              setContactColumns(prev => prev.map(c => c.id === editColData.id ? editColData : c));
+              setShowEditColForm(false);
+            }}
+            disabled={!editColData.name.trim()}
+            style={{ borderRadius: '8px', fontWeight: 600, padding: '8px 20px' }}
+          >
+            Save Changes
           </Button>
         </Modal.Footer>
       </Modal>

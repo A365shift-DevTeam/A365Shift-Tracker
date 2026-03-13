@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 import MainLayout from './layouts/MainLayout';
@@ -13,6 +13,8 @@ import Finance from './pages/Finance/Finance';
 import TodoList from './pages/TodoList/TodoList';
 import Invoice from './pages/Invoice/Invoice';
 import AIFollowup from './pages/AIFollowup/AIFollowup';
+import Vendor from './pages/Vendor/Vendor';
+import AIAgentsLayout from './pages/AIAgents/AIAgentsLayout';
 import './index.css';
 
 function App() {
@@ -35,7 +37,12 @@ function App() {
             <Route path="finance" element={<Finance />} />
             <Route path="todolist" element={<TodoList />} />
             <Route path="invoice" element={<Invoice />} />
-            <Route path="ai-followup" element={<AIFollowup />} />
+
+            <Route path="ai-agents" element={<AIAgentsLayout />}>
+              <Route index element={<Navigate to="ai-followup" replace />} />
+              <Route path="ai-followup" element={<AIFollowup />} />
+              <Route path="vendor" element={<Vendor />} />
+            </Route>
           </Route>
         </Routes>
       </AuthProvider>

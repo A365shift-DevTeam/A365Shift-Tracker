@@ -1584,3 +1584,7 @@ body.resizing * {
 .visibility-btn.hidden {
   color: #cbd5e1 !important;
 }
+
+.edit-btn:hover {
+  color: #10b981 !important;
+}
