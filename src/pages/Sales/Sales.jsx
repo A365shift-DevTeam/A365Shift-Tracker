@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { arrayUnion } from 'firebase/firestore'
 import { User, Mail, Contact, Settings, Plus, CheckCircle, Trash2, Briefcase, DollarSign, Timer, Flag, AlertTriangle, ArrowUpRight, Search, Monitor, Phone, FileText, MessageSquare, Edit, Clock } from 'lucide-react'
+import { FaWhatsapp } from 'react-icons/fa6'
 import { Button, Modal, Form, Dropdown } from 'react-bootstrap'
 import './Sales.css'
 import StageSettingsModal from './StageSettingsModal'
@@ -164,6 +165,21 @@ const SalesCard = ({ projectId, project, stages, activeStage, onStageChange, onD
                             onInvoice();
                         }}
                         title="Create Invoice"
+                    />
+                    <FaWhatsapp
+                        size={17}
+                        className="icon-outline icon-whatsapp"
+                        style={{ cursor: 'pointer', color: "rgb(35, 144, 154)" }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            const phone = project.phone || '';
+                            if (phone) {
+                                window.open(`https://wa.me/${phone.replace(/\D/g, '')}`, '_blank');
+                            } else {
+                                alert('No phone number available for this client.');
+                            }
+                        }}
+                        title="WhatsApp Client"
                     />
                     <Trash2
                         size={16}
@@ -349,6 +365,7 @@ function Sales() {
     const [searchQuery, setSearchQuery] = useState('')
     const [filterBy, setFilterBy] = useState('all') // 'all', 'stage'
     const [filterValue, setFilterValue] = useState('')
+    const [statusFilter, setStatusFilter] = useState('all') // 'all', 'Won', 'Lost'
     const [sortBy, setSortBy] = useState('id') // 'id', 'rating', 'delay'
     const [sortOrder, setSortOrder] = useState('desc')
 
@@ -406,8 +423,7 @@ function Sales() {
             amount: logData?.amount || 0,
             currency: logData?.currency || 'USD',
             description: logData?.description || `Moved to ${newStageLabel}`,
-            targetDate: logData?.targetDate,
-            revisedDate: logData?.revisedDate
+            targetDate: logData?.targetDate
         }
 
         const uiUpdates = {
@@ -439,12 +455,12 @@ function Sales() {
     }
 
     const [showAddModal, setShowAddModal] = useState(false)
-    const [newProjectData, setNewProjectData] = useState({ clientName: '', brandingName: 'A365Shift', type: 'Product' })
+    const [newProjectData, setNewProjectData] = useState({ clientName: '', brandingName: 'A365Shift', type: 'Product', phone: '' })
 
     // Edit Project State
     const [showEditModal, setShowEditModal] = useState(false)
     const [editingProject, setEditingProject] = useState(null)
-    const [editProjectData, setEditProjectData] = useState({ title: '', clientName: '', brandingName: '', type: 'Product' })
+    const [editProjectData, setEditProjectData] = useState({ title: '', clientName: '', brandingName: '', type: 'Product', status: '', phone: '' })
 
     const handleAddProject = () => {
         setNewProjectData({ clientName: '', brandingName: 'A365Shift', type: activeTab })
@@ -461,6 +477,7 @@ function Sales() {
             delay: 0,
             clientName: newProjectData.clientName || 'New Client',
             brandingName: newProjectData.brandingName || 'A365Shift',
+            phone: newProjectData.phone || '',
             customId: GenerateCustomId(newProjectData.brandingName, newProjectData.clientName)
         }
 
@@ -500,7 +517,9 @@ function Sales() {
             title: project.title || '',
             clientName: project.clientName || '',
             brandingName: project.brandingName || '',
-            type: project.type || 'Product'
+            type: project.type || 'Product',
+            status: project.status || '',
+            phone: project.phone || ''
         })
         setShowEditModal(true)
     }
@@ -511,7 +530,19 @@ function Sales() {
             title: editProjectData.title,
             clientName: editProjectData.clientName,
             brandingName: editProjectData.brandingName,
-            type: editProjectData.type
+            type: editProjectData.type,
+            status: editProjectData.status,
+            phone: editProjectData.phone
+        }
+
+        // If status changed to Won/Lost, update activeStage if it matches a stage label
+        const currentStages = getStagesByType(editProjectData.type);
+        if (editProjectData.status === 'Won') {
+            const wonIndex = currentStages.findIndex(s => s.label === 'Won');
+            if (wonIndex !== -1) updates.activeStage = wonIndex;
+        } else if (editProjectData.status === 'Lost') {
+            const lostIndex = currentStages.findIndex(s => s.label === 'Lost');
+            if (lostIndex !== -1) updates.activeStage = lostIndex;
         }
         // Optimistic update
         setProjects(prev => prev.map(p =>
@@ -568,10 +599,15 @@ function Sales() {
             if (!matchesId) return false;
         }
 
-        // 3. Custom Filter
+        // 3. Custom Filter (Stage)
         if (filterBy === 'stage' && filterValue) {
             const stageLabel = activeStages[p.activeStage]?.label;
             if (stageLabel !== filterValue) return false;
+        }
+
+        // 4. Status Filter
+        if (statusFilter !== 'all') {
+            if (p.status !== statusFilter) return false;
         }
 
         return true;
@@ -740,9 +776,59 @@ function Sales() {
                                             onClick={() => {
                                                 setFilterBy('all');
                                                 setFilterValue('');
+                                                setStatusFilter('all');
                                             }}
                                         >
                                             Clear Filters
+                                        </Button>
+                                    </div>
+                                )}
+                            </Dropdown.Menu>
+                        </Dropdown>
+
+                        {/* Status Filter Button */}
+                        <Dropdown>
+                            <Dropdown.Toggle as="button" className="icon-btn" bsPrefix="p-0 border-0 bg-transparent">
+                                <div className={`icon-wrapper ${statusFilter !== 'all' ? 'active' : ''}`}>
+                                    <CheckCircle size={20} />
+                                </div>
+                            </Dropdown.Toggle>
+                            <Dropdown.Menu className="timesheet-dropdown-menu p-3 shadow-sm border-0" style={{ minWidth: '200px', borderRadius: '12px' }}>
+                                <div>
+                                    <label className="small text-muted fw-bold mb-2">FILTER BY STATUS</label>
+                                    <div className="d-grid gap-2">
+                                        <Button
+                                            variant={statusFilter === 'all' ? 'primary' : 'light'}
+                                            size="sm"
+                                            onClick={() => setStatusFilter('all')}
+                                        >
+                                            All Projects
+                                        </Button>
+                                        <Button
+                                            variant={statusFilter === 'Won' ? 'success' : 'light'}
+                                            size="sm"
+                                            onClick={() => setStatusFilter('Won')}
+                                        >
+                                            Won
+                                        </Button>
+                                        <Button
+                                            variant={statusFilter === 'Lost' ? 'danger' : 'light'}
+                                            size="sm"
+                                            onClick={() => setStatusFilter('Lost')}
+                                        >
+                                            Lost
+                                        </Button>
+                                    </div>
+                                </div>
+                                {statusFilter !== 'all' && (
+                                    <div className="mt-3 pt-2 border-top text-end">
+                                        <Button
+                                            variant="link"
+                                            size="sm"
+                                            className="text-danger text-decoration-none p-0"
+                                            onClick={() => setStatusFilter('all')}
+                                        >
+                                            Clear Filter
                                         </Button>
                                     </div>
                                 )}
@@ -884,6 +970,15 @@ function Sales() {
                             />
                         </Form.Group>
                         <Form.Group className="mb-3">
+                            <Form.Label>Phone Number</Form.Label>
+                            <Form.Control
+                                type="text"
+                                placeholder="Enter client phone"
+                                value={newProjectData.phone}
+                                onChange={(e) => setNewProjectData({ ...newProjectData, phone: e.target.value })}
+                            />
+                        </Form.Group>
+                        <Form.Group className="mb-3">
                             <Form.Label>Project Type</Form.Label>
                             <Form.Select
                                 value={newProjectData.type}
@@ -940,6 +1035,15 @@ function Sales() {
                             />
                         </Form.Group>
                         <Form.Group className="mb-3">
+                            <Form.Label>Phone Number</Form.Label>
+                            <Form.Control
+                                type="text"
+                                placeholder="Enter client phone"
+                                value={editProjectData.phone}
+                                onChange={(e) => setEditProjectData({ ...editProjectData, phone: e.target.value })}
+                            />
+                        </Form.Group>
+                        <Form.Group className="mb-3">
                             <Form.Label>Project Type</Form.Label>
                             <Form.Select
                                 value={editProjectData.type}
@@ -947,6 +1051,17 @@ function Sales() {
                             >
                                 <option value="Product">{productLabel}</option>
                                 <option value="Service">{serviceLabel}</option>
+                            </Form.Select>
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Status</Form.Label>
+                            <Form.Select
+                                value={editProjectData.status}
+                                onChange={(e) => setEditProjectData({ ...editProjectData, status: e.target.value })}
+                            >
+                                <option value="">Select Status</option>
+                                <option value="Won">Won</option>
+                                <option value="Lost">Lost</option>
                             </Form.Select>
                         </Form.Group>
                     </Form>

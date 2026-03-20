@@ -35,7 +35,6 @@ const BusinessProcessModal = ({
     const [viewedStage, setViewedStage] = useState(initialStage)
     const [formData, setFormData] = useState({
         targetDate: '',
-        revisedDate: '',
         amount: '',
         currency: 'USD',
         description: '',
@@ -60,7 +59,6 @@ const BusinessProcessModal = ({
         })
         setFormData({
             targetDate: '',
-            revisedDate: '',
             amount: '',
             currency: 'USD',
             description: '',
@@ -115,14 +113,6 @@ const BusinessProcessModal = ({
                                 />
                             </Form.Group>
 
-                            <Form.Group className="mb-3">
-                                <Form.Label>Revised Date</Form.Label>
-                                <Form.Control
-                                    type="date"
-                                    value={formData.revisedDate}
-                                    onChange={e => handleFormChange('revisedDate', e.target.value)}
-                                />
-                            </Form.Group>
 
                             <Form.Group className="mb-3">
                                 <Form.Label>Amount</Form.Label>
@@ -211,11 +201,6 @@ const BusinessProcessModal = ({
                                             {item.targetDate && (
                                                 <small className="text-secondary" style={{ fontSize: '0.75rem' }}>
                                                     Target: {item.targetDate}
-                                                </small>
-                                            )}
-                                            {item.revisedDate && (
-                                                <small className="text-danger" style={{ fontSize: '0.75rem' }}>
-                                                    Revised: {item.revisedDate}
                                                 </small>
                                             )}
                                         </div>
