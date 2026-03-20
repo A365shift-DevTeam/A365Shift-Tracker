@@ -4,7 +4,7 @@ import { Plus, LayoutGrid, List as ListIcon, Search, SlidersHorizontal, Settings
 import { ListView } from './ListView'
 import { KanbanView } from './KanbanView'
 import { TaskModal } from './TaskModal'
-import { ColumnManager } from './ColumnManager'
+import { ColumnManager, ColumnConfigModal } from './ColumnManager'
 import { taskService } from '../../services/api'
 import './TodoList.css'
 
@@ -66,6 +66,8 @@ const TodoList = () => {
     const [showTaskModal, setShowTaskModal] = useState(false)
     const [editingTask, setEditingTask] = useState(null)
     const [showColumnManager, setShowColumnManager] = useState(false)
+    const [showColumnConfigModal, setShowColumnConfigModal] = useState(false)
+    const [editingColumnConfig, setEditingColumnConfig] = useState(null)
     const [searchQuery, setSearchQuery] = useState('')
 
     // Filtering and Sorting
@@ -157,6 +159,35 @@ const TodoList = () => {
             ))
         } catch (error) {
             console.error("Error updating task status:", error)
+        }
+    }
+
+    const handleSaveColumnFromModal = (columnData) => {
+        try {
+            if (editingColumnConfig) {
+                setColumns(columns.map(col =>
+                    col.id === editingColumnConfig.id ? { ...col, ...columnData } : col
+                ))
+            } else {
+                const newColumn = {
+                    ...columnData,
+                    id: `col-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+                }
+                setColumns([...columns, newColumn])
+            }
+            setEditingColumnConfig(null)
+            setShowColumnConfigModal(false)
+        } catch (error) {
+            console.error('Error saving column:', error)
+            alert('Failed to save column. Please try again.')
+        }
+    }
+
+    const handleDeleteColumnFromModal = (columnId) => {
+        if (window.confirm('Are you sure you want to delete this field? All data in this field will be lost.')) {
+            setColumns(columns.filter(col => col.id !== columnId))
+            setEditingColumnConfig(null)
+            setShowColumnConfigModal(false)
         }
     }
 
@@ -382,6 +413,26 @@ const TodoList = () => {
                 columns={columns}
                 onSave={editingTask ? handleUpdateTask : handleAddTask}
                 onDelete={handleDeleteTask}
+                onAddColumn={() => {
+                    setEditingColumnConfig(null)
+                    setShowColumnConfigModal(true)
+                }}
+                onEditColumn={(col) => {
+                    setEditingColumnConfig(col)
+                    setShowColumnConfigModal(true)
+                }}
+                onDeleteColumn={handleDeleteColumnFromModal}
+            />
+
+            <ColumnConfigModal
+                show={showColumnConfigModal}
+                onHide={() => {
+                    setShowColumnConfigModal(false)
+                    setEditingColumnConfig(null)
+                }}
+                column={editingColumnConfig}
+                onSave={handleSaveColumnFromModal}
+                onDelete={handleDeleteColumnFromModal}
             />
 
             {showColumnManager && (

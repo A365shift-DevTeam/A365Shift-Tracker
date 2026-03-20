@@ -154,7 +154,7 @@ const SortableColumnItem = ({ column, onToggleVisibility, onEdit, onDelete }) =>
   )
 }
 
-const ColumnConfigModal = ({ show, onHide, column, onSave, onDelete }) => {
+export const ColumnConfigModal = ({ show, onHide, column, onSave, onDelete }) => {
   const [formData, setFormData] = useState({
     name: column?.name || '',
     type: column?.type || 'text',

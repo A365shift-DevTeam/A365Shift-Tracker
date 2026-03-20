@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Modal, Form, Button } from 'react-bootstrap'
+import { Plus, Edit2, Trash2 } from 'lucide-react'
 import { FieldRenderer } from './FieldRenderers'
 
-export const TaskModal = ({ show, onHide, task, columns, onSave, onDelete }) => {
+export const TaskModal = ({ show, onHide, task, columns, onSave, onDelete, onAddColumn, onEditColumn, onDeleteColumn }) => {
   const [formValues, setFormValues] = useState({})
   const [errors, setErrors] = useState({})
   const [notify, setNotify] = useState(false)
@@ -187,7 +188,35 @@ export const TaskModal = ({ show, onHide, task, columns, onSave, onDelete }) => 
               </Form.Group>
             )}
 
-            {/* Any other dynamic columns not explicitly handled could go here if generic support is needed, but typically specific forms are static */}
+            {/* Render any newly added custom columns */}
+            {editableColumns
+              .filter(c => !['title', 'status', 'priority', 'dueDate'].includes(c.id))
+              .map(col => (
+                <Form.Group key={col.id} className="mb-4">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <Form.Label className="task-form-label mb-0">
+                      {col.name} {col.required && <span className="text-danger">*</span>}
+                    </Form.Label>
+                    <div className="d-flex gap-2">
+                      <Button variant="link" size="sm" className="p-0 text-muted" onClick={() => onEditColumn && onEditColumn(col)} title="Edit Field">
+                        <Edit2 size={14} />
+                      </Button>
+                      <Button variant="link" size="sm" className="p-0 text-danger" onClick={() => onDeleteColumn && onDeleteColumn(col.id)} title="Delete Field">
+                        <Trash2 size={14} />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="task-field-wrapper">
+                    <FieldRenderer
+                      column={col}
+                      value={formValues[col.id]}
+                      onChange={(val) => handleFieldChange(col.id, val)}
+                      isEditing={true}
+                    />
+                  </div>
+                  {errors[col.id] && <Form.Text className="text-danger">{errors[col.id]}</Form.Text>}
+                </Form.Group>
+            ))}
 
             {/* Notification Checkbox */}
             <Form.Group className="mb-3">
@@ -202,6 +231,7 @@ export const TaskModal = ({ show, onHide, task, columns, onSave, onDelete }) => 
                 Enable notifications for this task. A notification icon will appear in the action column.
               </Form.Text>
             </Form.Group>
+
           </Form>
         )}
       </Modal.Body>
