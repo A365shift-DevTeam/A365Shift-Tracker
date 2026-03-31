@@ -4,7 +4,7 @@ import { getFirestore } from "firebase/firestore";
 
 //  Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBE-g2hdEPgpTCA1hOjb2ey5pAoXnDptpY",
+ apiKey: "AIzaSyBE-g2hdEPgpTCA1hOjb2ey5pAoXnDptpY",
   authDomain: "digital-board-e80cb.firebaseapp.com",
   projectId: "digital-board-e80cb",
   storageBucket: "digital-board-e80cb.firebasestorage.app",

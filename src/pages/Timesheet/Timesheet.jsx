@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button, Dropdown, Form, Badge, Modal } from 'react-bootstrap'
-import { Plus, Search, Settings, Calendar, Clock, FileText, User, Building2, CheckCircle, Paperclip, ListChecks, Info, MapPin } from 'lucide-react'
+import { Plus, Search, Settings, Calendar, Clock, FileText, User, Building2, CheckCircle, Paperclip, ListChecks, Info, MapPin, Download } from 'lucide-react'
+import { exportToExcel } from '../../utils/exportToExcel'
 import { timesheetService } from '../../services/timesheetService'
 import { ListView } from './ListView'
 import { KanbanView } from './KanbanView'
@@ -512,6 +513,31 @@ const Timesheet = () => {
 
           <Button variant="outline-secondary" size="sm" onClick={() => setShowColumnManager(true)} className="d-flex align-items-center gap-2 btn-icon-text">
             <Settings size={16} /> Manage Columns
+          </Button>
+          <Button
+            variant="outline-success"
+            size="sm"
+            onClick={() => {
+              const colConfig = visibleColumns
+                .filter(col => col.id !== 'col-attachments' && col.type !== 'file')
+                .map(col => ({
+                  header: col.name,
+                  key: (entry) => {
+                    const val = entry.values?.[col.id];
+                    if (!val) return '';
+                    if (col.type === 'datetime' || col.type === 'date') {
+                      const d = new Date(val);
+                      return isNaN(d.getTime()) ? val : d.toLocaleString();
+                    }
+                    return val;
+                  },
+                  width: 20
+                }));
+              exportToExcel(processedEntries, 'Timesheet', `Timesheet_${new Date().toISOString().slice(0,10)}`, colConfig);
+            }}
+            className="d-flex align-items-center gap-2 ms-1 btn-icon-text"
+          >
+            <Download size={16} /> Excel
           </Button>
           <Button variant="primary" size="sm" onClick={handleCreateEntry} className="d-flex align-items-center gap-2 ms-1 btn-icon-text timesheet-add-btn">
             <Plus size={16} /> Add Entry

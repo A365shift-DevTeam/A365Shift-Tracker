@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { arrayUnion } from 'firebase/firestore'
-import { User, Mail, Contact, Settings, Plus, CheckCircle, Trash2, Briefcase, DollarSign, Timer, Flag, AlertTriangle, ArrowUpRight, Search, Monitor, Phone, FileText, MessageSquare, Edit, Clock } from 'lucide-react'
+import { User, Mail, Contact, Settings, Plus, CheckCircle, Trash2, Briefcase, DollarSign, Timer, Flag, AlertTriangle, ArrowUpRight, Search, Monitor, Phone, FileText, MessageSquare, Edit, Clock, Download } from 'lucide-react'
+import { exportToExcel } from '../../utils/exportToExcel'
 import { FaWhatsapp } from 'react-icons/fa6'
 import { Button, Modal, Form, Dropdown } from 'react-bootstrap'
 import './Sales.css'
@@ -908,6 +909,27 @@ function Sales() {
                                 <Settings size={20} />
                             </div>
                         </button>
+
+                        <Button
+                            variant="outline-success"
+                            size="sm"
+                            onClick={() => {
+                                exportToExcel(filteredProjects, 'Sales Projects', `Sales_${activeTab}_${new Date().toISOString().slice(0,10)}`, [
+                                    { header: 'Project ID', key: (p) => p.customId || String(p.id).slice(-6).toUpperCase(), width: 15 },
+                                    { header: 'Title', key: 'title', width: 25 },
+                                    { header: 'Client Name', key: 'clientName', width: 20 },
+                                    { header: 'Branding', key: 'brandingName', width: 15 },
+                                    { header: 'Type', key: 'type', width: 12 },
+                                    { header: 'Stage', key: (p) => activeStages[p.activeStage]?.label || 'Unknown', width: 15 },
+                                    { header: 'Status', key: 'status', width: 12 },
+                                    { header: 'Delay (Days)', key: 'delay', width: 12 },
+                                    { header: 'Phone', key: 'phone', width: 18 }
+                                ])
+                            }}
+                            className="d-flex align-items-center gap-2 btn-icon-text ms-2"
+                        >
+                            <Download size={16} /> Excel
+                        </Button>
 
                         <Button
                             variant="primary"

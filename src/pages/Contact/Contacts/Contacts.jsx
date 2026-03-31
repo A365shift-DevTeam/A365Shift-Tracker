@@ -3,8 +3,9 @@ import { Button, Dropdown, Form, Badge, Modal, Card, Row, Col } from 'react-boot
 import {
   Plus, Filter, MoreVertical,
   ArrowUpDown, Check, X, Layers, User, Flag, Briefcase, Building, Phone, Edit, Settings, ArrowUpRight,
-  GripVertical, Eye, EyeOff, Trash2
+  GripVertical, Eye, EyeOff, Trash2, Download
 } from 'lucide-react'
+import { exportToExcel } from '../../../utils/exportToExcel'
 import { contactService } from '../../../services/contactService'
 import { projectService } from '../../../services/api'
 
@@ -586,6 +587,27 @@ const Contacts = () => {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></svg>
             </button>
           </div>
+
+          <Button
+            className="btn-success-soft d-flex align-items-center gap-2"
+            style={{ fontSize: '0.85rem', padding: '6px 14px' }}
+            onClick={() => {
+              exportToExcel(processedContacts, 'Contacts', `Contacts_${new Date().toISOString().slice(0,10)}`, [
+                { header: 'Name', key: 'name', width: 22 },
+                { header: 'Email', key: 'email', width: 25 },
+                { header: 'Phone', key: 'phone', width: 18 },
+                { header: 'Company', key: 'company', width: 20 },
+                { header: 'Job Title', key: 'jobTitle', width: 18 },
+                { header: 'Location', key: 'location', width: 15 },
+                { header: 'Address', key: 'clientAddress', width: 25 },
+                { header: 'Country', key: 'clientCountry', width: 12 },
+                { header: 'Entity Type', key: 'type', width: 12 },
+                { header: 'Status', key: 'status', width: 12 }
+              ])
+            }}
+          >
+            <Download size={16} /> Excel
+          </Button>
 
           <Button
             className="btn-success-soft d-flex align-items-center gap-2"

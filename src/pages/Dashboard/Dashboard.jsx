@@ -8,8 +8,10 @@ import { useAuth } from '../../context/AuthContext';
 import {
   FaBriefcase, FaUserGroup, FaClock, FaChartLine,
   FaCircle, FaCalendarDay, FaFire, FaBolt,
-  FaMoneyBillWave, FaFileInvoiceDollar, FaDollarSign, FaFileInvoice
+  FaMoneyBillWave, FaFileInvoiceDollar, FaDollarSign, FaFileInvoice,
+  FaFileExcel
 } from 'react-icons/fa6';
+import { exportMultiSheetExcel } from '../../utils/exportToExcel';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
@@ -296,9 +298,45 @@ export default function Dashboard() {
           </h1>
           <p className="dashboard-subtitle">Here&apos;s what&apos;s happening in your workspace</p>
         </div>
-        <div className="header-date">
-          <FaCalendarDay />
-          {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+        <div className="d-flex align-items-center gap-3">
+          <button
+            className="btn btn-sm btn-outline-success d-flex align-items-center gap-2"
+            style={{ borderRadius: '8px', fontWeight: 600, fontSize: '0.8rem', padding: '6px 14px' }}
+            onClick={() => {
+              exportMultiSheetExcel([
+                {
+                  data: projects,
+                  sheetName: 'Projects',
+                  columnConfig: [
+                    { header: 'ID', key: (p) => p.customId || p.id, width: 15 },
+                    { header: 'Client', key: 'clientName', width: 20 },
+                    { header: 'Branding', key: 'brandingName', width: 15 },
+                    { header: 'Type', key: 'type', width: 12 },
+                    { header: 'Stage', key: 'activeStage', width: 10 },
+                    { header: 'Status', key: 'status', width: 12 },
+                    { header: 'Delay', key: 'delay', width: 8 }
+                  ]
+                },
+                {
+                  data: contacts,
+                  sheetName: 'Contacts',
+                  columnConfig: [
+                    { header: 'Name', key: 'name', width: 22 },
+                    { header: 'Email', key: 'email', width: 25 },
+                    { header: 'Phone', key: 'phone', width: 18 },
+                    { header: 'Company', key: 'company', width: 20 },
+                    { header: 'Status', key: 'status', width: 12 }
+                  ]
+                }
+              ], `Dashboard_Export_${new Date().toISOString().slice(0,10)}`)
+            }}
+          >
+            <FaFileExcel /> Export
+          </button>
+          <div className="header-date">
+            <FaCalendarDay />
+            {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+          </div>
         </div>
       </div>
 

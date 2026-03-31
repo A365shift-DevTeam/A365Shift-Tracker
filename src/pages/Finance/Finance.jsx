@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Row, Col, Card, Button, Form, Badge, Modal, Dropdown } from 'react-bootstrap'
-import { Plus, TrendingUp, DollarSign, Calendar, TrendingDown, Search, Edit, Trash2, Eye, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Settings } from 'lucide-react'
+import { Plus, TrendingUp, DollarSign, Calendar, TrendingDown, Search, Edit, Trash2, Eye, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Settings, Download } from 'lucide-react'
+import { exportToExcel } from '../../utils/exportToExcel'
 import { expenseService } from '../../services/expenseService'
 import { incomeService } from '../../services/incomeService'
 import { ExpenseModal } from './ExpenseModal'
@@ -560,6 +561,22 @@ const Finance = () => {
             </div>
 
             <div className="d-flex align-items-center gap-2">
+              <Button
+                variant="outline-success"
+                size="sm"
+                onClick={() => {
+                  exportToExcel(combinedTransactions, 'Finance', `Finance_${viewMode}_${new Date().toISOString().slice(0,10)}`, [
+                    { header: 'Description', key: 'description', width: 30 },
+                    { header: 'Type', key: (item) => item.type === 'expense' ? 'Expense' : 'Income', width: 12 },
+                    { header: 'Date', key: (item) => new Date(item.date).toLocaleDateString(), width: 15 },
+                    { header: 'Category', key: 'category', width: 15 },
+                    { header: 'Amount', key: 'amount', width: 15 }
+                  ])
+                }}
+                className="d-flex align-items-center gap-1 btn-icon-text"
+              >
+                <Download size={16} /> Excel
+              </Button>
               <Button
                 variant="success"
                 size="sm"

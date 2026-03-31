@@ -3,8 +3,9 @@ import { Button, Form, Badge, Card, Row, Col, InputGroup, Modal } from 'react-bo
 import {
     Building2, Search, Star, Filter, MessageSquare,
     MapPin, CheckCircle2, Circle, ChevronDown, Check, X,
-    Briefcase, Percent, Award, Shield, Cpu, Cloud, Globe, Phone, Mail, Send, Reply
+    Briefcase, Percent, Award, Shield, Cpu, Cloud, Globe, Phone, Mail, Send, Reply, Download
 } from 'lucide-react';
+import { exportToExcel } from '../../utils/exportToExcel';
 import { contactService } from '../../services/contactService';
 import { db } from '../../services/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
@@ -334,6 +335,25 @@ export default function Vendor() {
                                 onChange={e => setSearchQuery(e.target.value)}
                             />
                         </div>
+                        <button
+                            className="btn btn-sm btn-outline-success d-flex align-items-center gap-1 me-2"
+                            style={{ borderRadius: '8px', fontWeight: 600, fontSize: '0.8rem', padding: '6px 14px' }}
+                            onClick={() => {
+                                exportToExcel(filteredVendors, 'Vendors', `Vendors_${new Date().toISOString().slice(0,10)}`, [
+                                    { header: 'Name', key: 'name', width: 22 },
+                                    { header: 'Category', key: 'category', width: 18 },
+                                    { header: 'Rating', key: 'rating', width: 10 },
+                                    { header: 'Services', key: (v) => v.services?.join(', ') || '', width: 30 },
+                                    { header: 'Location', key: 'location', width: 20 },
+                                    { header: 'Email', key: (v) => v.contact?.email || '', width: 25 },
+                                    { header: 'Phone', key: (v) => v.contact?.phone || '', width: 18 },
+                                    { header: 'Years', key: 'years', width: 8 },
+                                    { header: 'Margin %', key: 'margin', width: 10 }
+                                ])
+                            }}
+                        >
+                            <Download size={14} /> Excel
+                        </button>
                         <div className="sort-dropdown">
                             <span className="text-muted small me-2">Sort by:</span>
                             <select className="border-0 bg-transparent fw-medium outline-none">

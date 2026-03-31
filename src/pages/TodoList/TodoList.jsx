@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Container, Row, Col, Card, Button, InputGroup, Form, Dropdown } from 'react-bootstrap'
-import { Plus, LayoutGrid, List as ListIcon, Search, SlidersHorizontal, Settings, Calendar, ClipboardList, AlertCircle, Clock, ChevronDown, Filter, BarChart2, ArrowUpDown, X } from 'lucide-react'
+import { Plus, LayoutGrid, List as ListIcon, Search, SlidersHorizontal, Settings, Calendar, ClipboardList, AlertCircle, Clock, ChevronDown, Filter, BarChart2, ArrowUpDown, X, Download } from 'lucide-react'
+import { exportToExcel } from '../../utils/exportToExcel'
 import { ListView } from './ListView'
 import { KanbanView } from './KanbanView'
 import { TaskModal } from './TaskModal'
@@ -356,6 +357,21 @@ const TodoList = () => {
                             <BarChart2 size={18} />
                         </button>
                     </div>
+
+                    <button
+                        className="btn-toolbar"
+                        onClick={() => {
+                            exportToExcel(filteredTasks, 'Tasks', `Tasks_${new Date().toISOString().slice(0,10)}`, [
+                                { header: 'Title', key: (t) => t.values?.title || '', width: 30 },
+                                { header: 'Status', key: (t) => t.values?.status || '', width: 15 },
+                                { header: 'Priority', key: (t) => t.values?.priority || '', width: 12 },
+                                { header: 'Due Date', key: (t) => t.values?.dueDate ? new Date(t.values.dueDate).toLocaleDateString() : '', width: 15 }
+                            ])
+                        }}
+                        title="Export to Excel"
+                    >
+                        <Download size={16} /> Export
+                    </button>
 
                     <button
                         className="btn-new-task"

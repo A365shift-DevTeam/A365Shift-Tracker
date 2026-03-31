@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { projectService, taskService } from '../../services/api';
 import { db } from '../../services/firebase';
 import { collection, getDocs } from 'firebase/firestore';
-import { FaRobot, FaBriefcase, FaListCheck, FaTriangleExclamation, FaWandMagicSparkles, FaArrowRight, FaClock, FaFileInvoiceDollar } from 'react-icons/fa6';
+import { FaRobot, FaBriefcase, FaListCheck, FaTriangleExclamation, FaWandMagicSparkles, FaArrowRight, FaClock, FaFileInvoiceDollar, FaFileExcel } from 'react-icons/fa6';
 import { Button } from 'react-bootstrap';
+import { exportMultiSheetExcel } from '../../utils/exportToExcel';
 import { useNavigate } from 'react-router-dom';
 import './AIFollowup.css';
 
@@ -269,6 +270,58 @@ const AIFollowup = () => {
                 </div>
 
                 <div className="d-flex gap-2">
+                    <Button
+                        variant="outline-success"
+                        size="sm"
+                        onClick={() => {
+                            const sheets = [];
+                            if (projects.length > 0) {
+                                sheets.push({
+                                    data: projects,
+                                    sheetName: 'Delayed Projects',
+                                    columnConfig: [
+                                        { header: 'Project', key: (p) => p.title || p.clientName || p.customId || '', width: 25 },
+                                        { header: 'Client', key: 'clientName', width: 20 },
+                                        { header: 'Stage', key: 'activeStage', width: 10 },
+                                        { header: 'Delay (Days)', key: 'delay', width: 12 },
+                                        { header: 'AI Insight', key: (p) => generateAIMessage(p, 'project'), width: 50 }
+                                    ]
+                                });
+                            }
+                            if (tasks.length > 0) {
+                                sheets.push({
+                                    data: tasks,
+                                    sheetName: 'Overdue Tasks',
+                                    columnConfig: [
+                                        { header: 'Task', key: (t) => t.values?.title || '', width: 25 },
+                                        { header: 'Priority', key: (t) => t.values?.priority || '', width: 12 },
+                                        { header: 'Due Date', key: (t) => t.values?.dueDate ? new Date(t.values.dueDate).toLocaleDateString() : '', width: 15 },
+                                        { header: 'Status', key: (t) => t.values?.status || '', width: 12 },
+                                        { header: 'AI Insight', key: (t) => generateAIMessage(t, 'task'), width: 50 }
+                                    ]
+                                });
+                            }
+                            if (invoices.length > 0) {
+                                sheets.push({
+                                    data: invoices,
+                                    sheetName: 'Pending Invoices',
+                                    columnConfig: [
+                                        { header: 'Milestone', key: 'name', width: 25 },
+                                        { header: 'Status', key: 'status', width: 12 },
+                                        { header: 'Ageing (Days)', key: 'ageing', width: 12 },
+                                        { header: 'AI Insight', key: (i) => generateAIMessage(i, 'invoice'), width: 50 }
+                                    ]
+                                });
+                            }
+                            if (sheets.length > 0) {
+                                exportMultiSheetExcel(sheets, `AI_Followup_${new Date().toISOString().slice(0,10)}`);
+                            } else {
+                                alert('No data to export.');
+                            }
+                        }}
+                    >
+                        <FaFileExcel className="me-2" /> Export
+                    </Button>
                     <Button variant="outline-primary" size="sm" onClick={() => window.location.reload()}>
                         <FaClock className="me-2" /> Refresh Scan
                     </Button>
